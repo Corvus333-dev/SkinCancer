@@ -48,16 +48,25 @@ def compile_model(model, lr=0.001):
 
     return model
 
-def train_model(ds, model, epochs=10):
+def train_model(train_ds, model, epochs=10, threshold=0.001):
     """
-    Trains model on dataset for customizable number of epochs.
+    Trains model on dataset, with early stopping callback.
 
     Args:
-        ds (tf.data.Dataset): Batched and preprocessed training dataset.
+        train_ds (tf.data.Dataset): Batched and preprocessed training dataset.
         model (keras.Model): Compiled model.
-        epochs (int): Number of training epochs.
+        epochs (int): Maximum number of epochs.
+        threshold (float): Minimum change in loss to qualify as an improvement.
 
     Returns:
         History: Keras object containing training metrics.
     """
-    return model.fit(ds, epochs=epochs)
+    stop = tf.keras.callbacks.EarlyStopping(
+        monitor='loss',
+        min_delta= threshold,
+        patience=3,
+        verbose=1,
+        restore_best_weights=True
+    )
+
+    return model.fit(train_ds, epochs=epochs, callbacks=[stop])

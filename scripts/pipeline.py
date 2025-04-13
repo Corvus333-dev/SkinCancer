@@ -13,7 +13,7 @@ def encode_labels():
         pd.DataFrame: DataFrame containing diagnosis codes and metadata.
         dict: Map of diagnosis codes to be used as labels.
     """
-    data_path = '../data/HAM10000_metadata'
+    data_path = 'data/HAM10000_metadata'
     df = pd.read_csv(data_path)
 
     # Map dx labels to numerical values
@@ -33,7 +33,7 @@ def map_image_paths(df):
     Returns:
         pd.DataFrame: Updated DataFrame containing image paths.
     """
-    image_folders = [Path('../data/HAM10000_images_part_1/'), Path('../data/HAM10000_images_part_2/')]
+    image_folders = [Path('data/HAM10000_images_part_1/'), Path('data/HAM10000_images_part_2/')]
     image_map = {}
     image_paths = []
 
@@ -103,7 +103,7 @@ def fetch_dataset(df, batch_size=32, shuffle=True):
     ds = ds.map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
 
     if shuffle:
-        ds = ds.shuffle(buffer_size=1000)
+        train_ds = ds.shuffle(buffer_size=1000)
 
     ds = ds.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
