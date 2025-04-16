@@ -1,5 +1,16 @@
+from config import ModelConfig
 from scripts.pipeline import *
 from scripts.model import *
+
+config = ModelConfig(
+    framework='resnet50',
+    input_shape=(224, 224, 3),
+    batch_size=64,
+    freeze_layers=True,
+    training=False,
+    learning_rate=0.0005,
+    epochs=15
+)
 
 def main():
     # Dataset pipeline
@@ -11,8 +22,9 @@ def main():
     test_ds = fetch_dataset(test_df, shuffle=False)
 
     # Model setup and training
-    model = compile_model(build_model(), lr=0.001)
-    train_model(train_ds, model, epochs=10)
+    model = build_resnet50(input_shape=config.input_shape, freeze_layers=config.freeze_layers, training=config.training)
+    compile_model(model, lr=config.learning_rate)
+    train_model(train_ds, model, epochs=config.epochs)
 
 if __name__ == '__main__':
     main()

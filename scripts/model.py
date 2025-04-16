@@ -4,13 +4,15 @@ from tensorflow.keras import Input
 from tensorflow.keras.layers import GlobalAveragePooling2D, Dropout, Dense
 from tensorflow.keras.models import Model
 
-def build_model(input_shape = (224, 224, 3), classes = 7):
+def build_resnet50(input_shape, freeze_layers: bool, training: bool, classes = 7):
     """
     Creates base model using ResNet50 architecture pretrained on ImageNet dataset,
     then adds custom pooling, dropout, and dense layers with softmax activation.
 
     Args:
         input_shape (tuple): Shape of input image.
+        freeze_layers (bool): Conditional for weight updating.
+        training (bool): Conditional for batch normalization and dropout.
         classes (int): Number of output classes.
 
     Returns:
@@ -22,10 +24,10 @@ def build_model(input_shape = (224, 224, 3), classes = 7):
         input_shape=input_shape
     )
 
-    base_model.trainable = False
+    base_model.trainable = not freeze_layers # Toggles base weight updating
 
     inputs = Input(shape=input_shape)
-    x = base_model(inputs, training=False)
+    x = base_model(inputs, training=training) # Toggles BatchNorm/Dropout
     x = GlobalAveragePooling2D()(x)
     x = Dropout(0.2)(x)
     outputs = Dense(classes, activation='softmax')(x)
@@ -41,12 +43,10 @@ def compile_model(model, lr=0.001):
         lr (float): Learning rate for optimizer.
 
     Returns:
-        keras.Model: Compiled model.
+        None
     """
     opt = tf.keras.optimizers.Adam(learning_rate=lr)
     model.compile(optimizer=opt, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-
-    return model
 
 def train_model(train_ds, model, epochs=10, threshold=0.001):
     """
