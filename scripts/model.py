@@ -24,10 +24,10 @@ def build_resnet50(input_shape, freeze_layers: bool, training: bool, classes = 7
         input_shape=input_shape
     )
 
-    base_model.trainable = not freeze_layers # Toggles base weight updating
+    base_model.trainable = not freeze_layers
 
     inputs = Input(shape=input_shape)
-    x = base_model(inputs, training=training) # Toggles BatchNorm/Dropout
+    x = base_model(inputs, training=training)
     x = GlobalAveragePooling2D()(x)
     x = Dropout(0.2)(x)
     outputs = Dense(classes, activation='softmax')(x)
@@ -59,7 +59,7 @@ def train_model(train_ds, model, epochs=10, threshold=0.001):
         threshold (float): Minimum change in loss to qualify as an improvement.
 
     Returns:
-        History: Keras object containing training metrics.
+        keras.callbacks.History: Training history.
     """
     stop = tf.keras.callbacks.EarlyStopping(
         monitor='loss',
