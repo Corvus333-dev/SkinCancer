@@ -19,7 +19,7 @@ def encode_labels():
     # Map dx labels to numerical values
     le = LabelEncoder()
     df['dx_code'] = le.fit_transform(df['dx'])
-    dx_map = dict(zip(le.classes_, range(len(le.classes_))))
+    dx_map = dict(enumerate(le.classes_))
 
     return df, dx_map
 
@@ -84,7 +84,7 @@ def preprocess_image(path, label):
 
     return image, label
 
-def fetch_dataset(df, batch_size=32, shuffle=True):
+def fetch_dataset(df, batch_size, shuffle=True):
     """
     Creates a Tensorflow Dataset from preprocessed images and corresponding labels.
 
@@ -94,7 +94,7 @@ def fetch_dataset(df, batch_size=32, shuffle=True):
         shuffle (bool): Optional shuffling.
 
     Returns:
-        tf.data.Dataset: Dataset of (image, label) batches.
+        tf.data.Dataset: Batched dataset of (image, label) pairs.
     """
     paths = df['image_path'].values
     labels = df['dx_code'].values
@@ -103,7 +103,7 @@ def fetch_dataset(df, batch_size=32, shuffle=True):
     ds = ds.map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
 
     if shuffle:
-        train_ds = ds.shuffle(buffer_size=1000)
+        ds = ds.shuffle(buffer_size=1000)
 
     ds = ds.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 

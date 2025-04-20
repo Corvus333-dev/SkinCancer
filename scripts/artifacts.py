@@ -2,6 +2,7 @@ from datetime import datetime
 from pathlib import Path
 from dataclasses import asdict
 import json
+import pandas as pd
 
 def create_directory(framework):
     """
@@ -46,3 +47,28 @@ def save_artifacts(directory, model, config, history, metrics):
 
     with open(directory / 'metrics.json', 'w') as f:
         json.dump(metrics, f, indent=4)
+
+def save_predictions(dx_map, y, y_hat, config):
+    """
+    Saves actual and predicted labels.
+
+    Args:
+        dx_map (dict): Map of diagnosis codes to diagnosis names.
+        y (list): True label indices.
+        y_hat (np.ndarray): Predicted label indices.
+        config (dataclass): Experiment configuration settings.
+
+    Returns:
+        None
+    """
+    df = pd.DataFrame({
+        'actual': [dx_map[i] for i in y],
+        'predicted': [dx_map[i] for i in y_hat]
+    })
+
+    directory = Path(config.checkpoint).parent
+
+    if config.mode == 'validate':
+        df.to_csv(directory / 'dev_predictions.csv', index=False)
+    elif config.mode == 'test':
+        df.to_csv(directory / 'test_predictions.csv', index=False)

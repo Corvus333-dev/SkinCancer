@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 from tensorflow.keras.applications import ResNet50
 from tensorflow.keras import Input
@@ -34,7 +35,7 @@ def build_resnet50(input_shape, freeze_layers: bool, training: bool, classes = 7
 
     return Model(inputs, outputs)
 
-def compile_model(model, lr=0.001):
+def compile_model(model, lr):
     """
     Compiles model using Adam optimizer and sparse categorical cross-entropy loss.
 
@@ -46,9 +47,9 @@ def compile_model(model, lr=0.001):
         None
     """
     opt = tf.keras.optimizers.Adam(learning_rate=lr)
-    model.compile(optimizer=opt, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer=opt, loss='sparse_categorical_crossentropy', metrics = ['accuracy'])
 
-def train_model(train_ds, model, epochs=10, threshold=0.001):
+def train_model(train_ds, model, epochs, threshold=0.001):
     """
     Trains model on dataset, with early stopping callback.
 
@@ -70,3 +71,25 @@ def train_model(train_ds, model, epochs=10, threshold=0.001):
     )
 
     return model.fit(train_ds, epochs=epochs, callbacks=[stop])
+
+def predict_labels(ds, model):
+    """
+    Generates predicted labels and collects associated true labels.
+
+    Args:
+        ds (tf.data.Dataset): Batched dataset of (image, label) pairs.
+        model (keras.Model): Trained model with softmax output.
+
+    Returns:
+        y (list): True label indices.
+        y_hat (np.ndarray): Predicted label indices.
+    """
+    y = []
+    predictions = model.predict(ds)
+
+    for image, label in ds:
+        y.extend(label.numpy())
+
+    y_hat = np.argmax(predictions, axis=1)
+
+    return y, y_hat
