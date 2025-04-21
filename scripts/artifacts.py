@@ -3,6 +3,7 @@ from pathlib import Path
 from dataclasses import asdict
 import json
 import pandas as pd
+from sklearn.metrics import classification_report
 
 def create_directory(framework):
     """
@@ -20,7 +21,7 @@ def create_directory(framework):
 
     return directory
 
-def save_artifacts(directory, model, config, history, metrics):
+def save_training_artifacts(directory, model, config, history, metrics):
     """
     Saves trained model and its associated metadata.
 
@@ -48,9 +49,9 @@ def save_artifacts(directory, model, config, history, metrics):
     with open(directory / 'metrics.json', 'w') as f:
         json.dump(metrics, f, indent=4)
 
-def save_predictions(dx_map, y, y_hat, config):
+def save_prediction_artifacts(dx_map, y, y_hat, config):
     """
-    Saves actual and predicted labels.
+    Saves actual vs predicted labels, and classification report.
 
     Args:
         dx_map (dict): Map of diagnosis codes to diagnosis names.
@@ -69,6 +70,15 @@ def save_predictions(dx_map, y, y_hat, config):
     directory = Path(config.checkpoint).parent
 
     if config.mode == 'validate':
-        df.to_csv(directory / 'dev_predictions.csv', index=False)
+        df_path = directory / 'dev_predictions.csv'
+        report_path = directory / 'dev_report.json'
     elif config.mode == 'test':
-        df.to_csv(directory / 'test_predictions.csv', index=False)
+        df_path = directory / 'test_predictions.csv'
+        report_path = directory / 'test_report.json'
+
+    df.to_csv(df_path, index=False)
+
+    report = classification_report(y, y_hat, target_names=list(dx_map.values()), output_dict=True)
+
+    with open(report_path, 'w') as f:
+        json.dump(report, f, indent=4)

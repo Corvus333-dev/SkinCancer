@@ -12,7 +12,7 @@ config = ModelConfig(
     freeze_layers=True,
     training=False,
     learning_rate=0.001,
-    epochs=10
+    epochs=20
 )
 
 def load_data():
@@ -40,18 +40,18 @@ def train_and_save(train_df, dev_df):
     metrics = model.evaluate(dev_ds, return_dict=True)
 
     directory = create_directory(config.framework)
-    save_artifacts(directory, model, config, history, metrics)
+    save_training_artifacts(directory, model, config, history, metrics)
 
 def predict_and_save(ds, dx_map):
     model = tf.keras.models.load_model(config.checkpoint)
     y, y_hat = predict_labels(ds, model)
-    save_predictions(dx_map, y, y_hat, config)
+    save_prediction_artifacts(dx_map, y, y_hat, config)
 
 def main():
     dx_map, train_df, dev_df, test_df = load_data()
 
     if config.mode == 'train':
-        train_and_save(config, train_df, dev_df)
+        train_and_save(train_df, dev_df)
 
     elif config.mode == 'validate':
         dev_ds = fetch_dataset(dev_df, batch_size=config.batch_size, shuffle=False)
