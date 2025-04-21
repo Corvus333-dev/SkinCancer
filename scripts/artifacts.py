@@ -3,7 +3,8 @@ from pathlib import Path
 from dataclasses import asdict
 import json
 import pandas as pd
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
 
 def create_directory(framework):
     """
@@ -43,15 +44,15 @@ def save_training_artifacts(directory, model, config, history, metrics):
     with open(directory / 'summary.txt', 'w', encoding='utf-8') as f:
         model.summary(print_fn=lambda x: f.write(x + '\n'))
 
-    with open(directory / 'history.json', 'w') as f:
+    with open(directory / 'training_history.json', 'w') as f:
         json.dump(history.history, f, indent=4)
 
-    with open(directory / 'metrics.json', 'w') as f:
+    with open(directory / 'evaluation_metrics.json', 'w') as f:
         json.dump(metrics, f, indent=4)
 
 def save_prediction_artifacts(dx_map, y, y_hat, config):
     """
-    Saves actual vs predicted labels, and classification report.
+    Saves predictions, classification report, and confusion matrix.
 
     Args:
         dx_map (dict): Map of diagnosis codes to diagnosis names.
@@ -69,16 +70,28 @@ def save_prediction_artifacts(dx_map, y, y_hat, config):
 
     directory = Path(config.checkpoint).parent
 
-    if config.mode == 'validate':
+    if config.mode == 'dev':
         df_path = directory / 'dev_predictions.csv'
-        report_path = directory / 'dev_report.json'
+        cr_path = directory / 'dev_classification_report.json'
+        cm_path = directory / 'dev_confusion_matrix.png'
     elif config.mode == 'test':
         df_path = directory / 'test_predictions.csv'
-        report_path = directory / 'test_report.json'
+        cr_path = directory / 'test_classification_report.json'
+        cm_path = directory / 'test_confusion_matrix.png'
 
     df.to_csv(df_path, index=False)
 
-    report = classification_report(y, y_hat, target_names=list(dx_map.values()), output_dict=True)
+    labels = list(dx_map.values())
+    cr = classification_report(y, y_hat, target_names=labels, output_dict=True)
 
-    with open(report_path, 'w') as f:
-        json.dump(report, f, indent=4)
+    with open(cr_path, 'w') as f:
+        json.dump(cr, f, indent=4)
+
+    cm = confusion_matrix(y, y_hat)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
+    fig, ax = plt.subplots(figsize=(10, 8))
+    disp.plot(cmap='Purples', ax=ax, xticks_rotation=45)
+    plt.title(f'Confusion Matrix ({config.mode})')
+    plt.tight_layout()
+    plt.savefig(cm_path)
+    plt.close()

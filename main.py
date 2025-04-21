@@ -8,11 +8,11 @@ config = ModelConfig(
     mode='train',
     checkpoint=None,
     input_shape=(224, 224, 3),
-    batch_size=64,
+    batch_size=32,
     freeze_layers=True,
     training=False,
     learning_rate=0.001,
-    epochs=20
+    epochs=10
 )
 
 def load_data():
@@ -53,7 +53,7 @@ def main():
     if config.mode == 'train':
         train_and_save(train_df, dev_df)
 
-    elif config.mode == 'validate':
+    elif config.mode == 'dev':
         dev_ds = fetch_dataset(dev_df, batch_size=config.batch_size, shuffle=False)
         predict_and_save(dev_ds, dx_map)
 
