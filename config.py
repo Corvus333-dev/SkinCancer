@@ -8,7 +8,7 @@ class ModelConfig:
     checkpoint: Optional[str] = None
     input_shape: Tuple[int, int, int] = (224, 224, 3)
     batch_size: int = 32
-    freeze_layers: bool = True
+    trainable_layers: int = 0
     training: bool = False
     learning_rate: float = 0.001
     epochs: int = 10

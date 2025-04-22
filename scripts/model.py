@@ -5,7 +5,7 @@ from tensorflow.keras import Input
 from tensorflow.keras.layers import GlobalAveragePooling2D, Dropout, Dense
 from tensorflow.keras.models import Model
 
-def build_resnet50(input_shape, freeze_layers: bool, training: bool, classes = 7):
+def build_resnet50(input_shape, trainable_layers, training: bool, classes = 7):
     """
     Creates base model using ResNet50 architecture pretrained on ImageNet dataset,
     then adds custom pooling, dropout, and dense layers with softmax activation.
@@ -25,7 +25,7 @@ def build_resnet50(input_shape, freeze_layers: bool, training: bool, classes = 7
         input_shape=input_shape
     )
 
-    base_model.trainable = not freeze_layers
+    base_model.trainable = False
 
     inputs = Input(shape=input_shape)
     x = base_model(inputs, training=training)
@@ -34,6 +34,11 @@ def build_resnet50(input_shape, freeze_layers: bool, training: bool, classes = 7
     outputs = Dense(classes, activation='softmax')(x)
 
     return Model(inputs, outputs)
+
+def unfreeze_layers(model, framework, trainable_layers):
+    base_model = model.get_layer(framework)
+    for layer in base_model.layers[-trainable_layers:]:
+        layer.trainable = True
 
 def compile_model(model, lr):
     """

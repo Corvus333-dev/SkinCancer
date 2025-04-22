@@ -5,13 +5,13 @@ from scripts.artifacts import *
 
 config = ModelConfig(
     framework='resnet50',
-    mode='train',
-    checkpoint=None,
+    mode='dev',
+    checkpoint='models/resnet50_20250422_1252/model.keras',
     input_shape=(224, 224, 3),
     batch_size=32,
-    freeze_layers=True,
+    trainable_layers=1,
     training=False,
-    learning_rate=0.001,
+    learning_rate=1e-5,
     epochs=10
 )
 
@@ -28,10 +28,12 @@ def train_and_save(train_df, dev_df):
 
     if config.checkpoint:
         model = tf.keras.models.load_model(config.checkpoint)
+        if config.trainable_layers > 0:
+            unfreeze_layers(model, config.framework, config.trainable_layers)
+            compile_model(model, lr=config.learning_rate)
     else:
         model = build_resnet50(
             input_shape=config.input_shape,
-            freeze_layers=config.freeze_layers,
             training=config.training
         )
         compile_model(model, lr=config.learning_rate)
