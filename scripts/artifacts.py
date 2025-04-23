@@ -79,14 +79,17 @@ def save_prediction_artifacts(dx_map, y, y_hat, config):
         cr_path = directory / 'test_classification_report.json'
         cm_path = directory / 'test_confusion_matrix.png'
 
+    # Save predictions
     df.to_csv(df_path, index=False)
 
     labels = list(dx_map.values())
-    cr = classification_report(y, y_hat, target_names=labels, output_dict=True)
 
+    # Classification report
+    cr = classification_report(y, y_hat, target_names=labels, output_dict=True)
     with open(cr_path, 'w') as f:
         json.dump(cr, f, indent=4)
 
+    # Confusion matrix
     cm = confusion_matrix(y, y_hat)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
     fig, ax = plt.subplots(figsize=(10, 8))

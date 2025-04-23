@@ -5,13 +5,13 @@ from scripts.artifacts import *
 
 config = ModelConfig(
     framework='resnet50',
-    mode='dev',
-    checkpoint='models/resnet50_20250422_1252/model.keras',
+    mode='train',
+    checkpoint=None,
     input_shape=(224, 224, 3),
     batch_size=32,
     trainable_layers=1,
     training=False,
-    learning_rate=1e-5,
+    learning_rate=0.001,
     epochs=10
 )
 
