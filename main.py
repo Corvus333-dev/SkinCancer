@@ -1,7 +1,9 @@
+from sklearn.metrics import classification_report, confusion_matrix
+
 from config import ModelConfig
-from scripts.pipeline import *
 from scripts.model import *
-from scripts.artifacts import *
+from scripts.pipeline import *
+from scripts.utils import *
 
 config = ModelConfig(
     framework='resnet50',
@@ -22,10 +24,7 @@ def load_data():
 
     return dx_map, train_df, dev_df, test_df
 
-def train_and_save(train_df, dev_df):
-    train_ds = fetch_dataset(train_df, batch_size=config.batch_size)
-    dev_ds = fetch_dataset(dev_df, batch_size=config.batch_size, shuffle=False)
-
+def train(ds):
     if config.checkpoint:
         model = tf.keras.models.load_model(config.checkpoint)
         if config.trainable_layers > 0:
@@ -38,30 +37,35 @@ def train_and_save(train_df, dev_df):
         )
         compile_model(model, lr=config.learning_rate)
 
-    history = train_model(train_ds, model, epochs=config.epochs)
-    metrics = model.evaluate(dev_ds, return_dict=True)
-
+    history = train_model(ds, model, epochs=config.epochs)
     directory = create_directory(config.framework)
-    save_training_artifacts(directory, model, config, history, metrics)
+    save_model(directory, model, config, history)
 
-def predict_and_save(ds, dx_map):
+def evaluate_and_predict(ds, dx_map):
     model = tf.keras.models.load_model(config.checkpoint)
+    metrics = model.evaluate(ds, return_dict=True)
     y, y_hat = predict_labels(ds, model)
-    save_prediction_artifacts(dx_map, y, y_hat, config)
+
+    labels = list(dx_map.values())
+    cr = classification_report(y, y_hat, target_names=labels, output_dict=True)
+    cm = confusion_matrix(y, y_hat)
+
+    save_results(dx_map, y, y_hat, cr, metrics, config)
 
 def main():
     dx_map, train_df, dev_df, test_df = load_data()
 
     if config.mode == 'train':
-        train_and_save(train_df, dev_df)
+        train_ds = fetch_dataset(train_df, batch_size=config.batch_size)
+        train(train_ds)
 
     elif config.mode == 'dev':
         dev_ds = fetch_dataset(dev_df, batch_size=config.batch_size, shuffle=False)
-        predict_and_save(dev_ds, dx_map)
+        evaluate_and_predict(dev_ds, dx_map)
 
     elif config.mode == 'test':
         test_ds = fetch_dataset(test_df, batch_size=config.batch_size, shuffle=False)
-        predict_and_save(test_ds, dx_map)
+        evaluate_and_predict(test_ds, dx_map)
 
 if __name__ == '__main__':
     main()
