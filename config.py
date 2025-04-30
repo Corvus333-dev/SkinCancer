@@ -16,6 +16,7 @@ class ModelConfig:
     framework: str
     mode: str
     checkpoint: Optional[str] = None
+    dist_plot: bool = False
     input_shape: Tuple[int, int, int] = (224, 224, 3)
     batch_size: int = 32
     trainable_layers: int = 0
