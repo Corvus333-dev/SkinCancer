@@ -14,7 +14,6 @@ config = ModelConfig(
     input_shape=(224, 224, 3),
     batch_size=32,
     trainable_layers=0,
-    training=False,
     learning_rate=0.001,
     epochs=30
 )
@@ -37,10 +36,7 @@ def train(ds):
             unfreeze_layers(model, config.framework, config.trainable_layers)
             compile_model(model, lr=config.learning_rate)
     else:
-        model = build_resnet50(
-            input_shape=config.input_shape,
-            training=config.training
-        )
+        model = build_resnet50(input_shape=config.input_shape)
         compile_model(model, lr=config.learning_rate)
 
     history = train_model(ds, model, epochs=config.epochs)
