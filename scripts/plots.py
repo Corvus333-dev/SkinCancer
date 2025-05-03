@@ -3,24 +3,23 @@ import numpy as np
 from pathlib import Path
 import seaborn as sns
 
-def plot_dist(df, dx_map):
+def plot_dist(df, dx_names):
     """
     Plots distribution of images used for diagnosis classification.
 
     Args:
         df (pd.DataFrame): DataFrame for HAM10000 dataset.
-        dx_map (dict): Map of diagnosis codes to diagnosis names.
+        dx_names (list): Alphabetized diagnosis names.
 
     Returns:
         matplotlib.figure.Figure: Distribution plot.
     """
     counts = df['dx'].value_counts()
-    labels = list(dx_map.values())
 
     sns.set_style('whitegrid')
     fig, ax = plt.subplots(figsize=(10, 7))
 
-    sns.barplot(x=counts.index, y=counts.values, ax=ax, color='cyan', order=labels)
+    sns.barplot(x=counts.index, y=counts.values, ax=ax, color='cyan', order=dx_names)
     bars = ax.containers[0]
     ax.bar_label(bars, padding=3, fontsize=12)
     ax.set_xlabel('Diagnosis')
@@ -61,13 +60,13 @@ def plot_hist(history, directory):
 
     return fig
 
-def plot_cm(cm, labels, config):
+def plot_cm(cm, dx_names, config):
     """
     Plots a confusion matrix with normalized prediction rates.
 
     Args:
         cm (np.ndarray): Confusion matrix.
-        labels (list): Diagnosis names.
+        dx_names (list): Diagnosis names.
         config (dataclass): Experiment configuration settings.
 
     Returns:
@@ -95,8 +94,8 @@ def plot_cm(cm, labels, config):
         cbar_kws={'label': 'Prediction Rate'},
         cmap='cool',
         fmt='',
-        xticklabels=labels,
-        yticklabels=labels
+        xticklabels=dx_names,
+        yticklabels=dx_names
     )
     ax.set_xlabel('Predicted Diagnosis')
     ax.set_ylabel('Actual Diagnosis')

@@ -16,7 +16,7 @@ def encode_labels():
     data_path = 'data/HAM10000_metadata'
     df = pd.read_csv(data_path)
 
-    # Map dx labels to numerical values
+    # Map diagnosis names to numerical values
     le = LabelEncoder()
     df['dx_code'] = le.fit_transform(df['dx'])
     dx_map = dict(enumerate(le.classes_))
@@ -65,42 +65,63 @@ def split_data(df):
 
     return train_df, dev_df, test_df
 
-def preprocess_image(path, label):
+def augment_image(image):
+    """
+    Performs random augmentation of images via horizontal and/or vertical flipping.
+
+    Args:
+        image (tf.Tensor): Decoded and resized image.
+
+    Returns:
+        image (tf.Tensor): Augmented or un-augmented image.
+    """
+    image = tf.image.random_flip_left_right(image)
+    image = tf.image.random_flip_up_down(image)
+
+    return image
+
+def preprocess_image(path, dx_code, augment):
     """
     Decodes a JPEG-encoded image, resizes and pads to 224x224, and performs ImageNet-style normalization.
 
     Args:
         path (tf.Tensor): Image path.
-        label (tf.Tensor): Corresponding class label.
+        dx_code (tf.Tensor): Encoded label associated with image path.
+        augment (bool): Augmentation flag.
 
     Returns:
         image (tf.Tensor): Preprocessed image of shape (224, 224, 3).
-        label (tf.Tensor): Corresponding input image label.
+        dx_code (tf.Tensor): Corresponding input image diagnosis code.
     """
     image = tf.io.read_file(path)
     image = tf.image.decode_jpeg(image, channels=3)
     image = tf.image.resize_with_pad(image, target_height=224, target_width=224)
+
+    if augment:
+        image = augment_image(image)
+
     image = preprocess_input(image)
 
-    return image, label
+    return image, dx_code
 
-def fetch_dataset(df, batch_size, shuffle=True):
+def fetch_dataset(df, batch_size, augment, shuffle=True):
     """
-    Creates a Tensorflow Dataset from preprocessed images and corresponding labels.
+    Creates a Tensorflow Dataset from preprocessed images and corresponding diagnosis codes.
 
     Args:
-        df (pd.DataFrame): DataFrame with image paths and labels.
+        df (pd.DataFrame): DataFrame with image paths and diagnosis codes.
         batch_size (int): Samples per batch.
+        augment (bool): Augmentation flag.
         shuffle (bool): Optional shuffling.
 
     Returns:
-        tf.data.Dataset: Batched dataset of (image, label) pairs.
+        tf.data.Dataset: Batched dataset of (image, dx_code) pairs.
     """
     paths = df['image_path'].values
-    labels = df['dx_code'].values
+    dx_codes = df['dx_code'].values
 
-    ds = tf.data.Dataset.from_tensor_slices((paths, labels))
-    ds = ds.map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
+    ds = tf.data.Dataset.from_tensor_slices((paths, dx_codes))
+    ds = ds.map(lambda x, y: preprocess_image(x, y, augment), num_parallel_calls=tf.data.AUTOTUNE)
 
     if shuffle:
         ds = ds.shuffle(buffer_size=1000)

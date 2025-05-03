@@ -16,9 +16,11 @@ class ModelConfig:
     framework: str
     mode: str
     checkpoint: Optional[str] = None
+    augment: bool = True
+    class_weight: bool = True
     dist_plot: bool = False
+    freeze: bool = True
     input_shape: Tuple[int, int, int] = (224, 224, 3)
     batch_size: int = 32
-    trainable_layers: int = 0
     learning_rate: float = 0.001
     epochs: int = 10

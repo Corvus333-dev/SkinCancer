@@ -23,31 +23,31 @@ def build_resnet50(input_shape, classes = 7):
         input_shape=input_shape
     )
 
-    base_model.trainable = False
+    base_model.trainable = False # Recursive (freezes all sub-layers)
 
     inputs = Input(shape=input_shape)
-    x = base_model(inputs)
+    x = base_model(inputs, training=False)
     x = GlobalAveragePooling2D()(x)
-    x = Dropout(0.2)(x)
+    x = Dropout(0.3)(x)
     outputs = Dense(classes, activation='softmax')(x)
 
     return Model(inputs, outputs)
 
-def unfreeze_layers(model, framework, trainable_layers):
+def unfreeze_block(model, framework):
     """
-    Flags base layers as trainable, starting from the top of network.
+    Flags last residual block as trainable.
 
     Args:
         model (keras.Model): Initial convergence model.
         framework (str): Base model architecture.
-        trainable_layers (int): Number of layers to unfreeze.
 
     Returns:
         None
     """
     base_model = model.get_layer(framework)
-    for layer in base_model.layers[-trainable_layers:]:
-        layer.trainable = True
+    base_model.trainable = True # Non-recursive (only unfreezes parent layer)
+    for layer in base_model.layers:
+        layer.trainable = ('conv5_block3' in layer.name)
 
 def compile_model(model, lr):
     """
@@ -63,13 +63,14 @@ def compile_model(model, lr):
     opt = tf.keras.optimizers.Adam(learning_rate=lr)
     model.compile(optimizer=opt, loss='sparse_categorical_crossentropy', metrics = ['accuracy'])
 
-def train_model(train_ds, model, epochs, threshold=0.001):
+def train_model(model, train_ds, class_weight, epochs, threshold=0.001):
     """
     Trains model on dataset, with early stopping callback.
 
     Args:
-        train_ds (tf.data.Dataset): Batched and preprocessed training dataset.
         model (keras.Model): Compiled model.
+        train_ds (tf.data.Dataset): Batched and preprocessed training dataset.
+        class_weight (dict): Map of diagnosis codes to associated weights.
         epochs (int): Maximum number of epochs.
         threshold (float): Minimum change in loss to qualify as an improvement.
 
@@ -84,7 +85,7 @@ def train_model(train_ds, model, epochs, threshold=0.001):
         restore_best_weights=True
     )
 
-    return model.fit(train_ds, epochs=epochs, callbacks=[stop])
+    return model.fit(train_ds, class_weight=class_weight, epochs=epochs, callbacks=[stop])
 
 def predict_labels(ds, model):
     """
