@@ -5,13 +5,14 @@ from tensorflow.keras import Input
 from tensorflow.keras.layers import GlobalAveragePooling2D, Dropout, Dense
 from tensorflow.keras.models import Model
 
-def build_resnet50(input_shape, classes = 7):
+def build_resnet50(input_shape, dropout, classes = 7):
     """
     Creates base model using ResNet50 architecture pretrained on ImageNet dataset,
-    then adds custom pooling, dropout, and dense layers with softmax activation.
+    then adds custom pooling, dropout, and dense layers.
 
     Args:
         input_shape (tuple): Shape of input image.
+        dropout (float): Dropout rate.
         classes (int): Number of output classes.
 
     Returns:
@@ -28,7 +29,8 @@ def build_resnet50(input_shape, classes = 7):
     inputs = Input(shape=input_shape)
     x = base_model(inputs, training=False)
     x = GlobalAveragePooling2D()(x)
-    x = Dropout(0.3)(x)
+    x = Dense(128, activation='relu')(x)
+    x = Dropout(dropout)(x)
     outputs = Dense(classes, activation='softmax')(x)
 
     return Model(inputs, outputs)
@@ -49,18 +51,19 @@ def unfreeze_block(model, framework):
     for layer in base_model.layers:
         layer.trainable = ('conv5_block3' in layer.name)
 
-def compile_model(model, lr):
+def compile_model(model, lr, wd):
     """
-    Compiles model using Adam optimizer and sparse categorical cross-entropy loss.
+    Compiles model using AdamW optimizer and sparse categorical cross-entropy loss.
 
     Args:
         model (keras.Model): Model to compile.
         lr (float): Learning rate for optimizer.
+        wd (float): Weight decay for optimizer.
 
     Returns:
         None
     """
-    opt = tf.keras.optimizers.Adam(learning_rate=lr)
+    opt = tf.keras.optimizers.AdamW(learning_rate=lr, weight_decay=wd)
     model.compile(optimizer=opt, loss='sparse_categorical_crossentropy', metrics = ['accuracy'])
 
 def train_model(model, train_ds, class_weight, epochs, threshold=0.001):

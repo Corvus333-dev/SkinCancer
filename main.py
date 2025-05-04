@@ -9,16 +9,18 @@ from scripts.utils import *
 
 config = ModelConfig(
     framework='resnet50',
-    mode='dev',
-    checkpoint='models/resnet50_20250502_1639/model.keras',
+    mode='train',
+    checkpoint=None,
     augment=True,
     class_weight=True,
     dist_plot=False,
-    freeze=False,
+    freeze=True,
     input_shape=(224, 224, 3),
     batch_size=32,
-    learning_rate=1e-6,
-    epochs=25
+    dropout=0.3,
+    learning_rate=1e-3,
+    weight_decay=1e-5,
+    epochs=30
 )
 
 def load_data():
@@ -38,10 +40,10 @@ def train(ds, train_df):
         model = tf.keras.models.load_model(config.checkpoint)
         if not config.freeze:
             unfreeze_block(model, config.framework)
-            compile_model(model, lr=config.learning_rate)
+            compile_model(model, lr=config.learning_rate, wd=config.weight_decay)
     else:
-        model = build_resnet50(input_shape=config.input_shape)
-        compile_model(model, lr=config.learning_rate)
+        model = build_resnet50(input_shape=config.input_shape, dropout=config.dropout)
+        compile_model(model, lr=config.learning_rate, wd=config.weight_decay)
 
     if config.class_weight:
         y_train = train_df['dx_code'].values

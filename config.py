@@ -22,5 +22,7 @@ class ModelConfig:
     freeze: bool = True
     input_shape: Tuple[int, int, int] = (224, 224, 3)
     batch_size: int = 32
-    learning_rate: float = 0.001
-    epochs: int = 10
+    dropout: float = 0.3
+    learning_rate: float = 1e-3
+    weight_decay: float = 1e-5
+    epochs: int = 30
