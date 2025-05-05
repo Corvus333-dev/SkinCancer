@@ -15,6 +15,7 @@ config = ModelConfig(
     class_weight=True,
     dist_plot=False,
     freeze=True,
+    learning_rate_decay=True,
     input_shape=(224, 224, 3),
     batch_size=32,
     dropout=0.3,
@@ -40,10 +41,21 @@ def train(ds, train_df):
         model = tf.keras.models.load_model(config.checkpoint)
         if not config.freeze:
             unfreeze_block(model, config.framework)
-            compile_model(model, lr=config.learning_rate, wd=config.weight_decay)
     else:
         model = build_resnet50(input_shape=config.input_shape, dropout=config.dropout)
-        compile_model(model, lr=config.learning_rate, wd=config.weight_decay)
+
+    if config.learning_rate_decay:
+        decay_steps = len(train_df) // config.batch_size * config.epochs
+    else:
+        decay_steps = None
+
+    compile_model(
+        model,
+        lr=config.learning_rate,
+        lr_decay=config.learning_rate_decay,
+        decay_steps=decay_steps,
+        wd=config.weight_decay
+    )
 
     if config.class_weight:
         y_train = train_df['dx_code'].values

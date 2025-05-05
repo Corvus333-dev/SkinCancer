@@ -20,6 +20,7 @@ class ModelConfig:
     class_weight: bool = True
     dist_plot: bool = False
     freeze: bool = True
+    learning_rate_decay: bool = True
     input_shape: Tuple[int, int, int] = (224, 224, 3)
     batch_size: int = 32
     dropout: float = 0.3

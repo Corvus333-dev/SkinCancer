@@ -1,9 +1,11 @@
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.applications import ResNet50
 from tensorflow.keras import Input
+from tensorflow.keras.applications import ResNet50
 from tensorflow.keras.layers import GlobalAveragePooling2D, Dropout, Dense
 from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import AdamW
+from tensorflow.keras.optimizers.schedules import CosineDecay
 
 def build_resnet50(input_shape, dropout, classes = 7):
     """
@@ -51,19 +53,25 @@ def unfreeze_block(model, framework):
     for layer in base_model.layers:
         layer.trainable = ('conv5_block3' in layer.name)
 
-def compile_model(model, lr, wd):
+def compile_model(model, lr, lr_decay, decay_steps, wd):
     """
-    Compiles model using AdamW optimizer and sparse categorical cross-entropy loss.
+    Compiles model using AdamW optimizer and sparse categorical cross-entropy loss,
+    with optional learning rate schedule.
 
     Args:
         model (keras.Model): Model to compile.
         lr (float): Learning rate for optimizer.
+        lr_decay (bool): Flag for learning rate schedule.
+        decay_steps (int): Number of steps for learning rate decay.
         wd (float): Weight decay for optimizer.
 
     Returns:
         None
     """
-    opt = tf.keras.optimizers.AdamW(learning_rate=lr, weight_decay=wd)
+    if lr_decay:
+        lr = CosineDecay(initial_learning_rate=lr, decay_steps=decay_steps, alpha=0.01)
+
+    opt = AdamW(learning_rate=lr, weight_decay=wd)
     model.compile(optimizer=opt, loss='sparse_categorical_crossentropy', metrics = ['accuracy'])
 
 def train_model(model, train_ds, class_weight, epochs, threshold=0.001):
