@@ -53,7 +53,7 @@ def unfreeze_block(model, framework):
     for layer in base_model.layers:
         layer.trainable = ('conv5_block3' in layer.name)
 
-def compile_model(model, lr, lr_decay, decay_steps, wd):
+def compile_model(model, lr, lrd, decay_steps, wd):
     """
     Compiles model using AdamW optimizer and sparse categorical cross-entropy loss,
     with optional learning rate schedule.
@@ -61,14 +61,14 @@ def compile_model(model, lr, lr_decay, decay_steps, wd):
     Args:
         model (keras.Model): Model to compile.
         lr (float): Learning rate for optimizer.
-        lr_decay (bool): Flag for learning rate schedule.
+        lrd (bool): Flag for learning rate schedule.
         decay_steps (int): Number of steps for learning rate decay.
         wd (float): Weight decay for optimizer.
 
     Returns:
         None
     """
-    if lr_decay:
+    if lrd:
         lr = CosineDecay(initial_learning_rate=lr, decay_steps=decay_steps, alpha=0.01)
 
     opt = AdamW(learning_rate=lr, weight_decay=wd)
@@ -98,23 +98,23 @@ def train_model(model, train_ds, class_weight, epochs, threshold=0.001):
 
     return model.fit(train_ds, class_weight=class_weight, epochs=epochs, callbacks=[stop])
 
-def predict_labels(ds, model):
+def predict_dx(ds, model):
     """
-    Generates predicted labels and collects associated true labels.
+    Generates predicted diagnoses and collects associated true diagnoses.
 
     Args:
-        ds (tf.data.Dataset): Batched dataset of (image, label) pairs.
+        ds (tf.data.Dataset): Batched dataset of (image, dx_code) pairs.
         model (keras.Model): Trained model with softmax output.
 
     Returns:
-        y (list): True label indices.
-        y_hat (np.ndarray): Predicted label indices.
+        y (list): True diagnosis indices.
+        y_hat (np.ndarray): Predicted diagnosis indices.
     """
     y = []
     predictions = model.predict(ds)
 
-    for image, label in ds:
-        y.extend(label.numpy())
+    for image, dx_code in ds:
+        y.extend(dx_code.numpy())
 
     y_hat = np.argmax(predictions, axis=1)
 

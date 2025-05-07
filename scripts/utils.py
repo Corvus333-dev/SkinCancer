@@ -51,17 +51,16 @@ def save_model(directory, model, config, history, hist_plot):
 
     hist_plot.savefig(directory / 'training_history.png', dpi=300)
 
-def save_results(dx_map, y, y_hat, cr, cm_plot, metrics, config):
+def save_results(dx_map, y, y_hat, cr, cm_plot, config):
     """
-    Saves evaluation metrics, predictions, and classification report.
+    Saves predictions, classification report, and confusion matrix.
 
     Args:
         dx_map (dict): Map of diagnosis codes to diagnosis names.
-        y (list): True label indices.
-        y_hat (np.ndarray): Predicted label indices.
+        y (list): True diagnosis indices.
+        y_hat (np.ndarray): Predicted diagnosis indices.
         cr (dict): Classification report.
         cm_plot (matplotlib.figure.Figure): Confusion matrix plot.
-        metrics (dict): Evaluation metrics.
         config (dataclass): Experiment configuration settings.
 
     Returns:
@@ -75,19 +74,13 @@ def save_results(dx_map, y, y_hat, cr, cm_plot, metrics, config):
     directory = Path(config.checkpoint).parent
 
     if config.mode == 'dev':
-        ev_path = directory / 'dev_evaluation_metrics.csv'
         df_path = directory / 'dev_predictions.csv'
         cr_path = directory / 'dev_classification_report.json'
         cm_path = directory / 'dev_confusion_matrix.png'
     elif config.mode == 'test':
-        ev_path = directory / 'test_evaluation_metrics.csv'
         df_path = directory / 'test_predictions.csv'
         cr_path = directory / 'test_classification_report.json'
         cm_path = directory / 'test_confusion_matrix.png'
-
-    # Save evaluation metrics
-    with open(ev_path, 'w') as f:
-        json.dump(metrics, f, indent=4)
 
     # Save predictions
     df.to_csv(df_path, index=False)

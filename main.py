@@ -10,16 +10,16 @@ from scripts.utils import *
 config = ModelConfig(
     framework='resnet50',
     mode='train',
-    checkpoint=None,
+    checkpoint='models/resnet50_20250506_1558/model.keras',
     augment=True,
     class_weight=True,
     dist_plot=False,
-    freeze=True,
+    freeze=False,
     learning_rate_decay=True,
     input_shape=(224, 224, 3),
     batch_size=32,
-    dropout=0.3,
-    learning_rate=1e-3,
+    dropout=0.4,
+    learning_rate=1e-4,
     weight_decay=1e-5,
     epochs=30
 )
@@ -52,7 +52,7 @@ def train(ds, train_df):
     compile_model(
         model,
         lr=config.learning_rate,
-        lr_decay=config.learning_rate_decay,
+        lrd=config.learning_rate_decay,
         decay_steps=decay_steps,
         wd=config.weight_decay
     )
@@ -73,14 +73,13 @@ def train(ds, train_df):
 
 def evaluate_and_predict(ds, dx_map, dx_names):
     model = tf.keras.models.load_model(config.checkpoint)
-    metrics = model.evaluate(ds, return_dict=True)
-    y, y_hat = predict_labels(ds, model)
+    y, y_hat = predict_dx(ds, model)
 
     cr = classification_report(y, y_hat, target_names=dx_names, output_dict=True)
     cm = confusion_matrix(y, y_hat)
     cm_plot = plot_cm(cm, dx_names, config)
 
-    save_results(dx_map, y, y_hat, cr, cm_plot, metrics, config)
+    save_results(dx_map, y, y_hat, cr, cm_plot, config)
 
 def main():
     dx_map, dx_names, train_df, dev_df, test_df = load_data()
