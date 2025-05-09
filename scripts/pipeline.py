@@ -67,14 +67,21 @@ def split_data(df):
 
 def augment_image(image):
     """
-    Performs random augmentation of images via horizontal and/or vertical flipping.
+    Performs random augmentation of images via 90-degree rotation,
+    brightness adjustment, contrast adjustment, horizontal flip, and vertical flip.
 
     Args:
         image (tf.Tensor): Decoded and resized image.
 
     Returns:
-        image (tf.Tensor): Augmented or un-augmented image.
+        image (tf.Tensor): Augmented or unaugmented image.
     """
+    # Randomly rotates by 90-degrees 0 or 1 times
+    random_rot90 = lambda image: tf.image.rot90(image, k=tf.random.uniform([], 0, 2, dtype=tf.int32))
+    image = random_rot90(image)
+
+    image = tf.image.random_brightness(image, max_delta=0.1)
+    image = tf.image.random_contrast(image, lower=0.9, upper=1.1)
     image = tf.image.random_flip_left_right(image)
     image = tf.image.random_flip_up_down(image)
 

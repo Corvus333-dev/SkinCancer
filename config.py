@@ -24,6 +24,7 @@ class ModelConfig:
     input_shape: Tuple[int, int, int] = (224, 224, 3)
     batch_size: int = 32
     dropout: float = 0.3
+    l2_lambda: float = 0.01
     learning_rate: float = 1e-3
     weight_decay: float = 1e-5
     epochs: int = 30
