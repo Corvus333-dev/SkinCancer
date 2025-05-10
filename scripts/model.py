@@ -6,9 +6,8 @@ from tensorflow.keras.layers import GlobalAveragePooling2D, Dropout, Dense
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import AdamW
 from tensorflow.keras.optimizers.schedules import CosineDecay
-from tensorflow.keras.regularizers import l2
 
-def build_resnet50(input_shape, dropout, l2_lambda, classes = 7):
+def build_resnet50(input_shape, dropout, classes = 7):
     """
     Creates base model using ResNet50 architecture pretrained on ImageNet dataset,
     then adds custom pooling, dropout, and dense layers.
@@ -16,7 +15,6 @@ def build_resnet50(input_shape, dropout, l2_lambda, classes = 7):
     Args:
         input_shape (tuple): Shape of input image.
         dropout (float): Dropout rate.
-        l2_lambda (float): Regularization coefficient.
         classes (int): Number of output classes.
 
     Returns:
@@ -33,7 +31,7 @@ def build_resnet50(input_shape, dropout, l2_lambda, classes = 7):
     inputs = Input(shape=input_shape)
     x = base_model(inputs, training=False)
     x = GlobalAveragePooling2D()(x)
-    x = Dense(128, activation='relu', kernel_regularizer=l2(l2_lambda))(x)
+    x = Dense(128, activation='relu')(x)
     x = Dropout(dropout)(x)
     outputs = Dense(classes, activation='softmax')(x)
 
@@ -41,7 +39,7 @@ def build_resnet50(input_shape, dropout, l2_lambda, classes = 7):
 
 def unfreeze_block(model, framework):
     """
-    Flags last residual block as trainable.
+    Flags all conv5 blocks as trainable.
 
     Args:
         model (keras.Model): Initial convergence model.
@@ -53,7 +51,7 @@ def unfreeze_block(model, framework):
     base_model = model.get_layer(framework)
     base_model.trainable = True # Non-recursive (only unfreezes parent layer)
     for layer in base_model.layers:
-        layer.trainable = ('conv5_block3' in layer.name)
+        layer.trainable = ('conv5_' in layer.name)
 
 def compile_model(model, lr, lrd, decay_steps, wd):
     """

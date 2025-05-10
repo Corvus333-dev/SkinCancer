@@ -11,7 +11,7 @@ config = ModelConfig(
     framework='resnet50',
     mode='train',
     checkpoint=None,
-    augment=False,
+    augment=True,
     class_weight=True,
     dist_plot=False,
     freeze=True,
@@ -19,8 +19,7 @@ config = ModelConfig(
     input_shape=(224, 224, 3),
     batch_size=32,
     dropout=0.3,
-    l2_lambda=0.01,
-    learning_rate=1e-4,
+    learning_rate=1e-3,
     weight_decay=1e-5,
     epochs=30
 )
@@ -43,7 +42,7 @@ def train(ds, train_df):
         if not config.freeze:
             unfreeze_block(model, config.framework)
     else:
-        model = build_resnet50(input_shape=config.input_shape, dropout=config.dropout, l2_lambda=config.l2_lambda)
+        model = build_resnet50(input_shape=config.input_shape, dropout=config.dropout)
 
     if config.learning_rate_decay:
         decay_steps = len(train_df) // config.batch_size * config.epochs
