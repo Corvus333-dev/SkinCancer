@@ -37,13 +37,14 @@ def build_resnet50(input_shape, dropout, classes = 7):
 
     return Model(inputs, outputs)
 
-def unfreeze_block(model, framework):
+def unfreeze_layers(model, framework, unfreeze):
     """
-    Flags all conv5 blocks as trainable.
+    Flags specified layers as trainable.
 
     Args:
         model (keras.Model): Initial convergence model.
         framework (str): Base model architecture.
+        unfreeze (tuple): Layers to unfreeze.
 
     Returns:
         None
@@ -51,12 +52,12 @@ def unfreeze_block(model, framework):
     base_model = model.get_layer(framework)
     base_model.trainable = True # Non-recursive (only unfreezes parent layer)
     for layer in base_model.layers:
-        layer.trainable = ('conv5_' in layer.name)
+        layer.trainable = any(keyword in layer.name for keyword in unfreeze)
 
 def compile_model(model, lr, lrd, decay_steps, wd):
     """
     Compiles model using AdamW optimizer and sparse categorical cross-entropy loss,
-    with optional learning rate schedule.
+    with cosine decay learning rate schedule.
 
     Args:
         model (keras.Model): Model to compile.

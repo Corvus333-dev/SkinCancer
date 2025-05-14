@@ -9,19 +9,19 @@ from scripts.utils import *
 
 config = ModelConfig(
     framework='resnet50',
-    mode='train',
-    checkpoint=None,
+    mode='dev',
+    checkpoint='models/resnet50_20250513_2019/model.keras',
+    unfreeze=('conv5_', 'conv4_block6_', 'conv4_block5_'),
     augment=True,
     class_weight=True,
     dist_plot=False,
-    freeze=True,
     learning_rate_decay=True,
     input_shape=(224, 224, 3),
     batch_size=32,
     dropout=0.3,
-    learning_rate=1e-3,
+    learning_rate=1e-4,
     weight_decay=1e-5,
-    epochs=30
+    epochs=25
 )
 
 def load_data():
@@ -39,8 +39,8 @@ def load_data():
 def train(ds, train_df):
     if config.checkpoint:
         model = tf.keras.models.load_model(config.checkpoint)
-        if not config.freeze:
-            unfreeze_block(model, config.framework)
+        if config.unfreeze:
+            unfreeze_layers(model, config.framework, config.unfreeze)
     else:
         model = build_resnet50(input_shape=config.input_shape, dropout=config.dropout)
 
@@ -65,11 +65,12 @@ def train(ds, train_df):
     else:
         class_weight = None
 
+    layer_state = get_layer_state(model, config.framework)
     history = train_model(model, ds, class_weight, epochs=config.epochs)
     directory = create_directory(config.framework)
     hist_plot = plot_hist(history.history, directory)
 
-    save_model(directory, model, config, history, hist_plot)
+    save_model(directory, model, config, layer_state, history, hist_plot)
 
 def evaluate_and_predict(ds, dx_map, dx_names):
     model = tf.keras.models.load_model(config.checkpoint)

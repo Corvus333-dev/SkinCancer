@@ -16,10 +16,10 @@ class ModelConfig:
     framework: str
     mode: str
     checkpoint: Optional[str] = None
+    unfreeze: Optional[Tuple[str, ...]] = None
     augment: bool = True
     class_weight: bool = True
     dist_plot: bool = False
-    freeze: bool = True
     learning_rate_decay: bool = True
     input_shape: Tuple[int, int, int] = (224, 224, 3)
     batch_size: int = 32

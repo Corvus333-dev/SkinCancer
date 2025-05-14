@@ -24,7 +24,27 @@ def create_directory(framework):
 
     return directory
 
-def save_model(directory, model, config, history, hist_plot):
+def get_layer_state(model, framework):
+    """
+    Extracts layer names and associated training states (unfrozen or frozen) from the base model.
+
+    Args:
+        model (keras.Model): Base model object.
+        framework (str): Base model architecture.
+
+    Returns:
+        dict: Map of layer names and training states.
+    """
+    base_model = model.get_layer(framework)
+    layer_state = {}
+
+    for layer in base_model.layers:
+        state = 'unfrozen' if layer.trainable else 'frozen'
+        layer_state[layer.name] = state
+
+    return layer_state
+
+def save_model(directory, model, config, layer_state, history, hist_plot):
     """
     Saves trained model and its associated metadata.
 
@@ -32,6 +52,7 @@ def save_model(directory, model, config, history, hist_plot):
         directory (Path): Object pointing to experiment folder.
         model (keras.Model): Trained model.
         config (dataclass): Experiment configuration settings.
+        layer_state (dict): Map of layer names and training states.
         history (keras.callbacks.History): Training history.
         hist_plot (matplotlib.figure.Figure): Training history plot.
 
@@ -45,6 +66,9 @@ def save_model(directory, model, config, history, hist_plot):
 
     with open(directory / 'summary.txt', 'w', encoding='utf-8') as f:
         model.summary(print_fn=lambda x: f.write(x + '\n'))
+
+    with open(directory / 'layer_state.json', 'w') as f:
+        json.dump(layer_state, f, indent=4)
 
     with open(directory / 'training_history.json', 'w') as f:
         json.dump(history.history, f, indent=4)
