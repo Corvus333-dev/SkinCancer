@@ -9,9 +9,9 @@ from scripts.utils import *
 
 config = ModelConfig(
     framework='resnet50',
-    mode='dev',
-    checkpoint='models/resnet50_20250513_2019/model.keras',
-    unfreeze=('conv5_', 'conv4_block6_', 'conv4_block5_'),
+    mode='train',
+    checkpoint='models/resnet50_20250510_1655/model.keras',
+    unfreeze=('conv5_', 'conv4_block6_'),
     augment=True,
     class_weight=True,
     dist_plot=False,
@@ -46,14 +46,17 @@ def train(ds, train_df):
 
     if config.learning_rate_decay:
         decay_steps = len(train_df) // config.batch_size * config.epochs
+        warmup_steps = int(decay_steps * 0.2) # 20% warmup
     else:
         decay_steps = None
+        warmup_steps = None
 
     compile_model(
         model,
         lr=config.learning_rate,
         lrd=config.learning_rate_decay,
         decay_steps=decay_steps,
+        warmup_steps=warmup_steps,
         wd=config.weight_decay
     )
 
