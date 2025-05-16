@@ -10,8 +10,8 @@ from scripts.utils import *
 config = ModelConfig(
     framework='resnet50',
     mode='train',
-    checkpoint='models/resnet50_20250510_1655/model.keras',
-    unfreeze=('conv5_', 'conv4_block6_'),
+    checkpoint='models/resnet50_20250510_1413/model.keras',
+    unfreeze=('conv5_',),
     augment=True,
     class_weight=True,
     dist_plot=False,

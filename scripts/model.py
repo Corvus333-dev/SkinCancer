@@ -29,7 +29,7 @@ def build_resnet50(input_shape, dropout, classes = 7):
     base_model.trainable = False # Recursive (freezes all sub-layers)
 
     inputs = Input(shape=input_shape)
-    x = base_model(inputs, training=False)
+    x = base_model(inputs) # No explicit training flag
     x = GlobalAveragePooling2D()(x)
     x = Dense(128, activation='relu')(x)
     x = Dropout(dropout)(x)
@@ -51,6 +51,7 @@ def unfreeze_layers(model, framework, unfreeze):
     """
     base_model = model.get_layer(framework)
     base_model.trainable = True # Non-recursive (only unfreezes parent layer)
+
     for layer in base_model.layers:
         layer.trainable = any(keyword in layer.name for keyword in unfreeze)
 
