@@ -54,7 +54,7 @@ def unfreeze_layers(model, framework, unfreeze):
     for layer in base_model.layers:
         layer.trainable = any(keyword in layer.name for keyword in unfreeze)
 
-def compile_model(model, lr, lrd, decay_steps, warmup_steps, wd):
+def compile_model(model, lr, lrd, decay_steps, wd):
     """
     Compiles model using AdamW optimizer and sparse categorical cross-entropy loss,
     with cosine decay learning rate schedule.
@@ -64,19 +64,13 @@ def compile_model(model, lr, lrd, decay_steps, warmup_steps, wd):
         lr (float): Learning rate for optimizer.
         lrd (bool): Flag for learning rate schedule.
         decay_steps (int): Number of steps for learning rate decay.
-        warmup_steps (int): Number of steps for learning rate warmup.
         wd (float): Weight decay for optimizer.
 
     Returns:
         None
     """
     if lrd:
-        lr = CosineDecay(
-            initial_learning_rate=1e-6,
-            decay_steps=decay_steps, alpha=0.01,
-            warmup_target=lr,
-            warmup_steps=warmup_steps
-        )
+        lr = CosineDecay(initial_learning_rate=lr, decay_steps=decay_steps, alpha=0.01)
 
     opt = AdamW(learning_rate=lr, weight_decay=wd)
     model.compile(optimizer=opt, loss='sparse_categorical_crossentropy', metrics = ['accuracy'])

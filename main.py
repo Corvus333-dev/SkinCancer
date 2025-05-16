@@ -46,17 +46,14 @@ def train(ds, train_df):
 
     if config.learning_rate_decay:
         decay_steps = len(train_df) // config.batch_size * config.epochs
-        warmup_steps = int(decay_steps * 0.2) # 20% warmup
     else:
         decay_steps = None
-        warmup_steps = None
 
     compile_model(
         model,
         lr=config.learning_rate,
         lrd=config.learning_rate_decay,
         decay_steps=decay_steps,
-        warmup_steps=warmup_steps,
         wd=config.weight_decay
     )
 
