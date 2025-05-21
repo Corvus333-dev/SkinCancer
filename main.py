@@ -9,17 +9,17 @@ from scripts.utils import *
 
 config = ModelConfig(
     framework='resnet50',
-    mode='dev',
-    checkpoint='models/resnet50_20250518_1646/model.keras',
-    unfreeze=('conv5_', 'conv4_block6_', 'conv4_block5_'),
+    mode='train',
+    checkpoint=None,
+    unfreeze=None,
     augment=True,
     class_weight=True,
     dist_plot=False,
     learning_rate_decay=True,
     input_shape=(224, 224, 3),
-    batch_size=32,
+    batch_size=64,
     dropout=0.3,
-    initial_learning_rate=0.5e-5,
+    initial_learning_rate=1e-4,
     warmup_target=None,
     weight_decay=1e-5,
     epochs=25
@@ -47,7 +47,7 @@ def train(ds, train_df):
 
     if config.learning_rate_decay:
         decay_steps = len(train_df) // config.batch_size * config.epochs
-        warmup_steps = int(decay_steps * 0.2)
+        warmup_steps = int(decay_steps * 0.12)
     else:
         decay_steps = None
         warmup_steps = None
