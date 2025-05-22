@@ -13,7 +13,7 @@ class ModelConfig:
         if self.input_shape[-1] != 3:
             raise ValueError('Expected 3-channel RBG input.')
 
-    framework: str
+    architecture: str
     mode: str
     checkpoint: Optional[str] = None
     unfreeze: Optional[Tuple[str, ...]] = None

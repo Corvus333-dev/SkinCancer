@@ -8,7 +8,7 @@ from scripts.plots import *
 from scripts.utils import *
 
 config = ModelConfig(
-    framework='resnet50',
+    architecture='resnet50v2',
     mode='train',
     checkpoint=None,
     unfreeze=None,
@@ -19,7 +19,7 @@ config = ModelConfig(
     input_shape=(224, 224, 3),
     batch_size=64,
     dropout=0.3,
-    initial_learning_rate=1e-4,
+    initial_learning_rate=1e-3,
     warmup_target=None,
     weight_decay=1e-5,
     epochs=25
@@ -41,9 +41,9 @@ def train(ds, train_df):
     if config.checkpoint:
         model = tf.keras.models.load_model(config.checkpoint)
         if config.unfreeze:
-            unfreeze_layers(model, config.framework, config.unfreeze)
+            unfreeze_layers(model, config.architecture, config.unfreeze)
     else:
-        model = build_resnet50(input_shape=config.input_shape, dropout=config.dropout)
+        model = build_model(architecture=config.architecture, input_shape=config.input_shape, dropout=config.dropout)
 
     if config.learning_rate_decay:
         decay_steps = len(train_df) // config.batch_size * config.epochs
@@ -69,9 +69,9 @@ def train(ds, train_df):
     else:
         class_weight = None
 
-    layer_state = get_layer_state(model, config.framework)
+    layer_state = get_layer_state(model, config.architecture)
     history = train_model(model, ds, class_weight, epochs=config.epochs)
-    directory = create_directory(config.framework)
+    directory = create_directory(config.architecture)
     hist_plot = plot_hist(history.history, directory)
 
     save_model(directory, model, config, layer_state, history, hist_plot)

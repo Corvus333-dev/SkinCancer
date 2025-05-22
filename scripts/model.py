@@ -1,18 +1,21 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import Input
-from tensorflow.keras.applications import ResNet50
-from tensorflow.keras.layers import GlobalAveragePooling2D, Dropout, Dense
+from tensorflow.keras.applications import ResNet50, ResNet50v2
+from tensorflow.keras.layers import BatchNormalization, Dense, Dropout, GlobalAveragePooling2D
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import AdamW
 from tensorflow.keras.optimizers.schedules import CosineDecay
 
-def build_resnet50(input_shape, dropout, classes = 7):
+def build_model(architecture, input_shape, dropout, classes = 7):
     """
-    Creates base model using ResNet50 architecture pretrained on ImageNet dataset,
-    then adds custom pooling, dropout, and dense layers.
+    Instantiates a base model using ResNet50 or ResNet50v2 architecture pretrained on ImageNet dataset,
+    then adds a custom top consisting of:
+
+        GAP -> BN -> Dense-256 -> Dropout -> Dense-7
 
     Args:
+        architecture (str): Base model architecture.
         input_shape (tuple): Shape of input image.
         dropout (float): Dropout rate.
         classes (int): Number of output classes.
@@ -20,7 +23,14 @@ def build_resnet50(input_shape, dropout, classes = 7):
     Returns:
         keras.Model: Functional model graph with attached layers and weights.
     """
-    base_model = ResNet50(
+    if architecture == 'resnet50':
+        model_type = ResNet50
+    elif architecture == 'resnet50v2':
+        model_type = ResNet50v2
+    else:
+        raise ValueError(f'Invalid model type: {architecture}')
+
+    base_model = model_type(
         include_top=False,
         weights='imagenet',
         input_shape=input_shape
@@ -31,25 +41,26 @@ def build_resnet50(input_shape, dropout, classes = 7):
     inputs = Input(shape=input_shape)
     x = base_model(inputs) # No explicit training flag
     x = GlobalAveragePooling2D()(x)
-    x = Dense(128, activation='relu')(x)
+    x = BatchNormalization()(x)
+    x = Dense(256, activation='relu')(x)
     x = Dropout(dropout)(x)
     outputs = Dense(classes, activation='softmax')(x)
 
     return Model(inputs, outputs)
 
-def unfreeze_layers(model, framework, unfreeze):
+def unfreeze_layers(model, architecture, unfreeze):
     """
     Flags specified layers as trainable.
 
     Args:
         model (keras.Model): Initial convergence model.
-        framework (str): Base model architecture.
+        architecture (str): Base model architecture.
         unfreeze (tuple): Layers to unfreeze.
 
     Returns:
         None
     """
-    base_model = model.get_layer(framework)
+    base_model = model.get_layer(architecture)
     base_model.trainable = True # Non-recursive (only unfreezes parent layer)
 
     for layer in base_model.layers:

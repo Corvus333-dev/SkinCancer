@@ -8,34 +8,34 @@ def save_dist(dist_plot):
     dist_path = 'data/distribution.png'
     dist_plot.savefig(dist_path, dpi=300)
 
-def create_directory(framework):
+def create_directory(architecture):
     """
     Creates a model-specific directory for storing experiment results.
 
     Args:
-        framework (str): Base model architecture.
+        architecture (str): Base model architecture.
 
     Returns:
         Path: Object pointing to new directory.
     """
     timestamp = datetime.now().strftime('%Y%m%d_%H%M')
-    directory = Path('models') / f'{framework}_{timestamp}'
+    directory = Path('models') / f'{architecture}_{timestamp}'
     directory.mkdir(parents=True, exist_ok=True)
 
     return directory
 
-def get_layer_state(model, framework):
+def get_layer_state(model, architecture):
     """
     Extracts layer names and associated training states (unfrozen or frozen) from the base model.
 
     Args:
         model (keras.Model): Base model object.
-        framework (str): Base model architecture.
+        architecture (str): Base model architecture.
 
     Returns:
         dict: Map of layer names and training states.
     """
-    base_model = model.get_layer(framework)
+    base_model = model.get_layer(architecture)
     layer_state = {}
 
     for layer in base_model.layers:
