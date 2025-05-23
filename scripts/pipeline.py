@@ -3,7 +3,8 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 import tensorflow as tf
-from tensorflow.keras.applications.resnet50 import preprocess_input
+from tensorflow.keras.applications.resnet import preprocess_input as pp_resnet
+from tensorflow.keras.applications.resnet_v2 import preprocess_input as pp_resnet_v2
 
 def encode_labels():
     """
@@ -87,13 +88,14 @@ def augment_image(image):
 
     return image
 
-def preprocess_image(path, dx_code, augment):
+def preprocess_image(path, dx_code, architecture, augment):
     """
     Decodes a JPEG-encoded image, resizes and pads to 224x224, and performs ImageNet-style normalization.
 
     Args:
         path (tf.Tensor): Image path.
         dx_code (tf.Tensor): Encoded label associated with image path.
+        architecture (str): Base model architecture.
         augment (bool): Augmentation flag.
 
     Returns:
@@ -107,16 +109,24 @@ def preprocess_image(path, dx_code, augment):
     if augment:
         image = augment_image(image)
 
+    if architecture == 'resnet50':
+        preprocess_input = pp_resnet
+    elif architecture == 'resnet50v2':
+        preprocess_input = pp_resnet_v2
+    else:
+        raise AssertionError('Architecture validation should be handled by ExperimentConfig.')
+
     image = preprocess_input(image)
 
     return image, dx_code
 
-def fetch_dataset(df, batch_size, augment, shuffle=True):
+def fetch_dataset(df, architecture, batch_size, augment, shuffle=True):
     """
     Creates a Tensorflow Dataset from preprocessed images and corresponding diagnosis codes.
 
     Args:
         df (pd.DataFrame): DataFrame with image paths and diagnosis codes.
+        architecture (str): Base model architecture.
         batch_size (int): Samples per batch.
         augment (bool): Augmentation flag.
         shuffle (bool): Optional shuffling.
@@ -128,7 +138,7 @@ def fetch_dataset(df, batch_size, augment, shuffle=True):
     dx_codes = df['dx_code'].values
 
     ds = tf.data.Dataset.from_tensor_slices((paths, dx_codes))
-    ds = ds.map(lambda x, y: preprocess_image(x, y, augment), num_parallel_calls=tf.data.AUTOTUNE)
+    ds = ds.map(lambda x, y: preprocess_image(x, y, architecture, augment), num_parallel_calls=tf.data.AUTOTUNE)
 
     if shuffle:
         ds = ds.shuffle(buffer_size=1000)

@@ -1,13 +1,13 @@
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.utils.class_weight import compute_class_weight
 
-from config import ModelConfig
+from config import ExperimentConfig
 from scripts.model import *
 from scripts.pipeline import *
 from scripts.plots import *
 from scripts.utils import *
 
-config = ModelConfig(
+config = ExperimentConfig(
     architecture='resnet50v2',
     mode='train',
     checkpoint=None,

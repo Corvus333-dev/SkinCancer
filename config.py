@@ -1,20 +1,10 @@
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Literal, Optional, Tuple
 
 @dataclass
-class ModelConfig:
-    def __post_init__(self):
-        if self.mode not in {'train', 'dev', 'test'}:
-            raise ValueError(f'Invalid mode: {self.mode}')
-
-        if self.mode != 'train' and not self.checkpoint:
-            raise ValueError('Model checkpoint required for dev/test modes.')
-
-        if self.input_shape[-1] != 3:
-            raise ValueError('Expected 3-channel RBG input.')
-
-    architecture: str
-    mode: str
+class ExperimentConfig:
+    architecture: Literal['resnet50', 'resnet50v2']
+    mode: Literal['train', 'dev', 'test']
     checkpoint: Optional[str] = None
     unfreeze: Optional[Tuple[str, ...]] = None
     augment: bool = True
@@ -28,3 +18,16 @@ class ModelConfig:
     warmup_target: Optional[float] = None
     weight_decay: float = 1e-5
     epochs: int = 30
+
+    def __post_init__(self):
+        if self.architecture not in {'resnet', 'resnet50v2'}:
+            raise ValueError(f'Invalid architecture: {self.architecture}')
+
+        if self.mode not in {'train', 'dev', 'test'}:
+            raise ValueError(f'Invalid mode: {self.mode}')
+
+        if self.mode != 'train' and not self.checkpoint:
+            raise ValueError('Model checkpoint required for dev/test modes.')
+
+        if self.input_shape[-1] != 3:
+            raise ValueError('Expected 3-channel RBG input.')

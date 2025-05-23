@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import Input
-from tensorflow.keras.applications import ResNet50, ResNet50v2
+from tensorflow.keras.applications import ResNet50, ResNet50V2
 from tensorflow.keras.layers import BatchNormalization, Dense, Dropout, GlobalAveragePooling2D
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import AdamW
@@ -26,9 +26,9 @@ def build_model(architecture, input_shape, dropout, classes = 7):
     if architecture == 'resnet50':
         model_type = ResNet50
     elif architecture == 'resnet50v2':
-        model_type = ResNet50v2
+        model_type = ResNet50V2
     else:
-        raise ValueError(f'Invalid model type: {architecture}')
+        raise AssertionError('Architecture validation should be handled by ExperimentConfig.')
 
     base_model = model_type(
         include_top=False,
