@@ -3,25 +3,46 @@ import tensorflow as tf
 from tensorflow.keras import Input
 from tensorflow.keras.applications import ResNet50, ResNet50V2
 from tensorflow.keras.layers import BatchNormalization, Dense, Dropout, GlobalAveragePooling2D
+from tensorflow.keras.losses import SparseCategoricalCrossentropy
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import AdamW
 from tensorflow.keras.optimizers.schedules import CosineDecay
 
-def build_model(architecture, input_shape, dropout, classes = 7):
+def build_top(architecture, dropout, x, classes=7):
     """
-    Instantiates a base model using ResNet50 or ResNet50v2 architecture pretrained on ImageNet dataset,
-    then adds a custom top consisting of:
+    Constructs an architecture-dependent top to attach to a base model.
 
-        GAP -> BN -> Dense-256 -> Dropout -> Dense-7
+    Args:
+        architecture (str): Base model architecture.
+        dropout (float): Dropout rate.
+        x (tf.Tensor): Base model feature extraction output.
+        classes (int): Number of classes (i.e., skin lesion types).
+
+    Returns:
+        tf.Tensor: Classifier activations output.
+    """
+    x = GlobalAveragePooling2D()(x)
+
+    if architecture == 'resnet50':
+        x = BatchNormalization()(x)
+
+    x = Dense(256, activation='relu')(x)
+    x = Dropout(dropout)(x)
+    outputs = Dense(classes, activation='softmax')(x)
+
+    return outputs
+
+def build_model(architecture, input_shape, dropout):
+    """
+    Instantiates a base model using ResNet50 or ResNet50v2 architecture pretrained on ImageNet dataset.
 
     Args:
         architecture (str): Base model architecture.
         input_shape (tuple): Shape of input image.
         dropout (float): Dropout rate.
-        classes (int): Number of output classes.
 
     Returns:
-        keras.Model: Functional model graph with attached layers and weights.
+        tf.keras.Model: Functional model with frozen base layers.
     """
     if architecture == 'resnet50':
         model_type = ResNet50
@@ -40,11 +61,7 @@ def build_model(architecture, input_shape, dropout, classes = 7):
 
     inputs = Input(shape=input_shape)
     x = base_model(inputs) # No explicit training flag
-    x = GlobalAveragePooling2D()(x)
-    x = BatchNormalization()(x)
-    x = Dense(256, activation='relu')(x)
-    x = Dropout(dropout)(x)
-    outputs = Dense(classes, activation='softmax')(x)
+    outputs = build_top(architecture, dropout, x)
 
     return Model(inputs, outputs)
 
@@ -53,7 +70,7 @@ def unfreeze_layers(model, architecture, unfreeze):
     Flags specified layers as trainable.
 
     Args:
-        model (keras.Model): Initial convergence model.
+        model (keras.Model): Initial convergence (top-calibrated) model.
         architecture (str): Base model architecture.
         unfreeze (tuple): Layers to unfreeze.
 
@@ -69,7 +86,7 @@ def unfreeze_layers(model, architecture, unfreeze):
 def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, wd):
     """
     Compiles model using AdamW optimizer and sparse categorical cross-entropy loss,
-    with cosine decay learning rate schedule.
+    with cosine decay learning rate schedule and label smoothing.
 
     Args:
         model (keras.Model): Model to compile.
@@ -92,7 +109,8 @@ def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, w
         lr = initial_lr
 
     opt = AdamW(learning_rate=lr, weight_decay=wd)
-    model.compile(optimizer=opt, loss='sparse_categorical_crossentropy', metrics = ['accuracy'])
+    loss = SparseCategoricalCrossentropy(label_smoothing=0.1)
+    model.compile(optimizer=opt, loss=loss, metrics = ['accuracy'])
 
 def train_model(model, train_ds, class_weight, epochs, threshold=0.001):
     """

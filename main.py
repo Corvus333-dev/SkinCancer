@@ -8,7 +8,7 @@ from scripts.plots import *
 from scripts.utils import *
 
 config = ExperimentConfig(
-    architecture='resnet50v2',
+    architecture='resnet50',
     mode='train',
     checkpoint=None,
     unfreeze=None,
@@ -90,15 +90,32 @@ def main():
     dx_map, dx_names, train_df, dev_df, test_df = load_data()
 
     if config.mode == 'train':
-        train_ds = fetch_dataset(train_df, batch_size=config.batch_size, augment=config.augment)
+        train_ds = fetch_dataset(
+            train_df,
+            architecture=config.architecture,
+            batch_size=config.batch_size,
+            augment=config.augment
+        )
         train(train_ds, train_df)
 
     elif config.mode == 'dev':
-        dev_ds = fetch_dataset(dev_df, batch_size=config.batch_size, augment=False, shuffle=False)
+        dev_ds = fetch_dataset(
+            dev_df,
+            architecture=config.architecture,
+            batch_size=config.batch_size,
+            augment=False,
+            shuffle=False
+        )
         evaluate_and_predict(dev_ds, dx_map, dx_names)
 
     elif config.mode == 'test':
-        test_ds = fetch_dataset(test_df, batch_size=config.batch_size, augment=False, shuffle=False)
+        test_ds = fetch_dataset(
+            test_df,
+            architecture=config.architecture,
+            batch_size=config.batch_size,
+            augment=False,
+            shuffle=False
+        )
         evaluate_and_predict(test_ds, dx_map, dx_names)
 
 if __name__ == '__main__':
