@@ -109,7 +109,7 @@ def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, w
         lr = initial_lr
 
     opt = AdamW(learning_rate=lr, weight_decay=wd)
-    loss = SparseCategoricalCrossentropy(label_smoothing=0.1)
+    loss = SparseCategoricalCrossentropy()
     model.compile(optimizer=opt, loss=loss, metrics = ['accuracy'])
 
 def train_model(model, train_ds, class_weight, epochs, threshold=0.001):

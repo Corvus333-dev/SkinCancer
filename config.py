@@ -20,7 +20,7 @@ class ExperimentConfig:
     epochs: int = 30
 
     def __post_init__(self):
-        if self.architecture not in {'resnet', 'resnet50v2'}:
+        if self.architecture not in {'resnet50', 'resnet50v2'}:
             raise ValueError(f'Invalid architecture: {self.architecture}')
 
         if self.mode not in {'train', 'dev', 'test'}:
