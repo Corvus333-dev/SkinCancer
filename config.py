@@ -3,7 +3,7 @@ from typing import Literal, Optional, Tuple
 
 @dataclass
 class ExperimentConfig:
-    architecture: Literal['resnet50', 'resnet50v2']
+    architecture: Literal['EfficientNetB0', 'InceptionV3', 'ResNet50']
     mode: Literal['train', 'dev', 'test']
     checkpoint: Optional[str] = None
     unfreeze: Optional[Tuple[str, ...]] = None
@@ -20,7 +20,7 @@ class ExperimentConfig:
     epochs: int = 30
 
     def __post_init__(self):
-        if self.architecture not in {'resnet50', 'resnet50v2'}:
+        if self.architecture not in {'EfficientNetB0', 'InceptionV3', 'ResNet50'}:
             raise ValueError(f'Invalid architecture: {self.architecture}')
 
         if self.mode not in {'train', 'dev', 'test'}:

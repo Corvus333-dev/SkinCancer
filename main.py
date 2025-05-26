@@ -8,7 +8,7 @@ from scripts.plots import *
 from scripts.utils import *
 
 config = ExperimentConfig(
-    architecture='resnet50',
+    architecture='InceptionV3',
     mode='train',
     checkpoint=None,
     unfreeze=None,
@@ -21,7 +21,7 @@ config = ExperimentConfig(
     dropout=0.3,
     initial_learning_rate=1e-3,
     warmup_target=None,
-    weight_decay=1e-5,
+    weight_decay=1e-4,
     epochs=25
 )
 
@@ -47,7 +47,7 @@ def train(ds, train_df):
 
     if config.learning_rate_decay:
         decay_steps = len(train_df) // config.batch_size * config.epochs
-        warmup_steps = int(decay_steps * 0.12)
+        warmup_steps = int(decay_steps * 0.1)
     else:
         decay_steps = None
         warmup_steps = None

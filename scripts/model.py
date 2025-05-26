@@ -1,53 +1,35 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import Input
-from tensorflow.keras.applications import ResNet50, ResNet50V2
+from tensorflow.keras.applications import EfficientNetB0, InceptionV3, ResNet50
 from tensorflow.keras.layers import BatchNormalization, Dense, Dropout, GlobalAveragePooling2D
 from tensorflow.keras.losses import SparseCategoricalCrossentropy
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import AdamW
 from tensorflow.keras.optimizers.schedules import CosineDecay
 
-def build_top(architecture, dropout, x, classes=7):
+def build_model(architecture, input_shape, dropout, classes=7):
     """
-    Constructs an architecture-dependent top to attach to a base model.
+    Instantiates a base model using EfficientNetB0, InceptionV3, or ResNet50 architecture pretrained on ImageNet
+    dataset, and attaches a broadly applicable custom top consisting of layers:
 
-    Args:
-        architecture (str): Base model architecture.
-        dropout (float): Dropout rate.
-        x (tf.Tensor): Base model feature extraction output.
-        classes (int): Number of classes (i.e., skin lesion types).
-
-    Returns:
-        tf.Tensor: Classifier activations output.
-    """
-    x = GlobalAveragePooling2D()(x)
-
-    if architecture == 'resnet50':
-        x = BatchNormalization()(x)
-
-    x = Dense(256, activation='relu')(x)
-    x = Dropout(dropout)(x)
-    outputs = Dense(classes, activation='softmax')(x)
-
-    return outputs
-
-def build_model(architecture, input_shape, dropout):
-    """
-    Instantiates a base model using ResNet50 or ResNet50v2 architecture pretrained on ImageNet dataset.
+    GAP -> BN -> Dropout -> Dense-256 -> BN -> Dropout -> Dense-7
 
     Args:
         architecture (str): Base model architecture.
         input_shape (tuple): Shape of input image.
         dropout (float): Dropout rate.
+        classes (int): Number of classes (i.e., skin lesion types).
 
     Returns:
         tf.keras.Model: Functional model with frozen base layers.
     """
-    if architecture == 'resnet50':
+    if architecture == 'EfficientNetB0':
+        model_type = EfficientNetB0
+    elif architecture == 'InceptionV3':
+        model_type = InceptionV3
+    elif architecture == 'ResNet50':
         model_type = ResNet50
-    elif architecture == 'resnet50v2':
-        model_type = ResNet50V2
     else:
         raise AssertionError('Architecture validation should be handled by ExperimentConfig.')
 
@@ -61,7 +43,13 @@ def build_model(architecture, input_shape, dropout):
 
     inputs = Input(shape=input_shape)
     x = base_model(inputs) # No explicit training flag
-    outputs = build_top(architecture, dropout, x)
+    x = GlobalAveragePooling2D()(x)
+    x = BatchNormalization()(x)
+    x = Dropout(dropout)(x)
+    x = Dense(256, activation='relu')(x)
+    x = BatchNormalization()(x)
+    x = Dropout(dropout)(x)
+    outputs = Dense(classes, activation='softmax')(x)
 
     return Model(inputs, outputs)
 
