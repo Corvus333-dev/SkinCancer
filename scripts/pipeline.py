@@ -3,8 +3,9 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 import tensorflow as tf
-from tensorflow.keras.applications.resnet import preprocess_input as pp_resnet
-from tensorflow.keras.applications.resnet_v2 import preprocess_input as pp_resnet_v2
+from tensorflow.keras.applications.efficientnet import preprocess_input as ppi_efficientnet
+from tensorflow.keras.applications.inception_v3 import preprocess_input as ppi_inception
+from tensorflow.keras.applications.resnet import preprocess_input as ppi_resnet
 
 def encode_labels():
     """
@@ -89,31 +90,36 @@ def augment_image(image):
 
 def preprocess_image(path, dx_code, architecture, augment):
     """
-    Decodes a JPEG-encoded image, resizes and pads to 224x224, and performs ImageNet-style normalization.
+    Decodes a JPEG-encoded image, resizes with pad, and performs ImageNet-style normalization.
 
     Args:
         path (tf.Tensor): Image path.
-        dx_code (tf.Tensor): Encoded label associated with image path.
+        dx_code (tf.Tensor): Encoded label associated with its image path.
         architecture (str): Base model architecture.
         augment (bool): Augmentation flag.
 
     Returns:
-        image (tf.Tensor): Preprocessed image of shape (224, 224, 3).
+        image (tf.Tensor): Preprocessed image of shape (224, 224, 3) or (299, 299, 3).
         dx_code (tf.Tensor): Corresponding input image diagnosis code.
     """
+    if architecture == 'EfficientNetB0':
+        preprocess_input = ppi_efficientnet
+        th, tw = 224, 224
+    elif architecture == 'InceptionV3':
+        preprocess_input = ppi_inception
+        th, tw = 299, 299
+    elif architecture == 'ResNet50':
+        preprocess_input = ppi_resnet
+        th, tw = 224, 224
+    else:
+        raise AssertionError('Architecture validation should be handled by ExperimentConfig.')
+
     image = tf.io.read_file(path)
     image = tf.image.decode_jpeg(image, channels=3)
-    image = tf.image.resize_with_pad(image, target_height=224, target_width=224)
+    image = tf.image.resize_with_pad(image, target_height=th, target_width=tw)
 
     if augment:
         image = augment_image(image)
-
-    if architecture == 'resnet50':
-        preprocess_input = pp_resnet
-    elif architecture == 'resnet50v2':
-        preprocess_input = pp_resnet_v2
-    else:
-        raise AssertionError('Architecture validation should be handled by ExperimentConfig.')
 
     image = preprocess_input(image)
 
