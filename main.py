@@ -8,19 +8,19 @@ from scripts.plots import *
 from scripts.utils import *
 
 config = ExperimentConfig(
-    architecture='InceptionV3',
+    architecture='inception_v3',
     mode='train',
-    checkpoint=None,
-    unfreeze=None,
+    checkpoint='models/inception_v3_20250526_1444/model.keras',
+    unfreeze='mixed7',
     augment=True,
     class_weight=True,
     dist_plot=False,
     learning_rate_decay=True,
-    input_shape=(224, 224, 3),
+    input_shape=(299, 299, 3),
     batch_size=64,
     dropout=0.3,
-    initial_learning_rate=1e-3,
-    warmup_target=None,
+    initial_learning_rate=1e-5,
+    warmup_target=1e-4,
     weight_decay=1e-4,
     epochs=25
 )

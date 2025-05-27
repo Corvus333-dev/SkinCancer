@@ -102,13 +102,13 @@ def preprocess_image(path, dx_code, architecture, augment):
         image (tf.Tensor): Preprocessed image of shape (224, 224, 3) or (299, 299, 3).
         dx_code (tf.Tensor): Corresponding input image diagnosis code.
     """
-    if architecture == 'EfficientNetB0':
+    if architecture == 'efficientnetb0':
         preprocess_input = ppi_efficientnet
         th, tw = 224, 224
-    elif architecture == 'InceptionV3':
+    elif architecture == 'inception_v3':
         preprocess_input = ppi_inception
         th, tw = 299, 299
-    elif architecture == 'ResNet50':
+    elif architecture == 'resnet50':
         preprocess_input = ppi_resnet
         th, tw = 224, 224
     else:

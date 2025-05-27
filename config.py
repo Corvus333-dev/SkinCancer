@@ -1,12 +1,12 @@
 from dataclasses import dataclass
-from typing import Literal, Optional, Tuple
+from typing import Literal, Optional, Tuple, Union
 
 @dataclass
 class ExperimentConfig:
-    architecture: Literal['EfficientNetB0', 'InceptionV3', 'ResNet50']
+    architecture: Literal['efficientnetb0', 'inception_v3', 'resnet50']
     mode: Literal['train', 'dev', 'test']
     checkpoint: Optional[str] = None
-    unfreeze: Optional[Tuple[str, ...]] = None
+    unfreeze: Optional[Union[int, str, Tuple[str, ...]]] = None
     augment: bool = True
     class_weight: bool = True
     dist_plot: bool = False
@@ -20,7 +20,7 @@ class ExperimentConfig:
     epochs: int = 30
 
     def __post_init__(self):
-        if self.architecture not in {'EfficientNetB0', 'InceptionV3', 'ResNet50'}:
+        if self.architecture not in {'efficientnetb0', 'inception_v3', 'resnet50'}:
             raise ValueError(f'Invalid architecture: {self.architecture}')
 
         if self.mode not in {'train', 'dev', 'test'}:

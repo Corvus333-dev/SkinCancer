@@ -24,11 +24,11 @@ def build_model(architecture, input_shape, dropout, classes=7):
     Returns:
         tf.keras.Model: Functional model with frozen base layers.
     """
-    if architecture == 'EfficientNetB0':
+    if architecture == 'efficientnetb0':
         model_type = EfficientNetB0
-    elif architecture == 'InceptionV3':
+    elif architecture == 'inception_v3':
         model_type = InceptionV3
-    elif architecture == 'ResNet50':
+    elif architecture == 'resnet50':
         model_type = ResNet50
     else:
         raise AssertionError('Architecture validation should be handled by ExperimentConfig.')
@@ -60,16 +60,33 @@ def unfreeze_layers(model, architecture, unfreeze):
     Args:
         model (keras.Model): Initial convergence (top-calibrated) model.
         architecture (str): Base model architecture.
-        unfreeze (tuple): Layers to unfreeze.
+        unfreeze (int | str | tuple): Layer specification for unfreezing:
+            - int: unfreeze from this layer depth to the top
+            - str: unfreeze from this layer name to the top
+            - tuple: unfreeze layers containing any of these keywords
 
     Returns:
         None
     """
     base_model = model.get_layer(architecture)
-    base_model.trainable = True # Non-recursive (only unfreezes parent layer)
+    base_model.trainable = True # Recursive (unfreezes all sub-layers)
 
-    for layer in base_model.layers:
-        layer.trainable = any(keyword in layer.name for keyword in unfreeze)
+    if isinstance(unfreeze, int):
+        for layer in base_model.layers[:-unfreeze]:
+            layer.trainable = False
+    elif isinstance(unfreeze, str):
+        matches = [i for i, layer in enumerate(base_model.layers) if layer.name == unfreeze]
+        if len(matches) == 0:
+            raise ValueError(f'Layer named "{unfreeze}" not found.')
+        elif len(matches) > 1:
+            raise ValueError(f'Multiple layers named "{unfreeze}" found.')
+        else:
+            match = matches[0] # Single layer index for slicing
+            for layer in base_model.layers[:match]:
+                layer.trainable = False
+    else:
+        for layer in base_model.layers:
+            layer.trainable = any(keyword in layer.name for keyword in unfreeze)
 
 def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, wd):
     """
