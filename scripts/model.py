@@ -71,9 +71,12 @@ def unfreeze_layers(model, architecture, unfreeze):
     base_model = model.get_layer(architecture)
     base_model.trainable = True # Recursive (unfreezes all sub-layers)
 
+    # Unfreeze from depth magnitude
     if isinstance(unfreeze, int):
         for layer in base_model.layers[:-unfreeze]:
             layer.trainable = False
+
+    # Unfreeze from layer name
     elif isinstance(unfreeze, str):
         matches = [i for i, layer in enumerate(base_model.layers) if layer.name == unfreeze]
         if len(matches) == 0:
@@ -81,9 +84,11 @@ def unfreeze_layers(model, architecture, unfreeze):
         elif len(matches) > 1:
             raise ValueError(f'Multiple layers named "{unfreeze}" found.')
         else:
-            match = matches[0] # Single layer index for slicing
+            match = matches[0] # Single layer index needed for slicing
             for layer in base_model.layers[:match]:
                 layer.trainable = False
+
+    # Unfreeze layers containing keyword (rare use case)
     else:
         for layer in base_model.layers:
             layer.trainable = any(keyword in layer.name for keyword in unfreeze)
@@ -150,15 +155,12 @@ def predict_dx(ds, model):
         model (keras.Model): Trained model with softmax output.
 
     Returns:
-        y (list): True diagnosis indices.
+        p (np.ndarray): Probability distributions.
+        y (np.ndarray): True diagnosis indices.
         y_hat (np.ndarray): Predicted diagnosis indices.
     """
-    y = []
-    predictions = model.predict(ds)
+    p = model.predict(ds)
+    y = np.concatenate([dx_code.numpy() for _, dx_code in ds])
+    y_hat = np.argmax(p, axis=1)
 
-    for image, dx_code in ds:
-        y.extend(dx_code.numpy())
-
-    y_hat = np.argmax(predictions, axis=1)
-
-    return y, y_hat
+    return p, y, y_hat

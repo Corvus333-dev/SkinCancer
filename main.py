@@ -8,15 +8,15 @@ from scripts.plots import *
 from scripts.utils import *
 
 config = ExperimentConfig(
-    architecture='inception_v3',
+    architecture='resnet50',
     mode='train',
-    checkpoint='models/inception_v3_20250526_1444/model.keras',
-    unfreeze='mixed7',
+    checkpoint=None,
+    unfreeze=None,
     augment=True,
     class_weight=True,
     dist_plot=False,
     learning_rate_decay=True,
-    input_shape=(299, 299, 3),
+    input_shape=(224, 224, 3),
     batch_size=64,
     dropout=0.3,
     initial_learning_rate=1e-5,
@@ -78,13 +78,14 @@ def train(ds, train_df):
 
 def evaluate_and_predict(ds, dx_map, dx_names):
     model = tf.keras.models.load_model(config.checkpoint)
-    y, y_hat = predict_dx(ds, model)
+    p, y, y_hat = predict_dx(ds, model)
 
     cr = classification_report(y, y_hat, target_names=dx_names, output_dict=True)
     cm = confusion_matrix(y, y_hat)
     cm_plot = plot_cm(cm, dx_names, config)
+    prc_data = get_prc_data(dx_names, p, y)
 
-    save_results(dx_map, y, y_hat, cr, cm_plot, config)
+    save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, config)
 
 def main():
     dx_map, dx_names, train_df, dev_df, test_df = load_data()

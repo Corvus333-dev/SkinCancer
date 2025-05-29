@@ -1,8 +1,10 @@
 from dataclasses import asdict
 from datetime import datetime
 import json
+import numpy as np
 import pandas as pd
 from pathlib import Path
+from sklearn.metrics import average_precision_score, precision_recall_curve
 
 def save_dist(dist_plot):
     dist_path = 'data/distribution.png'
@@ -44,6 +46,37 @@ def get_layer_state(model, architecture):
 
     return layer_state
 
+def get_prc_data(dx_names, p, y, classes=7):
+    """
+    Computes precision, recall, thresholds, and average precision values for each diagnosis class.
+
+    Args:
+        dx_names (list): Diagnosis names.
+        p (np.ndarray): Probability distributions.
+        y (np.ndarray): True diagnosis indices.
+        classes (int): Number of classes.
+
+    Returns:
+        dict: Precision-recall curve values for each class.
+    """
+    prc_data = {}
+
+    for i in range(classes):
+        y_true = np.equal(y, i)
+        y_score = p[:, i]
+
+        precision, recall, thresholds = precision_recall_curve(y_true, y_score)
+        avg_precision = average_precision_score(y_true, y_score)
+
+        prc_data[dx_names[i]] = {
+            'precision': precision.tolist(),
+            'recall': recall.tolist(),
+            'thresholds': thresholds.tolist(),
+            'avg_precision': avg_precision
+        }
+
+    return prc_data
+
 def save_model(directory, model, config, layer_state, history, hist_plot):
     """
     Saves trained model and its associated metadata.
@@ -75,9 +108,9 @@ def save_model(directory, model, config, layer_state, history, hist_plot):
 
     hist_plot.savefig(directory / 'training_history.png', dpi=300)
 
-def save_results(dx_map, y, y_hat, cr, cm_plot, config):
+def save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, config):
     """
-    Saves predictions, classification report, and confusion matrix.
+    Saves predictions, classification report, confusion matrix, and precision-recall curve data.
 
     Args:
         dx_map (dict): Map of diagnosis codes to diagnosis names.
@@ -85,6 +118,7 @@ def save_results(dx_map, y, y_hat, cr, cm_plot, config):
         y_hat (np.ndarray): Predicted diagnosis indices.
         cr (dict): Classification report.
         cm_plot (matplotlib.figure.Figure): Confusion matrix plot.
+        prc_data (dict): Precision-recall curve data.
         config (dataclass): Experiment configuration settings.
 
     Returns:
@@ -101,10 +135,12 @@ def save_results(dx_map, y, y_hat, cr, cm_plot, config):
         df_path = directory / 'dev_predictions.csv'
         cr_path = directory / 'dev_classification_report.json'
         cm_path = directory / 'dev_confusion_matrix.png'
+        prc_path = directory / 'dev_prc.json'
     elif config.mode == 'test':
         df_path = directory / 'test_predictions.csv'
         cr_path = directory / 'test_classification_report.json'
         cm_path = directory / 'test_confusion_matrix.png'
+        prc_path = directory / 'test_prc.json'
 
     # Save predictions
     df.to_csv(df_path, index=False)
@@ -115,3 +151,7 @@ def save_results(dx_map, y, y_hat, cr, cm_plot, config):
 
     # Save confusion matrix
     cm_plot.savefig(cm_path, dpi=300)
+
+    # Save precision-recall curve data
+    with open(prc_path, 'w') as f:
+        json.dump(prc_data, f, indent=4)
