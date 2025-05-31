@@ -1,3 +1,4 @@
+import matplotlib.cm
 import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
@@ -101,6 +102,44 @@ def plot_cm(cm, dx_names, config):
     ax.set_ylabel('Actual Diagnosis')
     ax.set_title(f'Normalized Confusion Matrix ({exp_name}, {mode})')
     ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
+
+    fig.tight_layout()
+
+    return fig
+
+def plot_prc(config, dx_names, prc_data):
+    """
+    Plots a precision-recall curve overlay for each diagnosis class.
+
+    Args:
+        config (dataclass): Experiment configuration settings.
+        dx_names (list): Diagnosis names.
+        prc_data (dict): Precision-recall curve values for each class.
+
+    Returns:
+        matplotlib.figure.Figure: Precision-recall curve overlay plot.
+    """
+    exp_name = Path(config.checkpoint).parent.name
+    mode = config.mode
+
+    cmap = matplotlib.cm.get_cmap('tab10')
+    fig, ax = plt.subplots(figsize=(9, 9))
+
+    for i, dx in enumerate(dx_names):
+        precision = prc_data[dx]['precision']
+        recall = prc_data[dx]['recall']
+        avg_precision = prc_data[dx]['avg_precision']
+        color = cmap(i)
+
+        ax.plot(recall, precision, color=color, label=f'{dx} (AP: {avg_precision:.2f})', lw=2)
+
+    ax.set_xlabel('Recall')
+    ax.set_ylabel('Precision')
+    ax.set_title(f'Precision-Recall Curves ({exp_name}, {mode})')
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.legend(fontsize='large', loc='lower left')
+    ax.grid(True, linestyle='--', alpha=0.5)
 
     fig.tight_layout()
 

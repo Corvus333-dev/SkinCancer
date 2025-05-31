@@ -108,9 +108,9 @@ def save_model(directory, model, config, layer_state, history, hist_plot):
 
     hist_plot.savefig(directory / 'training_history.png', dpi=300)
 
-def save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, config):
+def save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, prc_plot, config):
     """
-    Saves predictions, classification report, confusion matrix, and precision-recall curve data.
+    Saves predictions, classification report, confusion matrix, and precision-recall curve.
 
     Args:
         dx_map (dict): Map of diagnosis codes to diagnosis names.
@@ -119,6 +119,7 @@ def save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, config):
         cr (dict): Classification report.
         cm_plot (matplotlib.figure.Figure): Confusion matrix plot.
         prc_data (dict): Precision-recall curve data.
+        prc_plot (matplotlib.figure.Figure): Precision-recall curve plot.
         config (dataclass): Experiment configuration settings.
 
     Returns:
@@ -135,12 +136,14 @@ def save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, config):
         df_path = directory / 'dev_predictions.csv'
         cr_path = directory / 'dev_classification_report.json'
         cm_path = directory / 'dev_confusion_matrix.png'
-        prc_path = directory / 'dev_prc.json'
+        prc_data_path = directory / 'dev_prc.json'
+        prc_plot_path = directory / 'dev_prc.png'
     elif config.mode == 'test':
         df_path = directory / 'test_predictions.csv'
         cr_path = directory / 'test_classification_report.json'
         cm_path = directory / 'test_confusion_matrix.png'
-        prc_path = directory / 'test_prc.json'
+        prc_data_path = directory / 'test_prc.json'
+        prc_plot_path = directory / 'test_prc.png'
 
     # Save predictions
     df.to_csv(df_path, index=False)
@@ -153,5 +156,8 @@ def save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, config):
     cm_plot.savefig(cm_path, dpi=300)
 
     # Save precision-recall curve data
-    with open(prc_path, 'w') as f:
+    with open(prc_data_path, 'w') as f:
         json.dump(prc_data, f, indent=4)
+
+    # Save precision-recall curve plot
+    prc_plot.savefig(prc_plot_path, dpi=300)

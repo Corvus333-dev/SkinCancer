@@ -19,8 +19,8 @@ config = ExperimentConfig(
     input_shape=(224, 224, 3),
     batch_size=64,
     dropout=0.3,
-    initial_learning_rate=1e-5,
-    warmup_target=1e-4,
+    initial_learning_rate=1e-3,
+    warmup_target=None,
     weight_decay=1e-4,
     epochs=25
 )
@@ -84,8 +84,9 @@ def evaluate_and_predict(ds, dx_map, dx_names):
     cm = confusion_matrix(y, y_hat)
     cm_plot = plot_cm(cm, dx_names, config)
     prc_data = get_prc_data(dx_names, p, y)
+    prc_plot = plot_prc(config, dx_names, prc_data)
 
-    save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, config)
+    save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, prc_plot, config)
 
 def main():
     dx_map, dx_names, train_df, dev_df, test_df = load_data()
