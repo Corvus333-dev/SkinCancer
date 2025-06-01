@@ -54,7 +54,8 @@ def map_image_paths(df):
 
 def split_data(df):
     """
-    Splits DataFrame into train, dev, and test sets using a 70/15/15 split with stratification.
+    Splits DataFrame into train, dev, and test sets using a 70/15/15 split with stratification, while also keeping all
+    images from the same lesion within the same split to prevent data leakage.
 
     Args:
         df (pd.DataFrame): Full DataFrame, including image paths.
@@ -62,8 +63,28 @@ def split_data(df):
     Returns:
         pd.DataFrame: Train, dev, and test DataFrames.
     """
-    train_df, temp_df = train_test_split(df, test_size=0.3, stratify=df['dx_code'], random_state=9)
-    dev_df, test_df = train_test_split(temp_df, test_size=0.5, stratify=temp_df['dx_code'], random_state=9)
+
+    # Temporarily remove duplicate lesions
+    unique_df = df[['lesion_id', 'dx_code']].drop_duplicates()
+
+    # Split so that duplicate lesions are coupled
+    train_unique_df, temp_unique_df = train_test_split(
+        unique_df,
+        test_size=0.3,
+        stratify=unique_df['dx_code'],
+        random_state=9
+    )
+    dev_unique_df, test_unique_df = train_test_split(
+        temp_unique_df,
+        test_size=0.5,
+        stratify=temp_unique_df['dx_code'],
+        random_state=9
+    )
+
+    # Reintroduce duplicate lesions
+    train_df = df[df['lesion_id'].isin(train_unique_df['lesion_id'])]
+    dev_df = df[df['lesion_id'].isin(dev_unique_df['lesion_id'])]
+    test_df = df[df['lesion_id'].isin(test_unique_df['lesion_id'])]
 
     return train_df, dev_df, test_df
 
