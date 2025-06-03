@@ -2,6 +2,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.utils.class_weight import compute_class_weight
 
 from config import ExperimentConfig
+from scripts.export import *
 from scripts.model import *
 from scripts.pipeline import *
 from scripts.plots import *
@@ -9,9 +10,9 @@ from scripts.utils import *
 
 config = ExperimentConfig(
     architecture='resnet50',
-    mode='dev',
-    checkpoint='models/resnet50_20250603_0323/model.keras',
-    unfreeze='conv5_block1_1_conv',
+    mode='train',
+    checkpoint=None,
+    unfreeze=None,
     augment=True,
     class_weight=True,
     dist_plot=False,
@@ -19,9 +20,9 @@ config = ExperimentConfig(
     input_shape=(224, 224, 3),
     batch_size=32,
     dropout=0.2,
-    initial_learning_rate=1e-5,
+    initial_learning_rate=1e-3,
     patience=5,
-    warmup_target=1e-4,
+    warmup_target=None,
     weight_decay=1e-6,
     epochs=50
 )
@@ -63,10 +64,7 @@ def train(ds, train_df):
     )
 
     if config.class_weight:
-        y_train = train_df['dx_code'].values
-        classes = np.unique(y_train)
-        weights = compute_class_weight(class_weight='balanced', classes=classes, y=y_train)
-        class_weight = dict(zip(classes, weights))
+        class_weight = compute_class_weight(train_df)
     else:
         class_weight = None
 
@@ -84,7 +82,7 @@ def evaluate_and_predict(ds, dx_map, dx_names):
     cr = classification_report(y, y_hat, target_names=dx_names, output_dict=True)
     cm = confusion_matrix(y, y_hat)
     cm_plot = plot_cm(cm, dx_names, config)
-    prc_data = get_prc_data(dx_names, p, y)
+    prc_data = compute_prc(dx_names, p, y)
     prc_plot = plot_prc(config, dx_names, prc_data)
 
     save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, prc_plot, config)
