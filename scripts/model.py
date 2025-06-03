@@ -46,9 +46,12 @@ def build_model(architecture, input_shape, dropout, classes=7):
     x = GlobalAveragePooling2D()(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout)(x)
-    x = Dense(256, activation='relu')(x)
+    x = Dense(512, activation='relu')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout)(x)
+    x = Dense(256, activation='relu')(x)
+    x = BatchNormalization()(x)
+    x = Dropout(dropout/2)(x)
     outputs = Dense(classes, activation='softmax')(x)
 
     return Model(inputs, outputs)
@@ -112,9 +115,11 @@ def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, w
     if decay_steps:
         lr = CosineDecay(
             initial_learning_rate=initial_lr,
-            decay_steps=decay_steps, alpha=0.01,
+            decay_steps=decay_steps,
+            alpha=0.01,
             warmup_target=warmup_target,
-            warmup_steps=warmup_steps)
+            warmup_steps=warmup_steps
+        )
     else:
         lr = initial_lr
 
@@ -122,7 +127,7 @@ def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, w
     loss = SparseCategoricalCrossentropy()
     model.compile(optimizer=opt, loss=loss, metrics = ['accuracy'])
 
-def train_model(model, train_ds, class_weight, epochs, threshold=0.001):
+def train_model(model, train_ds, class_weight, epochs, patience, threshold=0.001):
     """
     Trains model on dataset, with early stopping callback.
 
@@ -131,6 +136,7 @@ def train_model(model, train_ds, class_weight, epochs, threshold=0.001):
         train_ds (tf.data.Dataset): Batched and preprocessed training dataset.
         class_weight (dict): Map of diagnosis codes to associated weights.
         epochs (int): Maximum number of epochs.
+        patience (int): Number of epochs with no improvement after which training will be stopped.
         threshold (float): Minimum change in loss to qualify as an improvement.
 
     Returns:
@@ -139,7 +145,7 @@ def train_model(model, train_ds, class_weight, epochs, threshold=0.001):
     stop = tf.keras.callbacks.EarlyStopping(
         monitor='loss',
         min_delta= threshold,
-        patience=3,
+        patience=patience,
         verbose=1,
         restore_best_weights=True
     )

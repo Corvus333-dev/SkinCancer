@@ -9,20 +9,21 @@ from scripts.utils import *
 
 config = ExperimentConfig(
     architecture='resnet50',
-    mode='train',
-    checkpoint=None,
-    unfreeze=None,
+    mode='dev',
+    checkpoint='models/resnet50_20250603_0323/model.keras',
+    unfreeze='conv5_block1_1_conv',
     augment=True,
     class_weight=True,
     dist_plot=False,
     learning_rate_decay=True,
     input_shape=(224, 224, 3),
-    batch_size=64,
-    dropout=0.4,
-    initial_learning_rate=1e-3,
-    warmup_target=None,
-    weight_decay=1e-4,
-    epochs=25
+    batch_size=32,
+    dropout=0.2,
+    initial_learning_rate=1e-5,
+    patience=5,
+    warmup_target=1e-4,
+    weight_decay=1e-6,
+    epochs=50
 )
 
 def load_data():
@@ -70,7 +71,7 @@ def train(ds, train_df):
         class_weight = None
 
     layer_state = get_layer_state(model, config.architecture)
-    history = train_model(model, ds, class_weight, epochs=config.epochs)
+    history = train_model(model, ds, class_weight, epochs=config.epochs, patience=config.patience)
     directory = create_directory(config.architecture)
     hist_plot = plot_hist(history.history, directory)
 

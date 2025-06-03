@@ -15,6 +15,7 @@ class ExperimentConfig:
     batch_size: int = 32
     dropout: float = 0.3
     initial_learning_rate: float = 1e-3
+    patience: int = 5
     warmup_target: Optional[float] = None
     weight_decay: float = 1e-5
     epochs: int = 30
