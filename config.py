@@ -7,13 +7,12 @@ class ExperimentConfig:
     mode: Literal['train', 'dev', 'test']
     checkpoint: Optional[str] = None
     unfreeze: Optional[Union[int, str, Tuple[str, ...]]] = None
-    augment: bool = True
     class_weight: bool = True
     dist_plot: bool = False
     learning_rate_decay: bool = True
     input_shape: Tuple[int, int, int] = (224, 224, 3)
     batch_size: int = 32
-    dropout: float = 0.3
+    dropout: Tuple[float, float, float] = (0.5, 0.3, 0.2)
     initial_learning_rate: float = 1e-3
     patience: int = 5
     warmup_target: Optional[float] = None

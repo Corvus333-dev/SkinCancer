@@ -88,28 +88,7 @@ def split_data(df):
 
     return train_df, dev_df, test_df
 
-def augment_image(image):
-    """
-    Performs random augmentation of images via 90-degree rotation, horizontal flip, vertical flip,
-    brightness adjustment, and contrast adjustment.
-
-    Args:
-        image (tf.Tensor): Decoded and resized image.
-
-    Returns:
-        image (tf.Tensor): Augmented or unaugmented image.
-    """
-    # Randomly rotates by 90-degrees 0 or 1 times
-    image = tf.image.rot90(image, k=tf.random.uniform([], 0, 2, dtype=tf.int32))
-
-    image = tf.image.random_flip_left_right(image)
-    image = tf.image.random_flip_up_down(image)
-    image = tf.image.random_brightness(image, max_delta=0.1)
-    image = tf.image.random_contrast(image, lower=0.9, upper=1.1)
-
-    return image
-
-def preprocess_image(path, dx_code, architecture, augment):
+def preprocess_image(path, dx_code, architecture):
     """
     Decodes a JPEG-encoded image, resizes with pad, and performs ImageNet-style normalization.
 
@@ -117,7 +96,6 @@ def preprocess_image(path, dx_code, architecture, augment):
         path (tf.Tensor): Image path.
         dx_code (tf.Tensor): Encoded label associated with its image path.
         architecture (str): Base model architecture.
-        augment (bool): Augmentation flag.
 
     Returns:
         image (tf.Tensor): Preprocessed image of shape (224, 224, 3) or (299, 299, 3).
@@ -139,14 +117,11 @@ def preprocess_image(path, dx_code, architecture, augment):
     image = tf.image.decode_jpeg(image, channels=3)
     image = tf.image.resize_with_pad(image, target_height=th, target_width=tw)
 
-    if augment:
-        image = augment_image(image)
-
     image = preprocess_input(image)
 
     return image, dx_code
 
-def fetch_dataset(df, architecture, batch_size, augment, shuffle=True):
+def fetch_dataset(df, architecture, batch_size, shuffle=True):
     """
     Creates a Tensorflow Dataset from preprocessed images and corresponding diagnosis codes.
 
@@ -154,7 +129,6 @@ def fetch_dataset(df, architecture, batch_size, augment, shuffle=True):
         df (pd.DataFrame): DataFrame with image paths and diagnosis codes.
         architecture (str): Base model architecture.
         batch_size (int): Samples per batch.
-        augment (bool): Augmentation flag.
         shuffle (bool): Optional shuffling.
 
     Returns:
@@ -164,7 +138,7 @@ def fetch_dataset(df, architecture, batch_size, augment, shuffle=True):
     dx_codes = df['dx_code'].values
 
     ds = tf.data.Dataset.from_tensor_slices((paths, dx_codes))
-    ds = ds.map(lambda x, y: preprocess_image(x, y, architecture, augment), num_parallel_calls=tf.data.AUTOTUNE)
+    ds = ds.map(lambda x, y: preprocess_image(x, y, architecture), num_parallel_calls=tf.data.AUTOTUNE)
 
     if shuffle:
         ds = ds.shuffle(buffer_size=1000)

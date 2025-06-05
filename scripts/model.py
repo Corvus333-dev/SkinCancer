@@ -1,8 +1,19 @@
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras import Input
+from tensorflow.keras import Input, Sequential
 from tensorflow.keras.applications import EfficientNetB0, InceptionV3, ResNet50
-from tensorflow.keras.layers import BatchNormalization, Dense, Dropout, GlobalAveragePooling2D
+from tensorflow.keras.layers import (
+    BatchNormalization,
+    Dense,
+    Dropout,
+    GlobalAveragePooling2D,
+    RandomBrightness,
+    RandomContrast,
+    RandomFlip,
+    RandomRotation,
+    RandomTranslation,
+    RandomZoom
+)
 from tensorflow.keras.losses import SparseCategoricalCrossentropy
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import AdamW
@@ -13,12 +24,15 @@ def build_model(architecture, input_shape, dropout, classes=7):
     Instantiates a base model using EfficientNetB0, InceptionV3, or ResNet50 architecture pretrained on ImageNet
     dataset, and attaches a broadly applicable custom top consisting of layers:
 
-    GAP -> BN -> Dropout -> Dense-256 -> BN -> Dropout -> Dense-7
+    GAP -> BN -> Dropout -> Dense-512 -> BN -> Dropout -> Dense-256 -> BN -> Dropout -> Dense-7
+
+    Performs the following random augmentations to input:
+    brightness, contrast, horizontal/vertical flip, rotation, translation, and zoom.
 
     Args:
         architecture (str): Base model architecture.
         input_shape (tuple): Shape of input image.
-        dropout (float): Dropout rate.
+        dropout (tuple): Dropout rates (ordered from bottom to top).
         classes (int): Number of classes (i.e., skin lesion types).
 
     Returns:
@@ -41,17 +55,27 @@ def build_model(architecture, input_shape, dropout, classes=7):
 
     base_model.trainable = False # Recursive (freezes all sub-layers)
 
+    augment_layers = Sequential([
+        RandomBrightness(0.1),
+        RandomContrast(0.1),
+        RandomFlip('horizontal_and_vertical'),
+        RandomRotation(0.125),
+        RandomTranslation(0.1, 0.1),
+        RandomZoom(height_factor=(-0.1, 0.1), width_factor=(-0.1, 0.1))
+    ])
+
     inputs = Input(shape=input_shape)
-    x = base_model(inputs) # No explicit training flag
+    x = augment_layers(inputs) # Explicit 'training=bool' is not required
+    x = base_model(x)
     x = GlobalAveragePooling2D()(x)
     x = BatchNormalization()(x)
-    x = Dropout(dropout)(x)
+    x = Dropout(dropout[0])(x)
     x = Dense(512, activation='relu')(x)
     x = BatchNormalization()(x)
-    x = Dropout(dropout)(x)
+    x = Dropout(dropout[1])(x)
     x = Dense(256, activation='relu')(x)
     x = BatchNormalization()(x)
-    x = Dropout(dropout/2)(x)
+    x = Dropout(dropout[2])(x)
     outputs = Dense(classes, activation='softmax')(x)
 
     return Model(inputs, outputs)

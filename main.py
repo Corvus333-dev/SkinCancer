@@ -1,5 +1,4 @@
 from sklearn.metrics import classification_report, confusion_matrix
-from sklearn.utils.class_weight import compute_class_weight
 
 from config import ExperimentConfig
 from scripts.export import *
@@ -13,17 +12,16 @@ config = ExperimentConfig(
     mode='train',
     checkpoint=None,
     unfreeze=None,
-    augment=True,
     class_weight=True,
     dist_plot=False,
     learning_rate_decay=True,
     input_shape=(224, 224, 3),
     batch_size=32,
-    dropout=0.2,
+    dropout=(0.5, 0.3, 0.2),
     initial_learning_rate=1e-3,
     patience=5,
     warmup_target=None,
-    weight_decay=1e-6,
+    weight_decay=1e-4,
     epochs=50
 )
 
@@ -64,7 +62,7 @@ def train(ds, train_df):
     )
 
     if config.class_weight:
-        class_weight = compute_class_weight(train_df)
+        class_weight = calculate_class_weight(train_df)
     else:
         class_weight = None
 
@@ -95,7 +93,6 @@ def main():
             train_df,
             architecture=config.architecture,
             batch_size=config.batch_size,
-            augment=config.augment
         )
         train(train_ds, train_df)
 
@@ -104,7 +101,6 @@ def main():
             dev_df,
             architecture=config.architecture,
             batch_size=config.batch_size,
-            augment=False,
             shuffle=False
         )
         evaluate_and_predict(dev_ds, dx_map, dx_names)
@@ -114,7 +110,6 @@ def main():
             test_df,
             architecture=config.architecture,
             batch_size=config.batch_size,
-            augment=False,
             shuffle=False
         )
         evaluate_and_predict(test_ds, dx_map, dx_names)
