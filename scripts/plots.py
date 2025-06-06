@@ -47,15 +47,21 @@ def plot_hist(history, directory):
 
     fig, ax = plt.subplots(1, 2, figsize=(12, 5))
 
-    ax[0].plot(history['accuracy'], color='magenta')
+    ax[0].plot(history['accuracy'], color='cyan', label='train')
+    ax[0].plot(history['val_accuracy'], color='magenta', label='dev')
     ax[0].set_xlabel('Epoch')
     ax[0].set_ylabel('Accuracy')
-    ax[0].set_title(f'Training Accuracy ({exp_name})')
+    ax[0].set_title(f'Accuracy ({exp_name})')
+    ax[0].legend(fontsize='large', loc='lower right')
+    ax[0].grid(True, linestyle='--', alpha=0.5)
 
-    ax[1].plot(history['loss'], color='cyan')
+    ax[1].plot(history['loss'], color='cyan', label='train')
+    ax[1].plot(history['val_loss'], color='magenta', label='dev')
     ax[1].set_xlabel('Epoch')
     ax[1].set_ylabel('Loss')
-    ax[1].set_title(f'Training Loss ({exp_name})')
+    ax[1].set_title(f'Loss ({exp_name})')
+    ax[1].legend(fontsize='large', loc='upper right')
+    ax[1].grid(True, linestyle='--', alpha=0.5)
 
     fig.tight_layout()
 

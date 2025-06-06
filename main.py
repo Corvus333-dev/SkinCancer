@@ -21,7 +21,7 @@ config = ExperimentConfig(
     initial_learning_rate=1e-3,
     patience=5,
     warmup_target=None,
-    weight_decay=1e-4,
+    weight_decay=1e-7,
     epochs=50
 )
 
@@ -37,7 +37,7 @@ def load_data():
 
     return dx_map, dx_names, train_df, dev_df, test_df
 
-def train(ds, train_df):
+def train(train_ds, dev_ds, train_df):
     if config.checkpoint:
         model = tf.keras.models.load_model(config.checkpoint)
         if config.unfreeze:
@@ -67,7 +67,7 @@ def train(ds, train_df):
         class_weight = None
 
     layer_state = get_layer_state(model, config.architecture)
-    history = train_model(model, ds, class_weight, epochs=config.epochs, patience=config.patience)
+    history = train_model(model, train_ds, dev_ds, class_weight, epochs=config.epochs, patience=config.patience)
     directory = create_directory(config.architecture)
     hist_plot = plot_hist(history.history, directory)
 
@@ -94,7 +94,13 @@ def main():
             architecture=config.architecture,
             batch_size=config.batch_size,
         )
-        train(train_ds, train_df)
+        dev_ds = fetch_dataset(
+            dev_df,
+            architecture=config.architecture,
+            batch_size=config.batch_size,
+            shuffle=False
+        )
+        train(train_ds, dev_ds, train_df)
 
     elif config.mode == 'dev':
         dev_ds = fetch_dataset(

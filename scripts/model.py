@@ -151,13 +151,14 @@ def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, w
     loss = SparseCategoricalCrossentropy()
     model.compile(optimizer=opt, loss=loss, metrics = ['accuracy'])
 
-def train_model(model, train_ds, class_weight, epochs, patience, threshold=0.001):
+def train_model(model, train_ds, dev_ds, class_weight, epochs, patience, threshold=0.001):
     """
     Trains model on dataset, with early stopping callback.
 
     Args:
         model (keras.Model): Compiled model.
-        train_ds (tf.data.Dataset): Batched and preprocessed training dataset.
+        train_ds (tf.data.Dataset): Training dataset.
+        dev_ds (tf.data.Dataset): Development dataset used for monitoring validation loss.
         class_weight (dict): Map of diagnosis codes to associated weights.
         epochs (int): Maximum number of epochs.
         patience (int): Number of epochs with no improvement after which training will be stopped.
@@ -167,14 +168,14 @@ def train_model(model, train_ds, class_weight, epochs, patience, threshold=0.001
         keras.callbacks.History: Training history.
     """
     stop = tf.keras.callbacks.EarlyStopping(
-        monitor='loss',
+        monitor='val_loss',
         min_delta= threshold,
         patience=patience,
         verbose=1,
         restore_best_weights=True
     )
 
-    return model.fit(train_ds, class_weight=class_weight, epochs=epochs, callbacks=[stop])
+    return model.fit(train_ds, validation_data=dev_ds, class_weight=class_weight, epochs=epochs, callbacks=[stop])
 
 def predict_dx(ds, model):
     """

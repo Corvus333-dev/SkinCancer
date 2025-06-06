@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.metrics import average_precision_score, precision_recall_curve
 
-def calculate_class_weight(train_df, gamma=1.1):
+def calculate_class_weight(train_df, gamma=0.75):
     """
     Calculates class weights using normalized exponential inverse frequency.
 
