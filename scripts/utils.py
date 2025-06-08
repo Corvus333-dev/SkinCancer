@@ -1,27 +1,23 @@
 import numpy as np
 from sklearn.metrics import average_precision_score, precision_recall_curve
 
-def calculate_class_weight(train_df, gamma=0.75):
+def calculate_class_weight(train_df):
     """
-    Calculates class weights using normalized exponential inverse frequency.
+    Calculates class weights using inverse square root frequency.
 
     Args:
-        train_df (pd.DataFrame): Training split DataFrame.
-        gamma (float): Exponent used to adjust weight magnitudes.
+        train_df (pd.DataFrame): Training set DataFrame.
 
     Returns:
-
+        dict: Map of diagnosis codes and weights.
     """
     y = train_df['dx_code'].values
     classes, counts = np.unique(y, return_counts=True)
-    num_classes = len(classes)
-    num_samples = len(y)
 
-    weights = (num_samples / (num_classes * counts))**gamma
+    weights = 1 / np.sqrt(counts)
     weights /= np.mean(weights)
-    class_weight = dict(zip(classes, weights))
 
-    return class_weight
+    return dict(zip(classes, weights))
 
 def get_layer_state(model, architecture):
     """

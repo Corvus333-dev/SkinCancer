@@ -18,10 +18,10 @@ config = ExperimentConfig(
     input_shape=(224, 224, 3),
     batch_size=32,
     dropout=(0.5, 0.3, 0.2),
-    initial_learning_rate=1e-3,
+    initial_learning_rate=1e-4,
     patience=5,
     warmup_target=None,
-    weight_decay=1e-7,
+    weight_decay=1e-6,
     epochs=50
 )
 
