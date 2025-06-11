@@ -54,8 +54,8 @@ def map_image_paths(df):
 
 def split_data(df):
     """
-    Splits DataFrame into train, dev, and test sets using a 70/15/15 split with stratification, while also keeping all
-    images from the same lesion within the same split to prevent data leakage.
+    Splits DataFrame into train, dev, and test sets using a 70/15/15 split with stratification. Places images from
+    the same lesion within the train set to prevent data leakage and preserve natural augmentation.
 
     Args:
         df (pd.DataFrame): Full DataFrame, including image paths.
@@ -65,7 +65,7 @@ def split_data(df):
     """
 
     # Temporarily remove duplicate lesions
-    unique_df = df[['lesion_id', 'dx_code']].drop_duplicates()
+    unique_df = df.drop_duplicates(subset=['lesion_id'])
 
     # Split so that duplicate lesions are coupled
     train_unique_df, temp_unique_df = train_test_split(
@@ -83,10 +83,8 @@ def split_data(df):
 
     # Reintroduce duplicate lesions
     train_df = df[df['lesion_id'].isin(train_unique_df['lesion_id'])]
-    dev_df = df[df['lesion_id'].isin(dev_unique_df['lesion_id'])]
-    test_df = df[df['lesion_id'].isin(test_unique_df['lesion_id'])]
 
-    return train_df, dev_df, test_df
+    return train_df, dev_unique_df, test_unique_df
 
 def preprocess_image(path, dx_code, architecture):
     """

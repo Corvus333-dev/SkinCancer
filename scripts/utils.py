@@ -1,20 +1,21 @@
 import numpy as np
 from sklearn.metrics import average_precision_score, precision_recall_curve
 
-def calculate_class_weight(train_df):
+def calculate_class_weight(train_df, gamma):
     """
-    Calculates class weights using inverse square root frequency.
+    Calculates class weights using inverse frequency with adjustable exponent.
 
     Args:
         train_df (pd.DataFrame): Training set DataFrame.
+        gamma (float): Exponent used for weight magnitude.
 
     Returns:
         dict: Map of diagnosis codes and weights.
     """
     y = train_df['dx_code'].values
     classes, counts = np.unique(y, return_counts=True)
+    weights = (len(y) / (len(classes) * counts)) ** gamma
 
-    weights = 1 / np.sqrt(counts)
     weights /= np.mean(weights)
 
     return dict(zip(classes, weights))

@@ -56,12 +56,12 @@ def build_model(architecture, input_shape, dropout, classes=7):
     base_model.trainable = False # Recursive (freezes all sub-layers)
 
     augment_layers = Sequential([
-        RandomBrightness(0.1),
-        RandomContrast(0.1),
+        RandomBrightness(0.15),
+        RandomContrast(0.15),
         RandomFlip('horizontal_and_vertical'),
-        RandomRotation(0.125),
-        RandomTranslation(0.1, 0.1),
-        RandomZoom(height_factor=(-0.1, 0.1), width_factor=(-0.1, 0.1))
+        RandomRotation(0.2),
+        RandomTranslation(0.15, 0.15),
+        RandomZoom((-0.15, 0.15))
     ])
 
     inputs = Input(shape=input_shape)
@@ -76,6 +76,9 @@ def build_model(architecture, input_shape, dropout, classes=7):
     x = Dense(256, activation='relu')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout[2])(x)
+    x = Dense(128, activation='relu')(x)
+    x = BatchNormalization()(x)
+    x = Dropout(dropout[3])(x)
     outputs = Dense(classes, activation='softmax')(x)
 
     return Model(inputs, outputs)
@@ -140,7 +143,7 @@ def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, w
         lr = CosineDecay(
             initial_learning_rate=initial_lr,
             decay_steps=decay_steps,
-            alpha=0.01,
+            alpha=0.05,
             warmup_target=warmup_target,
             warmup_steps=warmup_steps
         )
@@ -169,7 +172,7 @@ def train_model(model, train_ds, dev_ds, class_weight, epochs, patience, thresho
     """
     stop = tf.keras.callbacks.EarlyStopping(
         monitor='val_loss',
-        min_delta= threshold,
+        min_delta=threshold,
         patience=patience,
         verbose=1,
         restore_best_weights=True

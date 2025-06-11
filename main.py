@@ -12,17 +12,17 @@ config = ExperimentConfig(
     mode='train',
     checkpoint=None,
     unfreeze=None,
-    class_weight=True,
+    class_weight=0.5,
     dist_plot=False,
-    learning_rate_decay=True,
+    lr_decay=True,
     input_shape=(224, 224, 3),
     batch_size=32,
-    dropout=(0.5, 0.3, 0.2),
-    initial_learning_rate=1e-4,
-    patience=5,
+    dropout=(0.4, 0.3, 0.2, 0.1),
+    initial_lr=1e-4,
+    patience=10,
     warmup_target=None,
-    weight_decay=1e-6,
-    epochs=50
+    weight_decay=1e-4,
+    epochs=100
 )
 
 def load_data():
@@ -45,7 +45,7 @@ def train(train_ds, dev_ds, train_df):
     else:
         model = build_model(architecture=config.architecture, input_shape=config.input_shape, dropout=config.dropout)
 
-    if config.learning_rate_decay:
+    if config.lr_decay:
         decay_steps = len(train_df) // config.batch_size * config.epochs
         warmup_steps = int(decay_steps * 0.1)
     else:
@@ -54,7 +54,7 @@ def train(train_ds, dev_ds, train_df):
 
     compile_model(
         model,
-        initial_lr=config.initial_learning_rate,
+        initial_lr=config.initial_lr,
         warmup_target=config.warmup_target,
         decay_steps=decay_steps,
         warmup_steps=warmup_steps,
@@ -62,7 +62,7 @@ def train(train_ds, dev_ds, train_df):
     )
 
     if config.class_weight:
-        class_weight = calculate_class_weight(train_df)
+        class_weight = calculate_class_weight(train_df, config.class_weight)
     else:
         class_weight = None
 
