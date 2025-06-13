@@ -12,17 +12,18 @@ config = ExperimentConfig(
     mode='train',
     checkpoint=None,
     unfreeze=None,
-    class_weight=0.5,
+    class_weight=None,
     dist_plot=False,
+    focal_loss=(0.5, 2.0),
     lr_decay=True,
     input_shape=(224, 224, 3),
     batch_size=32,
     dropout=(0.4, 0.3, 0.2, 0.1),
     initial_lr=1e-4,
-    patience=10,
+    patience=5,
     warmup_target=None,
     weight_decay=1e-4,
-    epochs=100
+    epochs=1
 )
 
 def load_data():
@@ -45,6 +46,18 @@ def train(train_ds, dev_ds, train_df):
     else:
         model = build_model(architecture=config.architecture, input_shape=config.input_shape, dropout=config.dropout)
 
+    if config.class_weight:
+        class_weight = calculate_class_weight(train_df, config.class_weight)
+    else:
+        class_weight = None
+
+    if config.focal_loss:
+        alpha = calculate_class_weight(train_df, config.focal_loss[0])
+        gamma = config.focal_loss[1]
+    else:
+        alpha = None
+        gamma = None
+
     if config.lr_decay:
         decay_steps = len(train_df) // config.batch_size * config.epochs
         warmup_steps = int(decay_steps * 0.1)
@@ -58,13 +71,10 @@ def train(train_ds, dev_ds, train_df):
         warmup_target=config.warmup_target,
         decay_steps=decay_steps,
         warmup_steps=warmup_steps,
-        wd=config.weight_decay
+        wd=config.weight_decay,
+        alpha=alpha,
+        gamma=gamma
     )
-
-    if config.class_weight:
-        class_weight = calculate_class_weight(train_df, config.class_weight)
-    else:
-        class_weight = None
 
     layer_state = get_layer_state(model, config.architecture)
     history = train_model(model, train_ds, dev_ds, class_weight, epochs=config.epochs, patience=config.patience)

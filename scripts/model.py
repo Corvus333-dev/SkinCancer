@@ -19,6 +19,8 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import AdamW
 from tensorflow.keras.optimizers.schedules import CosineDecay
 
+from scripts.utils import SparseCategoricalFocalCrossentropy
+
 def build_model(architecture, input_shape, dropout, classes=7):
     """
     Instantiates a base model using EfficientNetB0, InceptionV3, or ResNet50 architecture pretrained on ImageNet
@@ -123,7 +125,7 @@ def unfreeze_layers(model, architecture, unfreeze):
         for layer in base_model.layers:
             layer.trainable = any(keyword in layer.name for keyword in unfreeze)
 
-def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, wd):
+def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, wd, alpha, gamma):
     """
     Compiles model using AdamW optimizer and sparse categorical cross-entropy loss,
     with cosine decay learning rate schedule and label smoothing.
@@ -150,8 +152,12 @@ def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, w
     else:
         lr = initial_lr
 
+    if gamma:
+        loss = SparseCategoricalFocalCrossentropy(alpha, gamma)
+    else:
+        loss = SparseCategoricalCrossentropy()
+
     opt = AdamW(learning_rate=lr, weight_decay=wd)
-    loss = SparseCategoricalCrossentropy()
     model.compile(optimizer=opt, loss=loss, metrics = ['accuracy'])
 
 def train_model(model, train_ds, dev_ds, class_weight, epochs, patience, threshold=0.001):

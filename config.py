@@ -9,6 +9,7 @@ class ExperimentConfig:
     unfreeze: Optional[Union[int, str, Tuple[str, ...]]] = None
     class_weight: Optional[float] = None
     dist_plot: bool = False
+    focal_loss: Optional[Tuple[float, float]] = None
     lr_decay: bool = True
     input_shape: Tuple[int, int, int] = (224, 224, 3)
     batch_size: int = 32

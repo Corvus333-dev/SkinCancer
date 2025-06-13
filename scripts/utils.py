@@ -1,5 +1,32 @@
 import numpy as np
 from sklearn.metrics import average_precision_score, precision_recall_curve
+import tensorflow as tf
+from tensorflow.keras.saving import register_keras_serializable
+
+@register_keras_serializable()
+class SparseCategoricalFocalCrossentropy(tf.keras.losses.Loss):
+    def __init__(self, alpha, gamma, name='sparse_categorical_focal_crossentropy'):
+        super().__init__(name=name)
+        self._alpha = alpha # Serialization copy
+        self.alpha = tf.constant(list(alpha.values()), dtype=tf.float32)
+        self.gamma = gamma
+
+    def call(self, y, y_hat):
+        y = tf.cast(y, tf.int32)
+        y_oh = tf.one_hot(y, depth=7)
+        y_hat = tf.clip_by_value(y_hat, 1e-7, 1 - 1e-7)
+
+        alpha_t = tf.reduce_sum(y_oh * self.alpha, axis=1)
+        p_t = tf.reduce_sum(y_oh * y_hat, axis=1)
+
+        return -alpha_t * tf.pow(1 - p_t, self.gamma) * tf.math.log(p_t)
+
+    def get_config(self):
+        return {
+            'alpha': self._alpha,
+            'gamma': self.gamma,
+            'name': self.name
+        }
 
 def calculate_class_weight(train_df, gamma):
     """
@@ -18,7 +45,8 @@ def calculate_class_weight(train_df, gamma):
 
     weights /= np.mean(weights)
 
-    return dict(zip(classes, weights))
+    # Cast to JSON-compatible types (required for custom loss serialization)
+    return {int(key): float(value) for key, value in zip(classes, weights)}
 
 def get_layer_state(model, architecture):
     """
