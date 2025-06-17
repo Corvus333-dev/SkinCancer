@@ -5,16 +5,44 @@ from tensorflow.keras.saving import register_keras_serializable
 
 @register_keras_serializable()
 class SparseCategoricalFocalCrossentropy(tf.keras.losses.Loss):
+    """
+    Custom focal loss implementation for sparse categorical classification, calculated via:
+
+        L(p_t) = -alpha_t * (1 - p_t)^gamma * log(p_t)
+
+        where:
+            p_t is predicted probability
+            alpha_t is class-specific weight
+            gamma is focusing parameter
+    """
     def __init__(self, alpha, gamma, name='sparse_categorical_focal_crossentropy'):
+        """
+        Initializes sparse categorical focal crossentropy loss.
+
+        Args:
+            alpha (dict): Map of diagnosis codes (int) and weights (float). Must be JSON-compatible.
+            gamma (float): Focusing parameter. Gradually reduces the importance given to easy examples.
+            name: Optional name for the loss instance.
+        """
         super().__init__(name=name)
         self._alpha = alpha # Serialization copy
         self.alpha = tf.constant(list(alpha.values()), dtype=tf.float32)
         self.gamma = gamma
 
     def call(self, y, y_hat):
+        """
+        Calculates focal loss between true and predicted classes.
+
+        Args:
+            y (tf.Tensor): True diagnosis indices.
+            y_hat (tf.Tensor): Probability distributions.
+
+        Returns:
+            tf.Tensor: Focal loss values.
+        """
         y = tf.cast(y, tf.int32)
         y_oh = tf.one_hot(y, depth=7)
-        y_hat = tf.clip_by_value(y_hat, 1e-7, 1 - 1e-7)
+        y_hat = tf.clip_by_value(y_hat, 1e-7, 1 - 1e-7) # Prevents numerical instability
 
         alpha_t = tf.reduce_sum(y_oh * self.alpha, axis=1)
         p_t = tf.reduce_sum(y_oh * y_hat, axis=1)
@@ -22,18 +50,20 @@ class SparseCategoricalFocalCrossentropy(tf.keras.losses.Loss):
         return -alpha_t * tf.pow(1 - p_t, self.gamma) * tf.math.log(p_t)
 
     def get_config(self):
+        # Configuration for model serialization
         return {
             'alpha': self._alpha,
             'gamma': self.gamma,
             'name': self.name
         }
 
-def calculate_class_weight(train_df, gamma):
+def calculate_class_weight(train_df, boost, gamma):
     """
     Calculates class weights using inverse frequency with adjustable exponent.
 
     Args:
         train_df (pd.DataFrame): Training set DataFrame.
+        boost (dict): Map of diagnosis codes and weight multipliers.
         gamma (float): Exponent used for weight magnitude.
 
     Returns:
@@ -42,6 +72,10 @@ def calculate_class_weight(train_df, gamma):
     y = train_df['dx_code'].values
     classes, counts = np.unique(y, return_counts=True)
     weights = (len(y) / (len(classes) * counts)) ** gamma
+
+    if boost:
+        for key, value in boost.items():
+            weights[key] *= value
 
     weights /= np.mean(weights)
 

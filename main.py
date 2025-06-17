@@ -11,7 +11,8 @@ config = ExperimentConfig(
     architecture='resnet50',
     mode='train',
     checkpoint=None,
-    unfreeze=None,
+    unfreeze=True,
+    boost={0: 1.1, 1: 1.1, 2: 1.6, 3: 2.0, 4: 1.4, 5: 1.0, 6: 1.7},
     class_weight=None,
     dist_plot=False,
     focal_loss=(0.5, 2.0),
@@ -23,7 +24,7 @@ config = ExperimentConfig(
     patience=5,
     warmup_target=None,
     weight_decay=1e-4,
-    epochs=1
+    epochs=50
 )
 
 def load_data():
@@ -52,7 +53,7 @@ def train(train_ds, dev_ds, train_df):
         class_weight = None
 
     if config.focal_loss:
-        alpha = calculate_class_weight(train_df, config.focal_loss[0])
+        alpha = calculate_class_weight(train_df, config.boost, config.focal_loss[0])
         gamma = config.focal_loss[1]
     else:
         alpha = None

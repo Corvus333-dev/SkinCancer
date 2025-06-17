@@ -58,12 +58,12 @@ def build_model(architecture, input_shape, dropout, classes=7):
     base_model.trainable = False # Recursive (freezes all sub-layers)
 
     augment_layers = Sequential([
-        RandomBrightness(0.15),
-        RandomContrast(0.15),
+        RandomBrightness(0.2),
+        RandomContrast(0.2),
         RandomFlip('horizontal_and_vertical'),
         RandomRotation(0.2),
-        RandomTranslation(0.15, 0.15),
-        RandomZoom((-0.15, 0.15))
+        RandomTranslation(0.2, 0.2),
+        RandomZoom((-0.2, 0.2))
     ])
 
     inputs = Input(shape=input_shape)
@@ -72,15 +72,19 @@ def build_model(architecture, input_shape, dropout, classes=7):
     x = GlobalAveragePooling2D()(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout[0])(x)
+
     x = Dense(512, activation='relu')(x)
-    x = BatchNormalization()(x)
+    X = BatchNormalization()(x)
     x = Dropout(dropout[1])(x)
+
     x = Dense(256, activation='relu')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout[2])(x)
+
     x = Dense(128, activation='relu')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout[3])(x)
+
     outputs = Dense(classes, activation='softmax')(x)
 
     return Model(inputs, outputs)
@@ -145,7 +149,7 @@ def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, w
         lr = CosineDecay(
             initial_learning_rate=initial_lr,
             decay_steps=decay_steps,
-            alpha=0.05,
+            alpha=0.1,
             warmup_target=warmup_target,
             warmup_steps=warmup_steps
         )

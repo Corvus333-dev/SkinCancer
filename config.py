@@ -7,13 +7,14 @@ class ExperimentConfig:
     mode: Literal['train', 'dev', 'test']
     checkpoint: Optional[str] = None
     unfreeze: Optional[Union[int, str, Tuple[str, ...]]] = None
+    boost: Optional[dict] = None
     class_weight: Optional[float] = None
     dist_plot: bool = False
     focal_loss: Optional[Tuple[float, float]] = None
     lr_decay: bool = True
     input_shape: Tuple[int, int, int] = (224, 224, 3)
     batch_size: int = 32
-    dropout: Tuple[float, float, float, float] = (0.4, 0.3, 0.2, 0.1)
+    dropout: Tuple[float, float, float, float] = (4, 3, 2, 1)
     initial_lr: float = 1e-3
     patience: int = 5
     warmup_target: Optional[float] = None
