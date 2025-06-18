@@ -54,7 +54,7 @@ def map_image_paths(df):
 
 def split_data(df):
     """
-    Splits DataFrame into train, dev, and test sets using a 70/15/15 split with stratification. Places images from
+    Splits DataFrame into train, dev, and test sets using an 80/10/10 split with stratification. Places images from
     the same lesion within the train set to prevent data leakage and preserve natural augmentation.
 
     Args:
@@ -70,7 +70,7 @@ def split_data(df):
     # Split so that duplicate lesions are coupled
     train_unique_df, temp_unique_df = train_test_split(
         unique_df,
-        test_size=0.3,
+        test_size=0.2,
         stratify=unique_df['dx_code'],
         random_state=9
     )
@@ -139,7 +139,7 @@ def fetch_dataset(df, architecture, batch_size, shuffle=True):
     ds = ds.map(lambda x, y: preprocess_image(x, y, architecture), num_parallel_calls=tf.data.AUTOTUNE)
 
     if shuffle:
-        ds = ds.shuffle(buffer_size=1000)
+        ds = ds.shuffle(buffer_size=2000)
 
     ds = ds.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 

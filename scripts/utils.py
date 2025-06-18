@@ -59,7 +59,7 @@ class SparseCategoricalFocalCrossentropy(tf.keras.losses.Loss):
 
 def calculate_class_weight(train_df, boost, gamma):
     """
-    Calculates class weights using inverse frequency with adjustable exponent.
+    Calculates class weights using inverse frequency with adjustable exponent and (optional) class-specific multipliers.
 
     Args:
         train_df (pd.DataFrame): Training set DataFrame.
