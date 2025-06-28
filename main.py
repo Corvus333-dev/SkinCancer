@@ -12,19 +12,19 @@ config = ExperimentConfig(
     mode='train',
     checkpoint=None,
     unfreeze=None,
-    boost={0: 1.1, 1: 1.1, 2: 1.6, 3: 2.0, 4: 1.4, 5: 1.0, 6: 1.7},
+    boost={0: 1.1, 1: 1.3, 2: 1.4, 3: 1.5, 4: 1.4, 5: 1.0, 6: 1.1},
     class_weight=None,
     dist_plot=False,
-    focal_loss=(0.5, 2.0),
+    focal_loss=(0.5, 2.0, 0.1),
     lr_decay=True,
     input_shape=(224, 224, 3),
     batch_size=32,
     dropout=(0.4, 0.3, 0.2, 0.1),
     initial_lr=1e-4,
-    patience=5,
+    patience=3,
     warmup_target=None,
     weight_decay=1e-4,
-    epochs=50
+    epochs=30
 )
 
 def load_data():
@@ -48,23 +48,22 @@ def train(train_ds, dev_ds, train_df):
         model = build_model(architecture=config.architecture, input_shape=config.input_shape, dropout=config.dropout)
 
     if config.class_weight:
-        class_weight = calculate_class_weight(train_df, config.class_weight)
+        class_weight = calculate_class_weight(train_df, config.boost, config.class_weight)
     else:
         class_weight = None
 
     if config.focal_loss:
         alpha = calculate_class_weight(train_df, config.boost, config.focal_loss[0])
         gamma = config.focal_loss[1]
+        smooth = config.focal_loss[2]
     else:
-        alpha = None
-        gamma = None
+        alpha, gamma, smooth = None, None, None
 
     if config.lr_decay:
         decay_steps = len(train_df) // config.batch_size * config.epochs
         warmup_steps = int(decay_steps * 0.1)
     else:
-        decay_steps = None
-        warmup_steps = None
+        decay_steps, warmup_steps = None, None
 
     compile_model(
         model,
@@ -74,7 +73,8 @@ def train(train_ds, dev_ds, train_df):
         warmup_steps=warmup_steps,
         wd=config.weight_decay,
         alpha=alpha,
-        gamma=gamma
+        gamma=gamma,
+        smooth=smooth
     )
 
     layer_state = get_layer_state(model, config.architecture)

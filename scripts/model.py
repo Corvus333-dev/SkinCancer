@@ -58,12 +58,12 @@ def build_model(architecture, input_shape, dropout, classes=7):
     base_model.trainable = False # Recursive (freezes all sub-layers)
 
     augment_layers = Sequential([
-        RandomBrightness(0.2),
-        RandomContrast(0.2),
+        RandomBrightness(0.15),
+        RandomContrast(0.15),
         RandomFlip('horizontal_and_vertical'),
-        RandomRotation(0.2),
-        RandomTranslation(0.2, 0.2),
-        RandomZoom((-0.2, 0.2))
+        RandomRotation(0.15),
+        RandomTranslation(0.15, 0.15),
+        RandomZoom((-0.15, 0.15))
     ])
 
     inputs = Input(shape=input_shape)
@@ -129,7 +129,7 @@ def unfreeze_layers(model, architecture, unfreeze):
         for layer in base_model.layers:
             layer.trainable = any(keyword in layer.name for keyword in unfreeze)
 
-def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, wd, alpha, gamma):
+def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, wd, alpha, gamma, smooth):
     """
     Compiles model using AdamW optimizer and sparse categorical cross-entropy loss,
     with cosine decay learning rate schedule and label smoothing.
@@ -141,6 +141,9 @@ def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, w
         decay_steps (int): Number of steps for learning rate decay.
         warmup_steps (int): Number of steps for learning rate warmup.
         wd (float): Weight decay for optimizer.
+        alpha (dict): Map of diagnosis codes (int) and weights (float). Must be JSON-compatible.
+        gamma (float): Focusing parameter. Gradually reduces the importance given to easy examples.
+        smooth (float): Label smoothing effect. Reduces overconfidence in predictions.
 
     Returns:
         None
@@ -157,7 +160,7 @@ def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, w
         lr = initial_lr
 
     if gamma:
-        loss = SparseCategoricalFocalCrossentropy(alpha, gamma)
+        loss = SparseCategoricalFocalCrossentropy(alpha, gamma, smooth)
     else:
         loss = SparseCategoricalCrossentropy()
 

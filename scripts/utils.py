@@ -15,19 +15,21 @@ class SparseCategoricalFocalCrossentropy(tf.keras.losses.Loss):
             alpha_t is class-specific weight
             gamma is focusing parameter
     """
-    def __init__(self, alpha, gamma, name='sparse_categorical_focal_crossentropy'):
+    def __init__(self, alpha, gamma, smooth, name='sparse_categorical_focal_crossentropy'):
         """
         Initializes sparse categorical focal crossentropy loss.
 
         Args:
             alpha (dict): Map of diagnosis codes (int) and weights (float). Must be JSON-compatible.
             gamma (float): Focusing parameter. Gradually reduces the importance given to easy examples.
+            smooth (float): Label smoothing effect. Reduces overconfidence in predictions.
             name: Optional name for the loss instance.
         """
         super().__init__(name=name)
         self._alpha = alpha # Serialization copy
         self.alpha = tf.constant(list(alpha.values()), dtype=tf.float32)
         self.gamma = gamma
+        self.smooth = smooth
 
     def call(self, y, y_hat):
         """
@@ -42,10 +44,11 @@ class SparseCategoricalFocalCrossentropy(tf.keras.losses.Loss):
         """
         y = tf.cast(y, tf.int32)
         y_oh = tf.one_hot(y, depth=7)
+        y_sm = y_oh * (1 - self.smooth) + self.smooth / 7 # Label smoothing
         y_hat = tf.clip_by_value(y_hat, 1e-7, 1 - 1e-7) # Prevents numerical instability
 
         alpha_t = tf.reduce_sum(y_oh * self.alpha, axis=1)
-        p_t = tf.reduce_sum(y_oh * y_hat, axis=1)
+        p_t = tf.reduce_sum(y_sm * y_hat, axis=1)
 
         return -alpha_t * tf.pow(1 - p_t, self.gamma) * tf.math.log(p_t)
 
@@ -54,6 +57,7 @@ class SparseCategoricalFocalCrossentropy(tf.keras.losses.Loss):
         return {
             'alpha': self._alpha,
             'gamma': self.gamma,
+            'smooth': self.smooth,
             'name': self.name
         }
 
