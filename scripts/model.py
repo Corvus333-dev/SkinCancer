@@ -26,7 +26,7 @@ def build_model(architecture, input_shape, dropout, classes=7):
     Instantiates a base model using EfficientNetB0, InceptionV3, or ResNet50 architecture pretrained on ImageNet
     dataset, and attaches a broadly applicable custom top consisting of layers:
 
-    GAP -> BN -> Dropout -> Dense-512 -> BN -> Dropout -> Dense-256 -> BN -> Dropout -> Dense-7
+    GAP -> BN -> DO -> Dense-512 -> BN -> DO -> Dense-256 -> BN -> DO -> Dense-128 -> BN -> DO -> Dense-7
 
     Performs the following random augmentations to input:
     brightness, contrast, horizontal/vertical flip, rotation, translation, and zoom.
@@ -74,7 +74,7 @@ def build_model(architecture, input_shape, dropout, classes=7):
     x = Dropout(dropout[0])(x)
 
     x = Dense(512, activation='relu')(x)
-    X = BatchNormalization()(x)
+    x = BatchNormalization()(x)
     x = Dropout(dropout[1])(x)
 
     x = Dense(256, activation='relu')(x)
