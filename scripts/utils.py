@@ -1,10 +1,67 @@
 import numpy as np
 from sklearn.metrics import average_precision_score, precision_recall_curve
 import tensorflow as tf
+from tensorflow.keras.layers import Conv2D, Dense, GlobalAveragePooling2D, Layer, Multiply, Reshape
+from tensorflow.keras.losses import Loss
 from tensorflow.keras.saving import register_keras_serializable
 
 @register_keras_serializable()
-class SparseCategoricalFocalCrossentropy(tf.keras.losses.Loss):
+class SEAM(Layer):
+    def __init__(self, ratio=16, use_spatial=True, name='seam', **kwargs):
+        super().__init__(name=name, **kwargs)
+        self.ratio = ratio
+        self.use_spatial = use_spatial
+
+    def build(self, input_shape):
+        self.filters = input_shape[-1]
+
+        self.gap = GlobalAveragePooling2D()
+        self.squeeze = Dense(
+            self.filters // self.ratio,
+            activation='relu',
+            kernel_initializer='he_normal',
+            use_bias=False
+        )
+        self.excite = Dense(
+            self.filters,
+            activation='sigmoid',
+            kernel_initializer='he_normal',
+            use_bias=False
+        )
+        self.reshape = Reshape((1, 1, self.filters))
+
+        if self.use_spatial:
+            self.spatial_conv = Conv2D(filters=1, kernel_size=7, padding='same', activation='sigmoid', use_bias=False)
+
+        super().build(input_shape)
+
+    def call(self, inputs):
+        se = self.gap(inputs)
+        se = self.squeeze(se)
+        se = self.excite(se)
+        se = self.reshape(se)
+        x = Multiply()([inputs, se])
+
+        if self.use_spatial:
+            am_avg = tf.reduce_mean(x, axis=-1, keepdims=True)
+            am_max = tf.reduce_max(x, axis=-1, keepdims=True)
+            am = tf.concat([am_avg, am_max], axis=-1)
+            am = self.spatial_conv(am)
+            x = Multiply()([x, am])
+
+        return x
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'ratio': self.ratio,
+            'use_spatial': self.use_spatial
+        })
+
+        return config
+
+@register_keras_serializable()
+class SparseCategoricalFocalCrossentropy(Loss):
     """
     Custom focal loss implementation for sparse categorical classification, calculated via:
 
@@ -53,13 +110,14 @@ class SparseCategoricalFocalCrossentropy(tf.keras.losses.Loss):
         return -alpha_t * tf.pow(1 - p_t, self.gamma) * tf.math.log(p_t)
 
     def get_config(self):
-        # Configuration for model serialization
-        return {
+        config = super().get_config()
+        config.update({
             'alpha': self._alpha,
             'gamma': self.gamma,
-            'smooth': self.smooth,
-            'name': self.name
-        }
+            'smooth': self.smooth
+        })
+
+        return config
 
 def calculate_class_weight(train_df, boost, gamma):
     """

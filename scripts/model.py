@@ -7,6 +7,7 @@ from tensorflow.keras.layers import (
     Dense,
     Dropout,
     GlobalAveragePooling2D,
+    Permute,
     RandomBrightness,
     RandomContrast,
     RandomFlip,
@@ -19,14 +20,14 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import AdamW
 from tensorflow.keras.optimizers.schedules import CosineDecay
 
-from scripts.utils import SparseCategoricalFocalCrossentropy
+from scripts.utils import SEAM, SparseCategoricalFocalCrossentropy
 
 def build_model(architecture, input_shape, dropout, classes=7):
     """
     Instantiates a base model using EfficientNetB0, InceptionV3, or ResNet50 architecture pretrained on ImageNet
     dataset, and attaches a broadly applicable custom top consisting of layers:
 
-    GAP -> BN -> DO -> Dense-512 -> BN -> DO -> Dense-256 -> BN -> DO -> Dense-128 -> BN -> DO -> Dense-7
+    SE -> GAP -> BN -> DO -> Dense-512 -> BN -> DO -> Dense-256 -> BN -> DO -> Dense-128 -> BN -> DO -> Dense-7
 
     Performs the following random augmentations to input:
     brightness, contrast, horizontal/vertical flip, rotation, translation, and zoom.
@@ -69,6 +70,7 @@ def build_model(architecture, input_shape, dropout, classes=7):
     inputs = Input(shape=input_shape)
     x = augment_layers(inputs) # Explicit 'training=bool' is not required
     x = base_model(x)
+    x = SEAM()(x)
     x = GlobalAveragePooling2D()(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout[0])(x)
