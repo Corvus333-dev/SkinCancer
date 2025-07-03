@@ -20,7 +20,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import AdamW
 from tensorflow.keras.optimizers.schedules import CosineDecay
 
-from scripts.utils import SEAM, SparseCategoricalFocalCrossentropy
+from scripts.utils import CBAM, SparseCategoricalFocalCrossentropy
 
 def build_model(architecture, input_shape, dropout, classes=7):
     """
@@ -70,7 +70,7 @@ def build_model(architecture, input_shape, dropout, classes=7):
     inputs = Input(shape=input_shape)
     x = augment_layers(inputs) # Explicit 'training=bool' is not required
     x = base_model(x)
-    x = SEAM()(x)
+    x = CBAM()(x)
     x = GlobalAveragePooling2D()(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout[0])(x)

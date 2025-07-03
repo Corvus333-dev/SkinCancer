@@ -1,60 +1,88 @@
 import numpy as np
 from sklearn.metrics import average_precision_score, precision_recall_curve
 import tensorflow as tf
-from tensorflow.keras.layers import Conv2D, Dense, GlobalAveragePooling2D, Layer, Multiply, Reshape
+from tensorflow.keras.activations import sigmoid
+from tensorflow.keras.layers import (
+    Concatenate,
+    Conv2D, Dense,
+    GlobalAveragePooling2D,
+    GlobalMaxPooling2D,
+    Layer,
+    Multiply,
+    Reshape
+)
 from tensorflow.keras.losses import Loss
 from tensorflow.keras.saving import register_keras_serializable
 
 @register_keras_serializable()
-class SEAM(Layer):
-    def __init__(self, ratio=16, use_spatial=True, name='seam', **kwargs):
+class CBAM(Layer):
+    def __init__(self, reduction_ratio=16, kernel_size=7, use_spatial=False, name='cbam', **kwargs):
         super().__init__(name=name, **kwargs)
-        self.ratio = ratio
+        self.reduction_ratio = reduction_ratio
+        self.kernel_size = kernel_size
         self.use_spatial = use_spatial
 
     def build(self, input_shape):
-        self.filters = input_shape[-1]
+        self.channels = input_shape[-1]
 
-        self.gap = GlobalAveragePooling2D()
-        self.squeeze = Dense(
-            self.filters // self.ratio,
+        self.mlp_dense1 = Dense(
+            self.channels // self.reduction_ratio,
             activation='relu',
             kernel_initializer='he_normal',
-            use_bias=False
+            use_bias=False,
+            name='channel_mlp_1'
         )
-        self.excite = Dense(
-            self.filters,
-            activation='sigmoid',
+        self.mlp_dense2 = Dense(
+            self.channels,
             kernel_initializer='he_normal',
-            use_bias=False
+            use_bias=False,
+            name='channel_mlp_2'
         )
-        self.reshape = Reshape((1, 1, self.filters))
-
-        if self.use_spatial:
-            self.spatial_conv = Conv2D(filters=1, kernel_size=7, padding='same', activation='sigmoid', use_bias=False)
+        self.spatial_conv = Conv2D(
+            filters=1,
+            kernel_size=self.kernel_size,
+            strides=1,
+            padding='same',
+            activation='sigmoid',
+            use_bias=False,
+            name='spatial_conv'
+        )
 
         super().build(input_shape)
 
+    def channel_attention(self, inputs):
+        avg_pool = GlobalAveragePooling2D()(inputs)
+        max_pool = GlobalMaxPooling2D()(inputs)
+
+        mlp_avg = self.mlp_dense2(self.mlp_dense1(avg_pool))
+        mlp_max = self.mlp_dense2(self.mlp_dense1(max_pool))
+
+        channel_att = sigmoid(mlp_avg + mlp_max)
+        channel_att = Reshape((1, 1, self.channels))(channel_att)
+
+        return Multiply()([inputs, channel_att])
+
+    def spatial_attention(self, inputs):
+        avg_pool = tf.reduce_mean(inputs, axis=-1, keepdims=True)
+        max_pool = tf.reduce_max(inputs, axis=-1, keepdims=True)
+        concat = Concatenate(axis=-1)([avg_pool, max_pool])
+        spatial_att = self.spatial_conv(concat)
+
+        return Multiply()([inputs, spatial_att])
+
     def call(self, inputs):
-        se = self.gap(inputs)
-        se = self.squeeze(se)
-        se = self.excite(se)
-        se = self.reshape(se)
-        x = Multiply()([inputs, se])
+        x = self.channel_attention(inputs)
 
         if self.use_spatial:
-            am_avg = tf.reduce_mean(x, axis=-1, keepdims=True)
-            am_max = tf.reduce_max(x, axis=-1, keepdims=True)
-            am = tf.concat([am_avg, am_max], axis=-1)
-            am = self.spatial_conv(am)
-            x = Multiply()([x, am])
+            x = self.spatial_attention(x)
 
         return x
 
     def get_config(self):
         config = super().get_config()
         config.update({
-            'ratio': self.ratio,
+            'reduction_ratio': self.reduction_ratio,
+            'kernel_size': self.kernel_size,
             'use_spatial': self.use_spatial
         })
 
@@ -72,7 +100,7 @@ class SparseCategoricalFocalCrossentropy(Loss):
             alpha_t is class-specific weight
             gamma is focusing parameter
     """
-    def __init__(self, alpha, gamma, smooth, name='sparse_categorical_focal_crossentropy'):
+    def __init__(self, alpha, gamma, smooth, reduction='sum_over_batch_size', name='sparse_categorical_focal_crossentropy'):
         """
         Initializes sparse categorical focal crossentropy loss.
 
@@ -82,7 +110,7 @@ class SparseCategoricalFocalCrossentropy(Loss):
             smooth (float): Label smoothing effect. Reduces overconfidence in predictions.
             name: Optional name for the loss instance.
         """
-        super().__init__(name=name)
+        super().__init__(reduction=reduction, name=name)
         self._alpha = alpha # Serialization copy
         self.alpha = tf.constant(list(alpha.values()), dtype=tf.float32)
         self.gamma = gamma
