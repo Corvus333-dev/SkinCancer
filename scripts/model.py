@@ -27,7 +27,7 @@ def build_model(architecture, input_shape, dropout, classes=7):
     Instantiates a base model using EfficientNetB0, InceptionV3, or ResNet50 architecture pretrained on ImageNet
     dataset, and attaches a broadly applicable custom top consisting of layers:
 
-    SE -> GAP -> BN -> DO -> Dense-512 -> BN -> DO -> Dense-256 -> BN -> DO -> Dense-128 -> BN -> DO -> Dense-7
+    CBAM -> GAP -> BN -> DO -> Dense-512 -> BN -> DO -> Dense-256 -> BN -> DO -> Dense-128 -> BN -> DO -> Dense-7
 
     Performs the following random augmentations to input:
     brightness, contrast, horizontal/vertical flip, rotation, translation, and zoom.
@@ -75,15 +75,15 @@ def build_model(architecture, input_shape, dropout, classes=7):
     x = BatchNormalization()(x)
     x = Dropout(dropout[0])(x)
 
-    x = Dense(512, activation='relu')(x)
+    x = Dense(512, activation='swish')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout[1])(x)
 
-    x = Dense(256, activation='relu')(x)
+    x = Dense(256, activation='swish')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout[2])(x)
 
-    x = Dense(128, activation='relu')(x)
+    x = Dense(128, activation='swish')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout[3])(x)
 
@@ -131,7 +131,7 @@ def unfreeze_layers(model, architecture, unfreeze):
         for layer in base_model.layers:
             layer.trainable = any(keyword in layer.name for keyword in unfreeze)
 
-def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, wd, alpha, gamma, smooth):
+def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, wd, alpha, gamma, smooth, cos_lambda):
     """
     Compiles model using AdamW optimizer and sparse categorical cross-entropy loss,
     with cosine decay learning rate schedule and label smoothing.
@@ -146,6 +146,7 @@ def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, w
         alpha (dict): Map of diagnosis codes (int) and weights (float). Must be JSON-compatible.
         gamma (float): Focusing parameter. Gradually reduces the importance given to easy examples.
         smooth (float): Label smoothing effect. Reduces overconfidence in predictions.
+        cos_lambda (float): Cosine distance scaling factor.
 
     Returns:
         None
@@ -162,7 +163,7 @@ def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, w
         lr = initial_lr
 
     if gamma:
-        loss = SparseCategoricalFocalCrossentropy(alpha, gamma, smooth)
+        loss = SparseCategoricalFocalCrossentropy(alpha, gamma, smooth, cos_lambda)
     else:
         loss = SparseCategoricalCrossentropy()
 
