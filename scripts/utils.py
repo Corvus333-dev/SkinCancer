@@ -16,7 +16,7 @@ from tensorflow.keras.saving import register_keras_serializable
 
 @register_keras_serializable()
 class CBAM(Layer):
-    def __init__(self, reduction_ratio=16, kernel_size=7, use_spatial=False, name='cbam', **kwargs):
+    def __init__(self, reduction_ratio=16, kernel_size=7, use_spatial=True, name='cbam', **kwargs):
         super().__init__(name=name, **kwargs)
         self.reduction_ratio = reduction_ratio
         self.kernel_size = kernel_size
@@ -99,10 +99,8 @@ class SparseCategoricalFocalCrossentropy(Loss):
             p_t is predicted probability
             alpha_t is class-specific weight
             gamma is focusing parameter
-
-        with (optional) addition of cosine similarity.
     """
-    def __init__(self, alpha, gamma, smooth, cos_lambda, reduction='sum_over_batch_size', name='sparse_categorical_focal_crossentropy'):
+    def __init__(self, alpha, gamma, smooth, reduction='sum_over_batch_size', name='sparse_categorical_focal_crossentropy'):
         """
         Initializes sparse categorical focal crossentropy loss with cosine similarity.
 
@@ -110,7 +108,6 @@ class SparseCategoricalFocalCrossentropy(Loss):
             alpha (dict): Map of diagnosis codes (int) and weights (float). Must be JSON-compatible.
             gamma (float): Focusing parameter. Gradually reduces the importance given to easy examples.
             smooth (float): Label smoothing effect. Reduces overconfidence in predictions.
-            cos_lambda (float): Cosine similarity scaling factor.
             name: Optional name for the loss instance.
         """
         super().__init__(reduction=reduction, name=name)
@@ -136,19 +133,9 @@ class SparseCategoricalFocalCrossentropy(Loss):
         y_sm = y_oh * (1 - self.smooth) + self.smooth / 7 # Label smoothing
         y_hat = tf.clip_by_value(y_hat, 1e-7, 1 - 1e-7) # Prevents numerical instability
 
-        # Focal loss
         alpha_t = tf.reduce_sum(y_oh * self.alpha, axis=1)
         p_t = tf.reduce_sum(y_sm * y_hat, axis=1)
         focal_loss = -alpha_t * tf.pow(1 - p_t, self.gamma) * tf.math.log(p_t)
-
-        # Cosine similarity
-        if self.cos_lambda:
-            y_sm_norm = tf.nn.l2_normalize(y_sm, axis=1)
-            y_hat_norm = tf.nn.l2_normalize(y_hat, axis=1)
-            cosine_sim = tf.reduce_sum(y_sm_norm * y_hat_norm, axis=1)
-            cosine_loss = 1 - cosine_sim
-
-            return focal_loss + self.cos_lambda * cosine_loss
 
         return focal_loss
 

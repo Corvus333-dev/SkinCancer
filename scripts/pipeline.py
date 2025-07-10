@@ -102,7 +102,7 @@ def preprocess_image(path, dx_code, architecture):
     if architecture == 'efficientnetb0':
         preprocess_input = ppi_efficientnet
         th, tw = 224, 224
-    elif architecture == 'inception_v3':
+    elif architecture == 'inceptionv3':
         preprocess_input = ppi_inception
         th, tw = 299, 299
     elif architecture == 'resnet50':

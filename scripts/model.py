@@ -24,10 +24,8 @@ from scripts.utils import CBAM, SparseCategoricalFocalCrossentropy
 
 def build_model(architecture, input_shape, dropout, classes=7):
     """
-    Instantiates a base model using EfficientNetB0, InceptionV3, or ResNet50 architecture pretrained on ImageNet
-    dataset, and attaches a broadly applicable custom top consisting of layers:
-
-    CBAM -> GAP -> BN -> DO -> Dense-512 -> BN -> DO -> Dense-256 -> BN -> DO -> Dense-128 -> BN -> DO -> Dense-7
+    Instantiates a base model using EfficientNetB0, InceptionV3, or ResNet50V2 architecture pretrained on ImageNet
+    dataset, and attaches a broadly applicable custom top.
 
     Performs the following random augmentations to input:
     brightness, contrast, horizontal/vertical flip, rotation, translation, and zoom.
@@ -43,7 +41,7 @@ def build_model(architecture, input_shape, dropout, classes=7):
     """
     if architecture == 'efficientnetb0':
         model_type = EfficientNetB0
-    elif architecture == 'inception_v3':
+    elif architecture == 'inceptionv3':
         model_type = InceptionV3
     elif architecture == 'resnet50':
         model_type = ResNet50
@@ -72,6 +70,9 @@ def build_model(architecture, input_shape, dropout, classes=7):
     x = base_model(x)
     x = CBAM()(x)
     x = GlobalAveragePooling2D()(x)
+    x = BatchNormalization()(x)
+
+    x = Dense(1024, activation='swish')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout[0])(x)
 
@@ -131,7 +132,7 @@ def unfreeze_layers(model, architecture, unfreeze):
         for layer in base_model.layers:
             layer.trainable = any(keyword in layer.name for keyword in unfreeze)
 
-def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, wd, alpha, gamma, smooth, cos_lambda):
+def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, wd, alpha, gamma, smooth):
     """
     Compiles model using AdamW optimizer and sparse categorical cross-entropy loss,
     with cosine decay learning rate schedule and label smoothing.
@@ -146,7 +147,6 @@ def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, w
         alpha (dict): Map of diagnosis codes (int) and weights (float). Must be JSON-compatible.
         gamma (float): Focusing parameter. Gradually reduces the importance given to easy examples.
         smooth (float): Label smoothing effect. Reduces overconfidence in predictions.
-        cos_lambda (float): Cosine distance scaling factor.
 
     Returns:
         None
@@ -163,7 +163,7 @@ def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, w
         lr = initial_lr
 
     if gamma:
-        loss = SparseCategoricalFocalCrossentropy(alpha, gamma, smooth, cos_lambda)
+        loss = SparseCategoricalFocalCrossentropy(alpha, gamma, smooth)
     else:
         loss = SparseCategoricalCrossentropy()
 
