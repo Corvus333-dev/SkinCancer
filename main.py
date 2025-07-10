@@ -15,11 +15,11 @@ config = ExperimentConfig(
     boost=None,
     class_weight=None,
     dist_plot=False,
-    focal_loss=(0.5, 2.0, 0.0, 0.0),
+    focal_loss=(0.5, 2.0, 0.1),
     lr_decay=True,
     input_shape=(224, 224, 3),
     batch_size=32,
-    dropout=(0.4, 0.3, 0.2, 0.1),
+    dropout=(0.5, 0.25, 0.125, 0.0625),
     initial_lr=1e-4,
     patience=3,
     warmup_target=None,
@@ -56,7 +56,6 @@ def train(train_ds, dev_ds, train_df):
         alpha = calculate_class_weight(train_df, config.boost, config.focal_loss[0])
         gamma = config.focal_loss[1]
         smooth = config.focal_loss[2]
-        cos_lambda = config.focal_loss[3]
     else:
         alpha, gamma, smooth, cos_lambda = None, None, None, None
 
@@ -75,8 +74,7 @@ def train(train_ds, dev_ds, train_df):
         wd=config.weight_decay,
         alpha=alpha,
         gamma=gamma,
-        smooth=smooth,
-        cos_lambda=cos_lambda
+        smooth=smooth
     )
 
     layer_state = get_layer_state(model, config.architecture)
