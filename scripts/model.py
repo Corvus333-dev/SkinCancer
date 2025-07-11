@@ -72,21 +72,17 @@ def build_model(architecture, input_shape, dropout, classes=7):
     x = GlobalAveragePooling2D()(x)
     x = BatchNormalization()(x)
 
-    x = Dense(1024, activation='swish')(x)
+    x = Dense(512, activation='swish')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout[0])(x)
 
-    x = Dense(512, activation='swish')(x)
+    x = Dense(256, activation='swish')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout[1])(x)
 
-    x = Dense(256, activation='swish')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(dropout[2])(x)
-
     x = Dense(128, activation='swish')(x)
     x = BatchNormalization()(x)
-    x = Dropout(dropout[3])(x)
+    x = Dropout(dropout[2])(x)
 
     outputs = Dense(classes, activation='softmax')(x)
 

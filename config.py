@@ -14,11 +14,11 @@ class ExperimentConfig:
     lr_decay: bool = True
     input_shape: Tuple[int, int, int] = (224, 224, 3)
     batch_size: int = 32
-    dropout: Tuple[float, float, float, float] = (0.5, 0.25, 0.125, 0.0625)
-    initial_lr: float = 1e-3
-    patience: int = 5
+    dropout: Tuple[float, float, float] = (0.5, 0.25, 0.125)
+    initial_lr: float = 1e-4
+    patience: int = 3
     warmup_target: Optional[float] = None
-    weight_decay: float = 1e-5
+    weight_decay: float = 1e-4
     epochs: int = 30
 
     def __post_init__(self):

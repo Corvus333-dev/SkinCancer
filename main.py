@@ -8,7 +8,7 @@ from scripts.plots import *
 from scripts.utils import *
 
 config = ExperimentConfig(
-    architecture='resnet50',
+    architecture='efficientnetb0',
     mode='train',
     checkpoint=None,
     unfreeze=None,
@@ -19,7 +19,7 @@ config = ExperimentConfig(
     lr_decay=True,
     input_shape=(224, 224, 3),
     batch_size=32,
-    dropout=(0.5, 0.25, 0.125, 0.0625),
+    dropout=(0.5, 0.25, 0.125),
     initial_lr=1e-4,
     patience=3,
     warmup_target=None,
