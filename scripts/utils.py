@@ -16,7 +16,7 @@ from tensorflow.keras.saving import register_keras_serializable
 
 @register_keras_serializable()
 class CBAM(Layer):
-    def __init__(self, reduction_ratio=16, kernel_size=3, use_spatial=True, name='cbam', **kwargs):
+    def __init__(self, reduction_ratio=16, kernel_size=5, use_spatial=True, name='cbam', **kwargs):
         super().__init__(name=name, **kwargs)
         self.reduction_ratio = reduction_ratio
         self.kernel_size = kernel_size
@@ -115,7 +115,6 @@ class SparseCategoricalFocalCrossentropy(Loss):
         self.alpha = tf.constant(list(alpha.values()), dtype=tf.float32)
         self.gamma = gamma
         self.smooth = smooth
-        self.cos_lambda = cos_lambda
 
     def call(self, y, y_hat):
         """

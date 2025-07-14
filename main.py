@@ -10,21 +10,21 @@ from scripts.utils import *
 config = ExperimentConfig(
     architecture='efficientnetb0',
     mode='train',
-    checkpoint=None,
-    unfreeze=None,
+    checkpoint='models/efficientnetb0_20250714_1320/model.keras',
+    unfreeze='block7a_expand_conv',
     boost=None,
     class_weight=None,
     dist_plot=False,
-    focal_loss=(0.5, 2.0, 0.1),
+    focal_loss=(0.5, 2.2, 0.1),
     lr_decay=True,
     input_shape=(224, 224, 3),
     batch_size=32,
     dropout=(0.5, 0.25, 0.125),
-    initial_lr=1e-4,
-    patience=3,
+    initial_lr=1e-5,
+    patience=6,
     warmup_target=None,
-    weight_decay=1e-4,
-    epochs=30
+    weight_decay=1e-5,
+    epochs=60
 )
 
 def load_data():

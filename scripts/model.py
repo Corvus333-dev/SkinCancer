@@ -7,7 +7,6 @@ from tensorflow.keras.layers import (
     Dense,
     Dropout,
     GlobalAveragePooling2D,
-    Permute,
     RandomBrightness,
     RandomContrast,
     RandomFlip,
