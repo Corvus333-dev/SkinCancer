@@ -103,10 +103,12 @@ def unfreeze_layers(model, architecture, unfreeze):
         None
     """
     base_model = model.get_layer(architecture)
-    base_model.trainable = True # Recursive (unfreezes all sub-layers)
+    base_model.trainable = True # Unfreezes parent container
 
     # Unfreeze from depth magnitude
     if isinstance(unfreeze, int):
+        for layer in base_model.layers[-unfreeze:]:
+            layer.trainable = True
         for layer in base_model.layers[:-unfreeze]:
             layer.trainable = False
 
@@ -119,6 +121,8 @@ def unfreeze_layers(model, architecture, unfreeze):
             raise ValueError(f'Multiple layers named "{unfreeze}" found.')
         else:
             match = matches[0] # Single layer index needed for slicing
+            for layer in base_model.layers[match:]:
+                layer.trainable = True
             for layer in base_model.layers[:match]:
                 layer.trainable = False
 
