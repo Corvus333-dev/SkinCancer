@@ -8,23 +8,23 @@ from scripts.plots import *
 from scripts.utils import *
 
 config = ExperimentConfig(
-    architecture='efficientnetb0',
+    architecture='efficientnetb1',
     mode='train',
-    checkpoint='models/efficientnetb0_20250715_1305/model.keras',
-    unfreeze='block6d_expand_conv',
+    checkpoint=None,
+    unfreeze=None,
     boost=None,
     class_weight=None,
     dist_plot=False,
     focal_loss=(0.5, 2.0, 0.1),
     lr_decay=True,
-    input_shape=(224, 224, 3),
+    input_shape=(240, 240, 3),
     batch_size=64,
     dropout=(0.5, 0.25, 0.125),
-    initial_lr=1e-5,
-    patience=6,
-    warmup_target=1e-4,
+    initial_lr=1e-3,
+    patience=3,
+    warmup_target=None,
     weight_decay=1e-5,
-    epochs=60
+    epochs=30
 )
 
 def load_data():
