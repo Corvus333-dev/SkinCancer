@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import Input, Sequential
-from tensorflow.keras.applications import EfficientNetB1, InceptionV3, ResNet50
+from tensorflow.keras.applications import EfficientNetB0, InceptionV3, ResNet50
 from tensorflow.keras.layers import (
     BatchNormalization,
     Dense,
@@ -23,7 +23,7 @@ from scripts.utils import CBAM, SparseCategoricalFocalCrossentropy
 
 def build_model(architecture, input_shape, dropout, classes=7):
     """
-    Instantiates a base model using EfficientNetB1, InceptionV3, or ResNet50V2 architecture pretrained on ImageNet
+    Instantiates a base model using EfficientNetB0, InceptionV3, or ResNet50V2 architecture pretrained on ImageNet
     dataset, and attaches a broadly applicable custom top.
 
     Performs the following random augmentations to input:
@@ -38,8 +38,8 @@ def build_model(architecture, input_shape, dropout, classes=7):
     Returns:
         tf.keras.Model: Functional model with frozen base layers.
     """
-    if architecture == 'efficientnetb1':
-        model_type = EfficientNetB1
+    if architecture == 'efficientnetb0':
+        model_type = EfficientNetB0
     elif architecture == 'inceptionv3':
         model_type = InceptionV3
     elif architecture == 'resnet50':

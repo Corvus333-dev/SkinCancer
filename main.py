@@ -8,7 +8,7 @@ from scripts.plots import *
 from scripts.utils import *
 
 config = ExperimentConfig(
-    architecture='efficientnetb1',
+    architecture='efficientnetb0',
     mode='train',
     checkpoint=None,
     unfreeze=None,
@@ -23,7 +23,7 @@ config = ExperimentConfig(
     initial_lr=1e-3,
     patience=3,
     warmup_target=None,
-    weight_decay=1e-5,
+    weight_decay=1e-4,
     epochs=30
 )
 
