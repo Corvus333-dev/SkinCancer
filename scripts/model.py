@@ -4,6 +4,7 @@ from tensorflow.keras import Input, Sequential
 from tensorflow.keras.applications import EfficientNetB0, InceptionV3, ResNet50
 from tensorflow.keras.layers import (
     BatchNormalization,
+    Concatenate,
     Dense,
     Dropout,
     GlobalAveragePooling2D,
@@ -64,8 +65,10 @@ def build_model(architecture, input_shape, dropout, classes=7):
         RandomZoom((-0.15, 0.15))
     ])
 
-    inputs = Input(shape=input_shape)
-    x = augment_layers(inputs) # Explicit 'training=bool' is not required
+    # Image branch
+    image_input = Input(name='image', shape=input_shape)
+
+    x = augment_layers(image_input) # Explicit 'training=bool' is not required
     x = base_model(x)
     x = CBAM()(x)
     x = GlobalAveragePooling2D()(x)
@@ -83,9 +86,17 @@ def build_model(architecture, input_shape, dropout, classes=7):
     x = BatchNormalization()(x)
     x = Dropout(dropout[2])(x)
 
-    outputs = Dense(classes, activation='softmax')(x)
+    # Metadata branch
+    meta_input = Input(name='meta', shape=(10,))
+    m = Dense(64, activation='swish')(x)
 
-    return Model(inputs, outputs)
+    # Fusion branch
+    xm = Concatenate()([x, m])
+    xm = Dense(32, activation='swish')(xm)
+
+    output = Dense(classes, activation='softmax')(xm)
+
+    return Model(inputs=[image_input, meta_input], outputs=output)
 
 def unfreeze_layers(model, architecture, unfreeze):
     """

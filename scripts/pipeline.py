@@ -6,6 +6,8 @@ import tensorflow as tf
 from tensorflow.keras.applications.efficientnet import preprocess_input as ppi_efficientnet
 from tensorflow.keras.applications.inception_v3 import preprocess_input as ppi_inception
 from tensorflow.keras.applications.resnet import preprocess_input as ppi_resnet
+from tensorflow.python.ops.numpy_ops.np_dtypes import float32
+
 
 def encode_labels():
     """
@@ -24,6 +26,21 @@ def encode_labels():
     dx_map = dict(enumerate(le.classes_))
 
     return df, dx_map
+
+def encode_meta(df):
+    """
+    Prepares metadata for multimodal input by normalizing age and one-hot encoding sex/localization.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing raw metadata.
+
+    Returns:
+        pd.DataFrame: DataFrame containing encoded metadata.
+    """
+    df['age'] = df['age'] / 100
+    df = pd.get_dummies(df, prefix=['sex', 'loc'], columns=['sex', 'localization'])
+
+    return df
 
 def map_image_paths(df):
     """
@@ -86,7 +103,7 @@ def split_data(df):
 
     return train_df, dev_unique_df, test_unique_df
 
-def preprocess_image(path, dx_code, architecture):
+def preprocess_image(path, architecture):
     """
     Decodes a JPEG-encoded image, resizes with pad, and performs ImageNet-style normalization.
 
@@ -117,11 +134,11 @@ def preprocess_image(path, dx_code, architecture):
 
     image = preprocess_input(image)
 
-    return image, dx_code
+    return image
 
 def fetch_dataset(df, architecture, batch_size, shuffle=True):
     """
-    Creates a Tensorflow Dataset from preprocessed images and corresponding diagnosis codes.
+    Creates a Tensorflow Dataset from corresponding metadata, preprocessed images, and diagnosis codes.
 
     Args:
         df (pd.DataFrame): DataFrame with image paths and diagnosis codes.
@@ -132,11 +149,19 @@ def fetch_dataset(df, architecture, batch_size, shuffle=True):
     Returns:
         tf.data.Dataset: Batched dataset of (image, dx_code) pairs.
     """
+    meta_columns = [col for col in df.columns if col == 'age' or col.startswith('sex_') or col.startswith('loc_')]
+    meta_array = df[meta_columns].to_numpy().astype('float32')
     paths = df['image_path'].values
     dx_codes = df['dx_code'].values
 
-    ds = tf.data.Dataset.from_tensor_slices((paths, dx_codes))
-    ds = ds.map(lambda x, y: preprocess_image(x, y, architecture), num_parallel_calls=tf.data.AUTOTUNE)
+    ds = tf.data.Dataset.from_tensor_slices((meta_array, paths, dx_codes))
+
+    def preprocess_all(meta_vector, path, dx_code):
+        # Package metadata, preprocessed image, and dx_code
+        image = preprocess_image(path, architecture)
+        return {'meta': meta_vector, 'image': image}, dx_code
+
+    ds = ds.map(preprocess_all, num_parallel_calls=tf.data.AUTOTUNE)
 
     if shuffle:
         ds = ds.shuffle(buffer_size=2000)
