@@ -88,11 +88,17 @@ def build_model(architecture, input_shape, dropout, classes=7):
 
     # Metadata branch
     meta_input = Input(name='meta', shape=(10,))
-    m = Dense(64, activation='swish')(x)
+    m = Dense(64, activation='swish')(meta_input)
+    m = BatchNormalization()(m)
+    m = Dropout(dropout[1])(m)
+
+    m = Dense(32, activation='swish')(m)
+    m = BatchNormalization()(m)
+    m = Dropout(dropout[2])(m)
 
     # Fusion branch
     xm = Concatenate()([x, m])
-    xm = Dense(32, activation='swish')(xm)
+    xm = Dense(16, activation='swish')(xm)
 
     output = Dense(classes, activation='softmax')(xm)
 
