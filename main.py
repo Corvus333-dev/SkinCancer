@@ -9,28 +9,29 @@ from scripts.utils import *
 
 config = ExperimentConfig(
     architecture='efficientnetb0',
-    mode='train',
-    checkpoint=None,
-    unfreeze=None,
+    mode='dev',
+    checkpoint='models/efficientnetb0_20250728_2019/model.keras',
+    unfreeze='block7a_expand_conv',
     boost=None,
     class_weight=None,
     dist_plot=False,
     focal_loss=(0.5, 2.0, 0.1),
     lr_decay=True,
     input_shape=(224, 224, 3),
-    batch_size=32,
+    batch_size=64,
     dropout=(0.5, 0.25, 0.125),
-    initial_lr=1e-3,
-    patience=3,
-    warmup_target=None,
+    initial_lr=1e-5,
+    patience=6,
+    warmup_target=1e-4,
     weight_decay=1e-4,
-    epochs=30
+    epochs=60
 )
 
 def load_data():
     df, dx_map = encode_labels()
     dx_names = list(dx_map.values())
     df = map_image_paths(df)
+    df = encode_meta(df)
     train_df, dev_df, test_df = split_data(df)
 
     if config.dist_plot:

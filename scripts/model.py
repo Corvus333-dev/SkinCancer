@@ -4,16 +4,17 @@ from tensorflow.keras import Input, Sequential
 from tensorflow.keras.applications import EfficientNetB0, InceptionV3, ResNet50
 from tensorflow.keras.layers import (
     BatchNormalization,
-    Concatenate,
     Dense,
     Dropout,
     GlobalAveragePooling2D,
+    Multiply,
     RandomBrightness,
     RandomContrast,
     RandomFlip,
     RandomRotation,
     RandomTranslation,
-    RandomZoom
+    RandomZoom,
+    Reshape
 )
 from tensorflow.keras.losses import SparseCategoricalCrossentropy
 from tensorflow.keras.models import Model
@@ -65,15 +66,26 @@ def build_model(architecture, input_shape, dropout, classes=7):
         RandomZoom((-0.15, 0.15))
     ])
 
-    # Image branch
     image_input = Input(name='image', shape=input_shape)
+    meta_input = Input(name='meta', shape=(19,))
 
     x = augment_layers(image_input) # Explicit 'training=bool' is not required
     x = base_model(x)
+
+    # Metadata-biased channel gate
+    channels = x.shape[-1]
+    m = Dense(64, activation='swish')(meta_input)
+    m = Dropout(dropout[2])(m)
+    m = Dense(channels, activation='sigmoid')(m)
+    m = Reshape((1, 1, channels))(m)
+    x = Multiply()([x, m])
+
+    # Convolutional block attention module
     x = CBAM()(x)
     x = GlobalAveragePooling2D()(x)
     x = BatchNormalization()(x)
 
+    # Dense stack
     x = Dense(512, activation='swish')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout[0])(x)
@@ -86,21 +98,7 @@ def build_model(architecture, input_shape, dropout, classes=7):
     x = BatchNormalization()(x)
     x = Dropout(dropout[2])(x)
 
-    # Metadata branch
-    meta_input = Input(name='meta', shape=(10,))
-    m = Dense(64, activation='swish')(meta_input)
-    m = BatchNormalization()(m)
-    m = Dropout(dropout[1])(m)
-
-    m = Dense(32, activation='swish')(m)
-    m = BatchNormalization()(m)
-    m = Dropout(dropout[2])(m)
-
-    # Fusion branch
-    xm = Concatenate()([x, m])
-    xm = Dense(16, activation='swish')(xm)
-
-    output = Dense(classes, activation='softmax')(xm)
+    output = Dense(classes, activation='softmax')(x)
 
     return Model(inputs=[image_input, meta_input], outputs=output)
 
