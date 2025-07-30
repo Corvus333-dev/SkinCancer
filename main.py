@@ -9,8 +9,8 @@ from scripts.utils import *
 
 config = ExperimentConfig(
     architecture='efficientnetb0',
-    mode='dev',
-    checkpoint='models/efficientnetb0_20250728_2019/model.keras',
+    mode='train',
+    checkpoint='models/efficientnetb0_20250730_1134/model.keras',
     unfreeze='block7a_expand_conv',
     boost=None,
     class_weight=None,

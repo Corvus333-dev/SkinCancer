@@ -7,7 +7,6 @@ from tensorflow.keras.layers import (
     Dense,
     Dropout,
     GlobalAveragePooling2D,
-    Multiply,
     RandomBrightness,
     RandomContrast,
     RandomFlip,
@@ -72,13 +71,15 @@ def build_model(architecture, input_shape, dropout, classes=7):
     x = augment_layers(image_input) # Explicit 'training=bool' is not required
     x = base_model(x)
 
-    # Metadata-biased channel gate
+    # Metadata-biased channel gate mechanism
+    alpha = tf.Variable(0.1, trainable=True, dtype=tf.float32)
     channels = x.shape[-1]
+
     m = Dense(64, activation='swish')(meta_input)
-    m = Dropout(dropout[2])(m)
+    m = Dropout(0.125)(m)
     m = Dense(channels, activation='sigmoid')(m)
     m = Reshape((1, 1, channels))(m)
-    x = Multiply()([x, m])
+    x = x * (1 + alpha * m) # Gate strength modulation
 
     # Convolutional block attention module
     x = CBAM()(x)
