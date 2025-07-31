@@ -25,7 +25,7 @@ from scripts.utils import CBAM, SparseCategoricalFocalCrossentropy
 def build_model(architecture, input_shape, dropout, classes=7):
     """
     Instantiates a base model using EfficientNetB0, InceptionV3, or ResNet50V2 architecture pretrained on ImageNet
-    dataset, and attaches a broadly applicable custom top.
+    dataset, and attaches a custom top that includes a metadata gate, CBAM, dense stack, and softmax output.
 
     Performs the following random augmentations to input:
     brightness, contrast, horizontal/vertical flip, rotation, translation, and zoom.
@@ -56,6 +56,7 @@ def build_model(architecture, input_shape, dropout, classes=7):
 
     base_model.trainable = False # Recursive (freezes all sub-layers)
 
+    # Augmentation block
     augment_layers = Sequential([
         RandomBrightness(0.15),
         RandomContrast(0.15),
@@ -65,6 +66,7 @@ def build_model(architecture, input_shape, dropout, classes=7):
         RandomZoom((-0.15, 0.15))
     ])
 
+    # Inputs
     image_input = Input(name='image', shape=input_shape)
     meta_input = Input(name='meta', shape=(19,))
 
@@ -72,14 +74,13 @@ def build_model(architecture, input_shape, dropout, classes=7):
     x = base_model(x)
 
     # Metadata-biased channel gate mechanism
-    alpha = tf.Variable(0.1, trainable=True, dtype=tf.float32)
+    alpha = tf.Variable(0.1, trainable=True, dtype=tf.float32) # Broad gate modulator
     channels = x.shape[-1]
-
-    m = Dense(64, activation='swish')(meta_input)
+    m = Dense(128, activation='swish')(meta_input)
     m = Dropout(0.125)(m)
     m = Dense(channels, activation='sigmoid')(m)
     m = Reshape((1, 1, channels))(m)
-    x = x * (1 + alpha * m) # Gate strength modulation
+    x = x * (1 + alpha * m)
 
     # Convolutional block attention module
     x = CBAM()(x)
