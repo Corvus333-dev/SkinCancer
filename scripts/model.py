@@ -15,7 +15,6 @@ from tensorflow.keras.layers import (
     RandomZoom,
     Reshape
 )
-from tensorflow.keras.losses import SparseCategoricalCrossentropy
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import AdamW
 from tensorflow.keras.optimizers.schedules import CosineDecay

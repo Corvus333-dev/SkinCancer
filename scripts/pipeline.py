@@ -6,8 +6,6 @@ import tensorflow as tf
 from tensorflow.keras.applications.efficientnet import preprocess_input as ppi_efficientnet
 from tensorflow.keras.applications.inception_v3 import preprocess_input as ppi_inception
 from tensorflow.keras.applications.resnet import preprocess_input as ppi_resnet
-from tensorflow.python.ops.numpy_ops.np_dtypes import float32
-
 
 def encode_labels():
     """
