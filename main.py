@@ -13,7 +13,6 @@ config = ExperimentConfig(
     checkpoint=None,
     unfreeze=None,
     boost=None,
-    class_weight=None,
     dist_plot=False,
     focal_loss=(0.5, 2.0, 0.1),
     lr_decay=True,
@@ -48,17 +47,9 @@ def train(train_ds, dev_ds, train_df):
     else:
         model = build_model(architecture=config.architecture, input_shape=config.input_shape, dropout=config.dropout)
 
-    if config.class_weight:
-        class_weight = calculate_class_weight(train_df, config.boost, config.class_weight)
-    else:
-        class_weight = None
-
-    if config.focal_loss:
-        alpha = calculate_class_weight(train_df, config.boost, config.focal_loss[0])
-        gamma = config.focal_loss[1]
-        smooth = config.focal_loss[2]
-    else:
-        alpha, gamma, smooth, cos_lambda = None, None, None, None
+    alpha = calculate_class_weight(train_df, config.boost, config.focal_loss[0])
+    gamma = config.focal_loss[1]
+    smooth = config.focal_loss[2]
 
     if config.lr_decay:
         decay_steps = len(train_df) // config.batch_size * config.epochs
@@ -79,7 +70,7 @@ def train(train_ds, dev_ds, train_df):
     )
 
     layer_state = get_layer_state(model, config.architecture)
-    history = train_model(model, train_ds, dev_ds, class_weight, epochs=config.epochs, patience=config.patience)
+    history = train_model(model, train_ds, dev_ds, epochs=config.epochs, patience=config.patience)
     directory = create_directory(config.architecture)
     hist_plot = plot_hist(history.history, directory)
 

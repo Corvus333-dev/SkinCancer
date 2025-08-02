@@ -178,15 +178,11 @@ def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, w
     else:
         lr = initial_lr
 
-    if gamma:
-        loss = SparseCategoricalFocalCrossentropy(alpha, gamma, smooth)
-    else:
-        loss = SparseCategoricalCrossentropy()
-
+    loss = SparseCategoricalFocalCrossentropy(alpha, gamma, smooth)
     opt = AdamW(learning_rate=lr, weight_decay=wd)
     model.compile(optimizer=opt, loss=loss, metrics = ['accuracy'])
 
-def train_model(model, train_ds, dev_ds, class_weight, epochs, patience, threshold=0.001):
+def train_model(model, train_ds, dev_ds, epochs, patience, threshold=0.001):
     """
     Trains model on dataset, with early stopping callback.
 
@@ -194,7 +190,6 @@ def train_model(model, train_ds, dev_ds, class_weight, epochs, patience, thresho
         model (keras.Model): Compiled model.
         train_ds (tf.data.Dataset): Training dataset.
         dev_ds (tf.data.Dataset): Development dataset used for monitoring validation loss.
-        class_weight (dict): Map of diagnosis codes to associated weights.
         epochs (int): Maximum number of epochs.
         patience (int): Number of epochs with no improvement after which training will be stopped.
         threshold (float): Minimum change in loss to qualify as an improvement.
@@ -210,7 +205,7 @@ def train_model(model, train_ds, dev_ds, class_weight, epochs, patience, thresho
         restore_best_weights=True
     )
 
-    return model.fit(train_ds, validation_data=dev_ds, class_weight=class_weight, epochs=epochs, callbacks=[stop])
+    return model.fit(train_ds, validation_data=dev_ds, epochs=epochs, callbacks=[stop])
 
 def predict_dx(ds, model):
     """

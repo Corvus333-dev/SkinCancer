@@ -8,7 +8,6 @@ class ExperimentConfig:
     checkpoint: Optional[str] = None
     unfreeze: Optional[Union[int, str, Tuple[str, ...]]] = None
     boost: Optional[dict] = None
-    class_weight: Optional[float] = None
     dist_plot: bool = False
     focal_loss: Optional[Tuple[float, float, float]] = None
     lr_decay: bool = True
