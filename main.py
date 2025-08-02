@@ -13,7 +13,6 @@ config = ExperimentConfig(
     checkpoint=None,
     unfreeze=None,
     boost=None,
-    dist_plot=False,
     focal_loss=(0.5, 2.0, 0.1),
     lr_decay=True,
     input_shape=(224, 224, 3),
@@ -33,7 +32,7 @@ def load_data():
     df = encode_meta(df)
     train_df, dev_df, test_df = split_data(df)
 
-    if config.dist_plot:
+    if not config.checkpoint:
         dist_plot = plot_dist(df, dx_names)
         save_dist(dist_plot)
 
