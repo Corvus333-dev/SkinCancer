@@ -16,6 +16,21 @@ from tensorflow.keras.saving import register_keras_serializable
 
 @register_keras_serializable()
 class CBAM(Layer):
+    """
+    Convolutional block attention module that enhances features via channel and spatial attention mechanisms.
+
+    Args:
+            reduction_ratio (int): Reduction ratio for channel MLP bottleneck.
+            kernel_size (int): Kernel size for spatial attention convolution.
+            use_spatial (bool): Toggles use of spatial attention.
+            name (str): Layer name.
+            **kwargs: Additional keyword arguments passed to parent class.
+
+    Reference:
+            Woo, S., Park, J., Lee, J.Y. and Kweon, I.S., 2018. CBAM: Convolutional Block Attention Module.
+            Proceedings of the European Conference on Computer Vision (ECCV) (pp. 3-19).
+            Paper: https://arxiv.org/abs/1807.06521
+    """
     def __init__(self, reduction_ratio=16, kernel_size=5, use_spatial=True, name='cbam', **kwargs):
         super().__init__(name=name, **kwargs)
         self.reduction_ratio = reduction_ratio
@@ -23,6 +38,16 @@ class CBAM(Layer):
         self.use_spatial = use_spatial
 
     def build(self, input_shape):
+        """
+        Constructs the CBAM architecture, consisting of:
+            - channel attention: two-layer MLP with reduction ratio bottleneck
+            - spatial attention: single convolution processing pooled channel features
+        Args:
+            input_shape (tuple): Shape of input tensor (used to calculate channel size).
+
+        Returns:
+            None
+        """
         self.channels = input_shape[-1]
 
         self.mlp_dense1 = Dense(
@@ -71,6 +96,15 @@ class CBAM(Layer):
         return Multiply()([inputs, spatial_att])
 
     def call(self, inputs):
+        """
+        Applies channel attention, optionally followed by spatial attention to input feature maps.
+
+        Args:
+            inputs (tf.Tensor): Input feature tensor of shape (batch size, h, w, c).
+
+        Returns:
+            tf.Tensor: Feature maps with spatial attention applied.
+        """
         x = self.channel_attention(inputs)
 
         if self.use_spatial:
@@ -91,7 +125,7 @@ class CBAM(Layer):
 @register_keras_serializable()
 class SparseCategoricalFocalCrossentropy(Loss):
     """
-    Custom focal loss implementation for sparse categorical classification, calculated via:
+    Implements focal cross-entropy loss for sparse categorical classification, calculated via:
 
         L(p_t) = -alpha_t * (1 - p_t)^gamma * log(p_t)
 
@@ -99,17 +133,15 @@ class SparseCategoricalFocalCrossentropy(Loss):
             p_t is predicted probability
             alpha_t is class-specific weight
             gamma is focusing parameter
-    """
-    def __init__(self, alpha, gamma, smooth, reduction='sum_over_batch_size', name='sparse_categorical_focal_crossentropy'):
-        """
-        Initializes sparse categorical focal crossentropy loss with cosine similarity.
 
-        Args:
-            alpha (dict): Map of diagnosis codes (int) and weights (float). Must be JSON-compatible.
+    Args:
+            alpha (dict): Map of diagnosis codes (int) and class weights (float). Must be JSON-compatible.
             gamma (float): Focusing parameter. Gradually reduces the importance given to easy examples.
             smooth (float): Label smoothing effect. Reduces overconfidence in predictions.
-            name: Optional name for the loss instance.
-        """
+            reduction (str): Type of reduction applied to loss.
+            name (str): Name for the loss instance.
+    """
+    def __init__(self, alpha, gamma, smooth, reduction='sum_over_batch_size', name='sparse_categorical_focal_crossentropy'):
         super().__init__(reduction=reduction, name=name)
         self._alpha = alpha # Serialization copy
         self.alpha = tf.constant(list(alpha.values()), dtype=tf.float32)
