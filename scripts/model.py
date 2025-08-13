@@ -4,6 +4,7 @@ from tensorflow.keras import Input, Sequential
 from tensorflow.keras.applications import EfficientNetB0, InceptionV3, ResNet50
 from tensorflow.keras.layers import (
     BatchNormalization,
+    Concatenate,
     Dense,
     Dropout,
     GlobalAveragePooling2D,
@@ -72,8 +73,8 @@ def build_model(architecture, input_shape, dropout, classes=7):
     x = augment_layers(image_input) # Explicit 'training=bool' is not required
     x = base_model(x)
 
-    # Metadata-biased channel gate mechanism
-    alpha = tf.Variable(0.1, trainable=True, dtype=tf.float32) # Broad gate modulator
+    # Metadata gate
+    alpha = tf.Variable(0.0, trainable=True, dtype=tf.float32) # Broad gate modulator
     channels = x.shape[-1]
     m = Dense(64, activation='swish')(meta_input)
     m = Dropout(0.125)(m)
