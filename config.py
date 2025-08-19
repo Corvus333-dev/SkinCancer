@@ -14,10 +14,10 @@ class ExperimentConfig:
     batch_size: int = 64
     dropout: Tuple[float, float, float] = (0.5, 0.25, 0.125)
     initial_lr: float = 1e-3
-    patience: int = 3
+    patience: int = 5
     warmup_target: Optional[float] = None
     weight_decay: float = 1e-4
-    epochs: int = 30
+    epochs: int = 50
 
     def __post_init__(self):
         if self.architecture not in {'efficientnetb0', 'inceptionv3', 'resnet50'}:

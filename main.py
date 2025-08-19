@@ -27,10 +27,10 @@ config = ExperimentConfig(
     batch_size=64,
     dropout=(0.5, 0.25, 0.125),
     initial_lr=1e-3,
-    patience=3,
+    patience=5,
     warmup_target=None,
     weight_decay=1e-4,
-    epochs=30
+    epochs=50
 )
 
 def load_data():
