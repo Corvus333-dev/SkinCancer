@@ -79,7 +79,7 @@ def build_model(architecture, input_shape, dropout, classes=7):
     m = Dropout(0.125)(m)
     m = Dense(channels, activation='sigmoid')(m)
     m = Reshape((1, 1, channels))(m)
-    x = x * (1 + alpha * m)
+    x = x * ((1 - alpha) + alpha * m)
 
     # Convolutional block attention module
     x = CBAM()(x)
