@@ -12,7 +12,15 @@ config = ExperimentConfig(
     mode='train',
     checkpoint=None,
     unfreeze=None,
-    boost=None,
+    boost={
+        0: 1.0, # akiec
+        1: 1.0, # bcc
+        2: 1.0, # bkl
+        3: 1.0, # df
+        4: 1.0, # mel
+        5: 1.0, # nv
+        6: 1.0  # vasc
+    },
     focal_loss=(0.5, 2.0, 0.1),
     lr_decay=True,
     input_shape=(224, 224, 3),
