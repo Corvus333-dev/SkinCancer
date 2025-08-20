@@ -67,7 +67,7 @@ def build_model(architecture, input_shape, dropout, classes=7):
 
     # Inputs
     image_input = Input(name='image', shape=input_shape)
-    meta_input = Input(name='meta', shape=(18,))
+    meta_input = Input(name='meta', shape=(17,))
 
     x = augment_layers(image_input) # Explicit 'training=bool' is not required
     x = base_model(x)

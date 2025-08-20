@@ -27,7 +27,8 @@ def encode_labels():
 
 def encode_meta(df):
     """
-    Prepares metadata for multimodal input by cleaning/normalizing age and one-hot encoding sex/localization.
+    Prepares metadata for multimodal input by cleaning/normalizing age and one-hot encoding sex/localization. Collinear
+    categories are conventionally dropped, but this is not strictly necessary for a neural network.
 
     Args:
         df (pd.DataFrame): DataFrame containing raw metadata.
@@ -36,8 +37,7 @@ def encode_meta(df):
         pd.DataFrame: DataFrame containing encoded metadata.
     """
     df['age'] = df['age'].fillna(0.0) / 100
-    df = pd.get_dummies(df, prefix=['sex', 'loc'], columns=['sex', 'localization'])
-    df = df.drop('sex_female', axis=1) # Drop redundant label
+    df = pd.get_dummies(df, prefix=['sex', 'loc'], columns=['sex', 'localization'], drop_first=True)
 
     return df
 
