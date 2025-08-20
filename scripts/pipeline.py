@@ -37,6 +37,7 @@ def encode_meta(df):
     """
     df['age'] = df['age'].fillna(0.0) / 100
     df = pd.get_dummies(df, prefix=['sex', 'loc'], columns=['sex', 'localization'])
+    df = df.drop('sex_female', axis=1) # Drop redundant label
 
     return df
 
