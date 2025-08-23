@@ -2,6 +2,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import Input, Sequential
 from tensorflow.keras.applications import EfficientNetB0, InceptionV3, ResNet50
+from tensorflow.keras.backend import epsilon
 from tensorflow.keras.layers import (
     BatchNormalization,
     Dense,
@@ -24,7 +25,7 @@ from scripts.utils import CBAM, SparseCategoricalFocalCrossentropy
 def build_model(architecture, input_shape, dropout, classes=7):
     """
     Instantiates a base model using EfficientNetB0, InceptionV3, or ResNet50V2 architecture pretrained on ImageNet
-    dataset, and attaches a custom top that includes a metadata gate, CBAM, dense stack, and softmax output.
+    dataset, and attaches a custom top that includes gated metadata fusion, CBAM, dense stack, and softmax output.
 
     Performs the following random augmentations to input:
     brightness, contrast, horizontal/vertical flip, rotation, translation, and zoom.
@@ -73,13 +74,13 @@ def build_model(architecture, input_shape, dropout, classes=7):
     x = base_model(x)
 
     # Metadata gate
-    alpha = tf.Variable(1.0, trainable=True, dtype=tf.float32) # Broad gate modulator
+    alpha = tf.Variable(1.0, trainable=True, dtype=tf.float32) # Broad modulator
     channels = x.shape[-1]
     m = Dense(64, activation='swish')(meta_input)
     m = Dropout(0.125)(m)
-    m = Dense(channels, activation='sigmoid')(m)
+    m = Dense(channels, activation='tanh')(m) # Specific modulator
     m = Reshape((1, 1, channels))(m)
-    x = x * ((1 - alpha) + alpha * m)
+    x = x * (1 + alpha * m) # Fusion
 
     # Convolutional block attention module
     x = CBAM()(x)
