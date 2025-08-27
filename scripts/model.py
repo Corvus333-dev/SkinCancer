@@ -2,7 +2,6 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import Input, Sequential
 from tensorflow.keras.applications import EfficientNetB0, InceptionV3, ResNet50
-from tensorflow.keras.backend import epsilon
 from tensorflow.keras.layers import (
     BatchNormalization,
     Dense,
