@@ -41,7 +41,7 @@ def build_model(architecture, input_shape, dropout, classes=7):
     """
     if architecture == 'efficientnetb0':
         model_type = EfficientNetB0
-    elif architecture == 'inceptionv3':
+    elif architecture == 'inception_v3':
         model_type = InceptionV3
     elif architecture == 'resnet50':
         model_type = ResNet50
