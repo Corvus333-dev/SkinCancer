@@ -4,7 +4,7 @@ from typing import Literal, Optional, Tuple, Union
 @dataclass
 class ExperimentConfig:
     architecture: Literal['efficientnetb0', 'inception_v3', 'resnet50']
-    mode: Literal['train', 'dev', 'test']
+    mode: Literal['train', 'val', 'test']
     checkpoint: Optional[str] = None
     unfreeze: Optional[Union[int, str, Tuple[str, ...]]] = None
     boost: Optional[dict] = None
@@ -23,11 +23,11 @@ class ExperimentConfig:
         if self.architecture not in {'efficientnetb0', 'inception_v3', 'resnet50'}:
             raise ValueError(f'Invalid architecture: {self.architecture}')
 
-        if self.mode not in {'train', 'dev', 'test'}:
+        if self.mode not in {'train', 'val', 'test'}:
             raise ValueError(f'Invalid mode: {self.mode}')
 
         if self.mode != 'train' and not self.checkpoint:
-            raise ValueError('Model checkpoint required for dev/test modes.')
+            raise ValueError('Model checkpoint required for val/test modes.')
 
         if self.input_shape[-1] != 3:
             raise ValueError('Expected 3-channel RBG input.')

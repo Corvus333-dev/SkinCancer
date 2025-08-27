@@ -70,14 +70,14 @@ def map_image_paths(df):
 
 def split_data(df):
     """
-    Splits DataFrame into train, dev, and test sets using an 80/10/10 split with stratification. Places images from
-    the same lesion within the train set to prevent data leakage and preserve natural augmentation.
+    Splits DataFrame into training, validation, and test sets using an 80/10/10 split with stratification. Places any
+    images from the same lesion ID within the training set to prevent data leakage and provide natural augmentation.
 
     Args:
         df (pd.DataFrame): Full DataFrame, including image paths.
 
     Returns:
-        pd.DataFrame: Train, dev, and test DataFrames.
+        pd.DataFrame: Training, validation, and test DataFrames.
     """
 
     # Temporarily remove duplicate lesions
@@ -90,7 +90,7 @@ def split_data(df):
         stratify=unique_df['dx_code'],
         random_state=9
     )
-    dev_unique_df, test_unique_df = train_test_split(
+    val_unique_df, test_unique_df = train_test_split(
         temp_unique_df,
         test_size=0.5,
         stratify=temp_unique_df['dx_code'],
@@ -100,7 +100,7 @@ def split_data(df):
     # Reintroduce duplicate lesions
     train_df = df[df['lesion_id'].isin(train_unique_df['lesion_id'])]
 
-    return train_df, dev_unique_df, test_unique_df
+    return train_df, val_unique_df, test_unique_df
 
 def preprocess_image(path, architecture):
     """
@@ -108,12 +108,10 @@ def preprocess_image(path, architecture):
 
     Args:
         path (tf.Tensor): Image path.
-        dx_code (tf.Tensor): Encoded label associated with its image path.
         architecture (str): Base model architecture.
 
     Returns:
         image (tf.Tensor): Preprocessed image of shape (224, 224, 3) or (299, 299, 3).
-        dx_code (tf.Tensor): Corresponding input image diagnosis code.
     """
     if architecture == 'efficientnetb0':
         preprocess_input = ppi_efficientnet

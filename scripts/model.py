@@ -24,7 +24,7 @@ from scripts.utils import CBAM, SparseCategoricalFocalCrossentropy
 
 def build_model(architecture, input_shape, dropout, classes=7):
     """
-    Instantiates a base model using EfficientNetB0, InceptionV3, or ResNet50V2 architecture pretrained on ImageNet
+    Instantiates a base model using EfficientNetB0, InceptionV3, or ResNet50 architecture pretrained on ImageNet
     dataset, and attaches a custom top that includes gated metadata fusion, CBAM, dense stack, and softmax output.
 
     Performs the following random augmentations to input:
@@ -150,13 +150,13 @@ def unfreeze_layers(model, architecture, unfreeze):
 
 def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, wd, alpha, gamma, smooth):
     """
-    Compiles model using AdamW optimizer and sparse categorical cross-entropy loss,
-    with cosine decay learning rate schedule and label smoothing.
+    Compiles model using AdamW optimizer and sparse categorical cross-entropy loss, with optional cosine decay learning
+    rate schedule and label smoothing.
 
     Args:
         model (keras.Model): Model to compile.
         initial_lr (float): Starting learning rate.
-        warmup_target (float): Learning rate after warmup (None for no warm-up).
+        warmup_target (float): Learning rate after warmup (use None for no warm-up).
         decay_steps (int): Number of steps for learning rate decay.
         warmup_steps (int): Number of steps for learning rate warmup.
         wd (float): Weight decay for optimizer.
@@ -182,14 +182,14 @@ def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, w
     opt = AdamW(learning_rate=lr, weight_decay=wd)
     model.compile(optimizer=opt, loss=loss, metrics = ['accuracy'])
 
-def train_model(model, train_ds, dev_ds, epochs, patience, threshold=0.001):
+def train_model(model, train_ds, val_ds, epochs, patience, threshold=0.001):
     """
     Trains model on dataset, with early stopping callback.
 
     Args:
         model (keras.Model): Compiled model.
         train_ds (tf.data.Dataset): Training dataset.
-        dev_ds (tf.data.Dataset): Development dataset used for monitoring validation loss.
+        val_ds (tf.data.Dataset): Validation dataset.
         epochs (int): Maximum number of epochs.
         patience (int): Number of epochs with no improvement after which training will be stopped.
         threshold (float): Minimum change in loss to qualify as an improvement.
@@ -205,7 +205,7 @@ def train_model(model, train_ds, dev_ds, epochs, patience, threshold=0.001):
         restore_best_weights=True
     )
 
-    return model.fit(train_ds, validation_data=dev_ds, epochs=epochs, callbacks=[stop])
+    return model.fit(train_ds, validation_data=val_ds, epochs=epochs, callbacks=[stop])
 
 def predict_dx(ds, model):
     """

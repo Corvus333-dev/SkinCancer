@@ -4,7 +4,8 @@ import tensorflow as tf
 from tensorflow.keras.activations import sigmoid
 from tensorflow.keras.layers import (
     Concatenate,
-    Conv2D, Dense,
+    Conv2D,
+    Dense,
     GlobalAveragePooling2D,
     GlobalMaxPooling2D,
     Layer,
@@ -141,7 +142,7 @@ class SparseCategoricalFocalCrossentropy(Loss):
             reduction (str): Type of reduction applied to loss.
             name (str): Name for the loss instance.
     """
-    def __init__(self, alpha, gamma, smooth, reduction='sum_over_batch_size', name='sparse_categorical_focal_crossentropy'):
+    def __init__(self, alpha, gamma, smooth, reduction='sum_over_batch_size', name='scarface'):
         super().__init__(reduction=reduction, name=name)
         self._alpha = alpha # Serialization copy
         self.alpha = tf.constant(list(alpha.values()), dtype=tf.float32)
@@ -182,7 +183,7 @@ class SparseCategoricalFocalCrossentropy(Loss):
 
 def calculate_class_weight(train_df, boost, gamma):
     """
-    Calculates class weights using inverse frequency with adjustable exponent and (optional) class-specific multipliers.
+    Calculates class weights using inverse frequency with adjustable exponent and class-specific multipliers.
 
     Args:
         train_df (pd.DataFrame): Training set DataFrame.

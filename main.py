@@ -24,7 +24,7 @@ config = ExperimentConfig(
     focal_loss=(0.5, 2.0, 0.1),
     lr_decay=True,
     input_shape=(224, 224, 3),
-    batch_size=64,
+    batch_size=32,
     dropout=(0.5, 0.25, 0.125),
     initial_lr=1e-3,
     patience=5,
@@ -38,15 +38,15 @@ def load_data():
     dx_names = list(dx_map.values())
     df = map_image_paths(df)
     df = encode_meta(df)
-    train_df, dev_df, test_df = split_data(df)
+    train_df, val_df, test_df = split_data(df)
 
     if not config.checkpoint:
         dist_plot = plot_dist(df, dx_names)
         save_dist(dist_plot)
 
-    return dx_map, dx_names, train_df, dev_df, test_df
+    return dx_map, dx_names, train_df, val_df, test_df
 
-def train(train_ds, dev_ds, train_df):
+def train(train_ds, val_ds, train_df):
     if config.checkpoint:
         model = tf.keras.models.load_model(config.checkpoint)
         if config.unfreeze:
@@ -77,7 +77,7 @@ def train(train_ds, dev_ds, train_df):
     )
 
     layer_state = get_layer_state(model, config.architecture)
-    history = train_model(model, train_ds, dev_ds, epochs=config.epochs, patience=config.patience)
+    history = train_model(model, train_ds, val_ds, epochs=config.epochs, patience=config.patience)
     directory = create_directory(config.architecture)
     hist_plot = plot_hist(history.history, directory)
 
@@ -96,7 +96,7 @@ def evaluate_and_predict(ds, dx_map, dx_names):
     save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, prc_plot, config)
 
 def main():
-    dx_map, dx_names, train_df, dev_df, test_df = load_data()
+    dx_map, dx_names, train_df, val_df, test_df = load_data()
 
     if config.mode == 'train':
         train_ds = fetch_dataset(
@@ -104,22 +104,22 @@ def main():
             architecture=config.architecture,
             batch_size=config.batch_size,
         )
-        dev_ds = fetch_dataset(
-            dev_df,
+        val_ds = fetch_dataset(
+            val_df,
             architecture=config.architecture,
             batch_size=config.batch_size,
             shuffle=False
         )
-        train(train_ds, dev_ds, train_df)
+        train(train_ds, val_ds, train_df)
 
-    elif config.mode == 'dev':
-        dev_ds = fetch_dataset(
-            dev_df,
+    elif config.mode == 'val':
+        val_ds = fetch_dataset(
+            val_df,
             architecture=config.architecture,
             batch_size=config.batch_size,
             shuffle=False
         )
-        evaluate_and_predict(dev_ds, dx_map, dx_names)
+        evaluate_and_predict(val_ds, dx_map, dx_names)
 
     elif config.mode == 'test':
         test_ds = fetch_dataset(
