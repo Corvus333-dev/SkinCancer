@@ -27,8 +27,8 @@ def encode_labels():
 
 def encode_meta(df):
     """
-    Prepares metadata for multimodal input by cleaning/normalizing age and one-hot encoding sex/localization. Collinear
-    categories are conventionally dropped, but this is not strictly necessary for a neural network.
+    Prepares metadata for multimodal input by cleaning/normalizing age and one-hot encoding diagnosis type, sex,
+    localization, and dataset origin. Collinear categories are conventionally dropped.
 
     Args:
         df (pd.DataFrame): DataFrame containing raw metadata.
@@ -36,8 +36,13 @@ def encode_meta(df):
     Returns:
         pd.DataFrame: DataFrame containing encoded metadata.
     """
-    df['age'] = df['age'].fillna(0.0) / 100
-    df = pd.get_dummies(df, prefix=['sex', 'loc'], columns=['sex', 'localization'], drop_first=True)
+    df['age'] = df['age'].fillna(0.0) / 100 # Sentinel value of 0.0 for missing ages
+    df = pd.get_dummies(
+        df,
+        prefix=['dx_type', 'sex', 'localization', 'dataset'],
+        columns=['dx_type', 'sex', 'localization', 'dataset'],
+        drop_first=True
+    )
 
     return df
 
@@ -144,9 +149,10 @@ def fetch_dataset(df, architecture, batch_size, shuffle=True):
         shuffle (bool): Optional shuffling.
 
     Returns:
-        tf.data.Dataset: Batched dataset of (image, dx_code) pairs.
+        tf.data.Dataset: Batched dataset of (meta, image, dx_code) triplets.
     """
-    meta_columns = [col for col in df.columns if col == 'age' or col.startswith('sex_') or col.startswith('loc_')]
+    meta_prefixes = ['dx_type_', 'sex_', 'localization_', 'dataset_']
+    meta_columns = [col for col in df.columns if col == 'age' or any(col.startswith(p) for p in meta_prefixes)]
     meta_array = df[meta_columns].to_numpy().astype('float32')
     paths = df['image_path'].values
     dx_codes = df['dx_code'].values
