@@ -88,12 +88,12 @@ def save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, prc_plot, config):
 
     directory = Path(config.checkpoint).parent
 
-    if config.mode == 'dev':
-        df_path = directory / 'dev_predictions.csv'
-        cr_path = directory / 'dev_classification_report.json'
-        cm_path = directory / 'dev_confusion_matrix.png'
-        prc_data_path = directory / 'dev_prc.json'
-        prc_plot_path = directory / 'dev_prc.png'
+    if config.mode == 'val':
+        df_path = directory / 'val_predictions.csv'
+        cr_path = directory / 'val_classification_report.json'
+        cm_path = directory / 'val_confusion_matrix.png'
+        prc_data_path = directory / 'val_prc.json'
+        prc_plot_path = directory / 'val_prc.png'
     elif config.mode == 'test':
         df_path = directory / 'test_predictions.csv'
         cr_path = directory / 'test_classification_report.json'
