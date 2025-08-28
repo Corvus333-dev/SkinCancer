@@ -19,7 +19,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import AdamW
 from tensorflow.keras.optimizers.schedules import CosineDecay
 
-from scripts.utils import CBAM, SparseCategoricalFocalCrossentropy
+from scripts.keras_objects import CBAM, SparseCategoricalFocalCrossentropy
 
 def build_model(architecture, input_shape, dropout, classes=7):
     """

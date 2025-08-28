@@ -3,10 +3,10 @@ from sklearn.metrics import classification_report, confusion_matrix
 from config import ExperimentConfig
 from scripts.export import *
 from scripts.model import *
-from scripts.pipeline import *
 from scripts.plots import *
 from scripts.utils import *
 
+# Experiment controller
 config = ExperimentConfig(
     architecture='efficientnetb0',
     mode='train',
@@ -32,19 +32,6 @@ config = ExperimentConfig(
     weight_decay=1e-4,
     epochs=50
 )
-
-def load_data():
-    df, dx_map = encode_labels()
-    dx_names = list(dx_map.values())
-    df = map_image_paths(df)
-    df = encode_meta(df)
-    train_df, val_df, test_df = split_data(df)
-
-    if not config.checkpoint:
-        dist_plot = plot_dist(df, dx_names)
-        save_dist(dist_plot)
-
-    return dx_map, dx_names, train_df, val_df, test_df
 
 def train(train_ds, val_ds, train_df):
     if config.checkpoint:
