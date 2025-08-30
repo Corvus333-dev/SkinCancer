@@ -75,8 +75,9 @@ def map_image_paths(df):
 
 def split_data(df):
     """
-    Splits DataFrame into training, validation, and test sets using an 80/10/10 split with stratification. Places any
-    images from the same lesion ID within the training set to prevent data leakage and provide natural augmentation.
+    Splits DataFrame into training, validation, and test sets using an initial 75/15/10 split with stratification after
+    dropping duplicate lesion ids. Places any images from the same lesion ID within the training set to prevent data
+    leakage and provide natural augmentation (this results in a final split of ~79/13/8 for HAM10000 dataset).
 
     Args:
         df (pd.DataFrame): Full DataFrame, including image paths.
@@ -88,22 +89,21 @@ def split_data(df):
     # Temporarily remove duplicate lesions
     unique_df = df.drop_duplicates(subset=['lesion_id'])
 
-    # Split so that duplicate lesions are coupled
     train_unique_df, temp_unique_df = train_test_split(
         unique_df,
-        test_size=0.2,
+        test_size=0.25,
         stratify=unique_df['dx_code'],
         random_state=9
     )
     val_unique_df, test_unique_df = train_test_split(
         temp_unique_df,
-        test_size=0.5,
+        test_size=0.4,
         stratify=temp_unique_df['dx_code'],
         random_state=9
     )
 
-    # Reintroduce duplicate lesions
-    train_df = df[df['lesion_id'].isin(train_unique_df['lesion_id'])]
+    # Reintroduce duplicate minority lesions to training set
+    train_df = df[(df['lesion_id'].isin(train_unique_df['lesion_id'])) & (df['dx'] != 5)]
 
     return train_df, val_unique_df, test_unique_df
 

@@ -13,11 +13,11 @@ config = ExperimentConfig(
     checkpoint=None,
     unfreeze=None,
     boost={
-        0: 1.0, # akiec
+        0: 1.1, # akiec
         1: 1.0, # bcc
         2: 1.0, # bkl
         3: 1.0, # df
-        4: 1.0, # mel
+        4: 1.1, # mel
         5: 1.0, # nv
         6: 1.0  # vasc
     },
@@ -26,9 +26,9 @@ config = ExperimentConfig(
     input_shape=(224, 224, 3),
     batch_size=64,
     dropout=(0.5, 0.25, 0.125),
-    initial_lr=1e-3,
+    initial_lr=3e-6,
     patience=5,
-    warmup_target=None,
+    warmup_target=3e-5,
     weight_decay=1e-4,
     epochs=50
 )
