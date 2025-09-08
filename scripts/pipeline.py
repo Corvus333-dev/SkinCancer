@@ -108,8 +108,7 @@ def preprocess_image(path, input_shape):
     """
     Decodes a JPEG-encoded image and resizes with pad.
 
-    Note: Additional preprocessing is included in the model using a Normalization layer or Rescaling layer for ConvNeXt
-    or EfficientNet, respectively.
+    Note: Additional preprocessing is included in the model using a Rescaling layer for EfficientNet.
 
     Args:
         path (tf.Tensor): Image path.

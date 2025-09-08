@@ -8,7 +8,7 @@ from scripts.utils import *
 
 # Experiment controller
 config = ExperimentConfig(
-    architecture='convnext_tiny',
+    architecture='efficientnetb1',
     mode='train',
     checkpoint=None,
     unfreeze=None,
