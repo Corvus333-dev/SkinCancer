@@ -8,16 +8,16 @@ from scripts.utils import *
 
 # Experiment controller
 config = ExperimentConfig(
-    architecture='efficientnetb0',
+    architecture='convnext_tiny',
     mode='train',
     checkpoint=None,
     unfreeze=None,
     boost={
-        0: 1.1, # akiec
+        0: 1.0, # akiec
         1: 1.0, # bcc
         2: 1.0, # bkl
         3: 1.0, # df
-        4: 1.1, # mel
+        4: 1.0, # mel
         5: 1.0, # nv
         6: 1.0  # vasc
     },
@@ -26,9 +26,9 @@ config = ExperimentConfig(
     input_shape=(224, 224, 3),
     batch_size=64,
     dropout=(0.5, 0.25, 0.125),
-    initial_lr=3e-6,
+    initial_lr=1e-3,
     patience=5,
-    warmup_target=3e-5,
+    warmup_target=None,
     weight_decay=1e-4,
     epochs=50
 )
@@ -88,13 +88,13 @@ def main():
     if config.mode == 'train':
         train_ds = fetch_dataset(
             train_df,
-            architecture=config.architecture,
             batch_size=config.batch_size,
+            input_shape=config.input_shape
         )
         val_ds = fetch_dataset(
             val_df,
-            architecture=config.architecture,
             batch_size=config.batch_size,
+            input_shape=config.input_shape,
             shuffle=False
         )
         train(train_ds, val_ds, train_df)
@@ -102,8 +102,8 @@ def main():
     elif config.mode == 'val':
         val_ds = fetch_dataset(
             val_df,
-            architecture=config.architecture,
             batch_size=config.batch_size,
+            input_shape=config.input_shape,
             shuffle=False
         )
         evaluate_and_predict(val_ds, dx_map, dx_names)
@@ -111,8 +111,8 @@ def main():
     elif config.mode == 'test':
         test_ds = fetch_dataset(
             test_df,
-            architecture=config.architecture,
             batch_size=config.batch_size,
+            input_shape=config.input_shape,
             shuffle=False
         )
         evaluate_and_predict(test_ds, dx_map, dx_names)

@@ -3,9 +3,6 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 import tensorflow as tf
-from tensorflow.keras.applications.efficientnet import preprocess_input as ppi_efficientnet
-from tensorflow.keras.applications.inception_v3 import preprocess_input as ppi_inception
-from tensorflow.keras.applications.resnet import preprocess_input as ppi_resnet
 
 def encode_labels():
     """
@@ -107,45 +104,34 @@ def split_data(df):
 
     return train_df, val_unique_df, test_unique_df
 
-def preprocess_image(path, architecture):
+def preprocess_image(path, input_shape):
     """
-    Decodes a JPEG-encoded image, resizes with pad, and performs ImageNet-style normalization.
+    Decodes a JPEG-encoded image and resizes with pad.
+
+    Note: Additional preprocessing is included in the model using a Normalization layer or Rescaling layer for ConvNeXt
+    or EfficientNet, respectively.
 
     Args:
         path (tf.Tensor): Image path.
-        architecture (str): Base model architecture.
+        input_shape (tuple): Image shape (h, w, c) for model input.
 
     Returns:
-        image (tf.Tensor): Preprocessed image of shape (224, 224, 3) or (299, 299, 3).
+        image (tf.Tensor): Resized and padded image of shape (h, w, c).
     """
-    if architecture == 'efficientnetb0':
-        preprocess_input = ppi_efficientnet
-        th, tw = 224, 224
-    elif architecture == 'inception_v3':
-        preprocess_input = ppi_inception
-        th, tw = 299, 299
-    elif architecture == 'resnet50':
-        preprocess_input = ppi_resnet
-        th, tw = 224, 224
-    else:
-        raise AssertionError('Architecture validation should be handled by ExperimentConfig.')
-
     image = tf.io.read_file(path)
-    image = tf.image.decode_jpeg(image, channels=3)
-    image = tf.image.resize_with_pad(image, target_height=th, target_width=tw)
-
-    image = preprocess_input(image)
+    image = tf.image.decode_jpeg(image, channels=input_shape[2])
+    image = tf.image.resize_with_pad(image, target_height=input_shape[0], target_width=input_shape[1])
 
     return image
 
-def fetch_dataset(df, architecture, batch_size, shuffle=True):
+def fetch_dataset(df, batch_size, input_shape, shuffle=True):
     """
     Creates a Tensorflow Dataset from corresponding metadata, preprocessed images, and diagnosis codes.
 
     Args:
         df (pd.DataFrame): DataFrame with image paths and diagnosis codes.
-        architecture (str): Base model architecture.
         batch_size (int): Samples per batch.
+        input_shape (tuple): Image shape (h, w, c) for model input.
         shuffle (bool): Optional shuffling.
 
     Returns:
@@ -161,7 +147,7 @@ def fetch_dataset(df, architecture, batch_size, shuffle=True):
 
     def preprocess_all(meta_vector, path, dx_code):
         # Package metadata, preprocessed image, and dx_code
-        image = preprocess_image(path, architecture)
+        image = preprocess_image(path, input_shape)
         return {'meta': meta_vector, 'image': image}, dx_code
 
     ds = ds.map(preprocess_all, num_parallel_calls=tf.data.AUTOTUNE)
