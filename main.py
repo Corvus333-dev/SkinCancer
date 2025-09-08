@@ -8,10 +8,11 @@ from scripts.utils import *
 
 # Experiment controller
 config = ExperimentConfig(
-    architecture='efficientnetb1',
+    architecture='efficientnetb0',
     mode='train',
     checkpoint=None,
     unfreeze=None,
+    bn_freeze=True,
     boost={
         0: 1.0, # akiec
         1: 1.0, # bcc
@@ -37,7 +38,7 @@ def train(train_ds, val_ds, train_df):
     if config.checkpoint:
         model = tf.keras.models.load_model(config.checkpoint)
         if config.unfreeze:
-            unfreeze_layers(model, config.architecture, config.unfreeze)
+            unfreeze_layers(model, config.architecture, config.unfreeze, config.bn_freeze)
     else:
         model = build_model(architecture=config.architecture, input_shape=config.input_shape, dropout=config.dropout)
 

@@ -7,6 +7,7 @@ class ExperimentConfig:
     mode: Literal['train', 'val', 'test']
     checkpoint: Optional[str] = None
     unfreeze: Optional[Union[int, str, Tuple[str, ...]]] = None
+    bn_freeze: Optional[bool] = False
     boost: Optional[dict] = None
     focal_loss: Optional[Tuple[float, float, float]] = None
     lr_decay: bool = True

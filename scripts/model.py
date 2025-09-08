@@ -101,7 +101,7 @@ def build_model(architecture, input_shape, dropout, classes=7):
 
     return Model(inputs=[image_input, meta_input], outputs=output)
 
-def unfreeze_layers(model, architecture, unfreeze):
+def unfreeze_layers(model, architecture, unfreeze, bn_freeze):
     """
     Flags specified layers as trainable.
 
@@ -112,6 +112,7 @@ def unfreeze_layers(model, architecture, unfreeze):
             - int: unfreeze from this layer depth to the top
             - str: unfreeze from this layer name to the top
             - tuple: unfreeze layers containing any of these keywords
+        bn_freeze (bool): Freeze batch normalization layers in base model
 
     Returns:
         None
@@ -144,6 +145,12 @@ def unfreeze_layers(model, architecture, unfreeze):
     else:
         for layer in base_model.layers:
             layer.trainable = any(keyword in layer.name for keyword in unfreeze)
+
+    # Optionally freeze batch normalization layers
+    if bn_freeze:
+        for layer in base_model.layers:
+            if isinstance(layer, BatchNormalization):
+                layer.trainable = False
 
 def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, wd, alpha, gamma, smooth):
     """
