@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import Input, Sequential
-from tensorflow.keras.applications import EfficientNetB0, EfficientNetB1
+from tensorflow.keras.applications import EfficientNetB1, ResNet50V2
 from tensorflow.keras.layers import (
     BatchNormalization,
     Dense,
@@ -23,7 +23,7 @@ from scripts.keras_objects import CBAM, SparseCategoricalFocalCrossentropy
 
 def build_model(architecture, input_shape, dropout, classes=7):
     """
-    Instantiates a base model using EfficientNetB0 or EfficientNetB1 architecture pretrained on ImageNet dataset, and
+    Instantiates a base model using EfficientNetB1 or ResNet50V2 architecture pretrained on ImageNet dataset, and
     attaches a custom top that includes gated metadata fusion, CBAM, dense stack, and softmax output.
 
     Performs the following random augmentations to input:
@@ -38,10 +38,10 @@ def build_model(architecture, input_shape, dropout, classes=7):
     Returns:
         tf.keras.Model: Functional model with frozen base layers.
     """
-    if architecture == 'efficientnetb0':
-        model_type = EfficientNetB0
-    elif architecture == 'efficientnetb1':
+    if architecture == 'efficientnetb1':
         model_type = EfficientNetB1
+    elif architecture == 'resnet50v2':
+        model_type = ResNet50V2
     else:
         raise AssertionError('Architecture validation should be handled by ExperimentConfig.')
 

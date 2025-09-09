@@ -8,7 +8,7 @@ from scripts.utils import *
 
 # Experiment controller
 config = ExperimentConfig(
-    architecture='efficientnetb0',
+    architecture='resnet50v2',
     mode='train',
     checkpoint=None,
     unfreeze=None,
