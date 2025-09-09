@@ -19,7 +19,7 @@ def save_dist(dist_plot):
 
 def create_directory(architecture):
     """
-    Creates a model-specific, timestamped directory for storing experiment results.
+    Creates architecture-specific, timestamped directories for storing experiment results.
 
     Args:
         architecture (str): Base model architecture.
@@ -28,7 +28,7 @@ def create_directory(architecture):
         Path: Object pointing to new directory.
     """
     timestamp = datetime.now().strftime('%Y%m%d_%H%M')
-    directory = Path('models') / f'{architecture}_{timestamp}'
+    directory = Path('models') / architecture / timestamp
     directory.mkdir(parents=True, exist_ok=True)
 
     return directory
