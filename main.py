@@ -12,7 +12,7 @@ config = ExperimentConfig(
     mode='train',
     checkpoint=None,
     unfreeze=None,
-    bn_freeze=True,
+    bn_freeze=False,
     boost={
         0: 1.0, # akiec
         1: 1.0, # bcc
