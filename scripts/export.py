@@ -64,7 +64,7 @@ def save_model(directory, model, config, layer_state, history, hist_plot):
 
     hist_plot.savefig(directory / 'training_history.png', dpi=300)
 
-def save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, prc_plot, config):
+def save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, prc_plot, checkpoint, mode):
     """
     Saves predictions, classification report, confusion matrix, and precision-recall curve.
 
@@ -76,7 +76,8 @@ def save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, prc_plot, config):
         cm_plot (matplotlib.figure.Figure): Confusion matrix plot.
         prc_data (dict): Precision-recall curve data.
         prc_plot (matplotlib.figure.Figure): Precision-recall curve plot.
-        config (dataclass): Experiment configuration settings.
+        checkpoint (str): Location of saved model (used to extract parent directory).
+        mode (str): mode (str): Validation or test mode designation.
 
     Returns:
         None
@@ -86,15 +87,15 @@ def save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, prc_plot, config):
         'predicted': [dx_map[i] for i in y_hat]
     })
 
-    directory = Path(config.checkpoint).parent
+    directory = Path(checkpoint).parent
 
-    if config.mode == 'val':
+    if mode == 'val':
         df_path = directory / 'val_predictions.csv'
         cr_path = directory / 'val_classification_report.json'
         cm_path = directory / 'val_confusion_matrix.png'
         prc_data_path = directory / 'val_prc.json'
         prc_plot_path = directory / 'val_prc.png'
-    elif config.mode == 'test':
+    elif mode == 'test':
         df_path = directory / 'test_predictions.csv'
         cr_path = directory / 'test_classification_report.json'
         cm_path = directory / 'test_confusion_matrix.png'

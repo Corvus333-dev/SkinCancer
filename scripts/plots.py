@@ -67,20 +67,20 @@ def plot_hist(history, directory):
 
     return fig
 
-def plot_cm(cm, dx_names, config):
+def plot_cm(cm, dx_names, checkpoint, mode):
     """
     Plots a confusion matrix with normalized prediction rates.
 
     Args:
         cm (np.ndarray): Confusion matrix.
         dx_names (list): Diagnosis names.
-        config (dataclass): Experiment configuration settings.
+        checkpoint (str): Location of saved model (used to extract experiment name).
+        mode (str): Validation or test mode designation.
 
     Returns:
         matplotlib.figure.Figure: Confusion matrix plot.
     """
-    exp_name = Path(config.checkpoint).parent.name
-    mode = config.mode
+    exp_name = Path(checkpoint).parent.name
 
     # Normalize values
     cm_norm = cm.astype('float') / cm.sum(axis=1, keepdims=True) * 100
@@ -113,20 +113,20 @@ def plot_cm(cm, dx_names, config):
 
     return fig
 
-def plot_prc(config, dx_names, prc_data):
+def plot_prc(checkpoint, mode, dx_names, prc_data):
     """
     Plots a precision-recall curve overlay for each diagnosis class.
 
     Args:
-        config (dataclass): Experiment configuration settings.
+        checkpoint (str): Location of saved model (used to extract experiment name).
+        mode (str): Validation or test mode designation.
         dx_names (list): Diagnosis names.
         prc_data (dict): Precision-recall curve values for each class.
 
     Returns:
         matplotlib.figure.Figure: Precision-recall curve overlay plot.
     """
-    exp_name = Path(config.checkpoint).parent.name
-    mode = config.mode
+    exp_name = Path(checkpoint).parent.name
 
     cmap = matplotlib.cm.get_cmap('tab10')
     fig, ax = plt.subplots(figsize=(9, 9))
