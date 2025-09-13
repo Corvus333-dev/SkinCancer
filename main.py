@@ -30,7 +30,7 @@ cfg = Config(
         focal_loss=(0.5, 2.0, 0.1),
         initial_lr=1e-3,
         lr_decay=True,
-        patience=5,
+        patience=10,
         warmup_target=None,
         weight_decay=1e-4
     )
