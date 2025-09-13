@@ -93,44 +93,24 @@ def evaluate_and_predict(ds, dx_map, dx_names):
 
 def main():
     dx_map, dx_names, train_df, val_df, test_df = load_data()
-    batch_size = cfg.train.batch_size
-    input_shape = cfg.exp.input_shape
-    architecture = cfg.exp.architecture
+
+    fetch_args = dict(
+        batch_size=cfg.train.batch_size,
+        input_shape=cfg.exp.input_shape,
+        architecture=cfg.exp.architecture
+    )
 
     if cfg.exp.mode == 'train':
-        train_ds = fetch_dataset(
-            train_df,
-            batch_size=batch_size,
-            input_shape=input_shape,
-            architecture=architecture
-        )
-        val_ds = fetch_dataset(
-            val_df,
-            batch_size=batch_size,
-            input_shape=input_shape,
-            architecture=architecture,
-            shuffle=False
-        )
+        train_ds = fetch_dataset(train_df, **fetch_args)
+        val_ds = fetch_dataset(val_df, **fetch_args, shuffle=False)
         train(train_ds, val_ds, train_df)
 
     elif cfg.exp.mode == 'val':
-        val_ds = fetch_dataset(
-            val_df,
-            batch_size=batch_size,
-            input_shape=input_shape,
-            architecture=architecture,
-            shuffle=False
-        )
+        val_ds = fetch_dataset(val_df, **fetch_args, shuffle=False)
         evaluate_and_predict(val_ds, dx_map, dx_names)
 
     elif cfg.exp.mode == 'test':
-        test_ds = fetch_dataset(
-            test_df,
-            batch_size=batch_size,
-            input_shape=input_shape,
-            architecture=architecture,
-            shuffle=False
-        )
+        test_ds = fetch_dataset(test_df, **fetch_args, shuffle=False)
         evaluate_and_predict(test_ds, dx_map, dx_names)
 
 if __name__ == '__main__':
