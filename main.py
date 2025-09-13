@@ -1,10 +1,12 @@
 from sklearn.metrics import classification_report, confusion_matrix
+import tensorflow as tf
 
 from config import Config, ExpConfig, TrainConfig
-from scripts.export import *
-from scripts.model import *
-from scripts.plots import *
-from scripts.utils import *
+from scripts.export import create_directory, save_model, save_results
+from scripts.model import build_model, compile_model, predict_dx, train_model, unfreeze_layers
+from scripts.pipeline import load_data, fetch_dataset
+from scripts.plots import plot_cm, plot_hist, plot_prc
+from scripts.utils import calculate_class_weight, compute_prc, get_layer_state
 
 cfg = Config(
     exp=ExpConfig(
@@ -26,7 +28,7 @@ cfg = Config(
             6: 1.0   # vasc
         },
         dropout=(0.5, 0.25, 0.125),
-        epochs=50,
+        epochs=1,
         focal_loss=(0.5, 2.0, 0.1),
         initial_lr=1e-3,
         lr_decay=True,
@@ -93,17 +95,20 @@ def main():
     dx_map, dx_names, train_df, val_df, test_df = load_data()
     batch_size = cfg.train.batch_size
     input_shape = cfg.exp.input_shape
+    architecture = cfg.exp.architecture
 
     if cfg.exp.mode == 'train':
         train_ds = fetch_dataset(
             train_df,
             batch_size=batch_size,
-            input_shape=input_shape
+            input_shape=input_shape,
+            architecture=architecture
         )
         val_ds = fetch_dataset(
             val_df,
             batch_size=batch_size,
             input_shape=input_shape,
+            architecture=architecture,
             shuffle=False
         )
         train(train_ds, val_ds, train_df)
@@ -113,6 +118,7 @@ def main():
             val_df,
             batch_size=batch_size,
             input_shape=input_shape,
+            architecture=architecture,
             shuffle=False
         )
         evaluate_and_predict(val_ds, dx_map, dx_names)
@@ -122,6 +128,7 @@ def main():
             test_df,
             batch_size=batch_size,
             input_shape=input_shape,
+            architecture=architecture,
             shuffle=False
         )
         evaluate_and_predict(test_ds, dx_map, dx_names)

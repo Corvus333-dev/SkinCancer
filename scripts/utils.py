@@ -1,17 +1,6 @@
 import numpy as np
 from sklearn.metrics import average_precision_score, precision_recall_curve
 
-from scripts.pipeline import *
-
-def load_data():
-    df, dx_map = encode_labels()
-    dx_names = list(dx_map.values())
-    df = map_image_paths(df)
-    df = encode_meta(df)
-    train_df, val_df, test_df = split_data(df)
-
-    return dx_map, dx_names, train_df, val_df, test_df
-
 def calculate_class_weight(train_df, boost, gamma):
     """
     Calculates class weights using inverse frequency with adjustable exponent and class-specific multipliers.

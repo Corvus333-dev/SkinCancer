@@ -3,14 +3,15 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 import tensorflow as tf
+from tensorflow.keras.applications.resnet_v2 import preprocess_input
 
 def encode_labels():
     """
-    Assigns a unique number to each type of skin lesion diagnosis.
+    Assigns a unique number (diagnosis code) to each type of skin lesion (diagnosis name).
 
     Returns:
-        pd.DataFrame: DataFrame containing diagnosis codes and metadata.
-        dict: Map of diagnosis codes to be used as labels.
+        df (pd.DataFrame): DataFrame containing diagnosis codes and metadata.
+        dx_map (dict): Map of diagnosis codes to diagnosis names.
     """
     data_path = 'data/HAM10000_metadata'
     df = pd.read_csv(data_path)
@@ -73,14 +74,14 @@ def map_image_paths(df):
 def split_data(df):
     """
     Splits DataFrame into training, validation, and test sets using an initial 75/15/10 split with stratification after
-    dropping duplicate lesion ids. Places any images from the same lesion ID within the training set to prevent data
+    dropping duplicate lesion IDs. Places any images from the same lesion ID within the training set to prevent data
     leakage and provide natural augmentation (this results in a final split of ~79/13/8 for HAM10000 dataset).
 
     Args:
         df (pd.DataFrame): Full DataFrame, including image paths.
 
     Returns:
-        pd.DataFrame: Training, validation, and test DataFrames.
+        pd.DataFrame: Training, validation, and test DataFrames (train_df, val_unique_df, test_unique_df).
     """
 
     # Temporarily remove duplicate lesions
@@ -104,15 +105,33 @@ def split_data(df):
 
     return train_df, val_unique_df, test_unique_df
 
-def preprocess_image(path, input_shape):
+def load_data():
+    """
+    Executes initial pipeline, converting raw data into prepared datasets.
+
+    Returns:
+        dx_map (dict): Map of diagnosis codes to diagnosis names.
+        dx_names (list): Diagnosis names.
+        pd.DataFrame: Training, validation, and test DataFrames (train_df, val_df, test_df).
+    """
+    df, dx_map = encode_labels()
+    dx_names = list(dx_map.values())
+    df = map_image_paths(df)
+    df = encode_meta(df)
+    train_df, val_df, test_df = split_data(df)
+
+    return dx_map, dx_names, train_df, val_df, test_df
+
+def preprocess_image(path, input_shape, architecture):
     """
     Decodes a JPEG-encoded image and resizes with pad.
 
-    Note: Additional preprocessing is included in the model using a Rescaling layer for EfficientNet.
+    Note: Pixel scaling [0-255] is included in the model via a Rescaling layer for EfficientNet.
 
     Args:
         path (tf.Tensor): Image path.
         input_shape (tuple): Image shape (h, w, c) for model input.
+        architecture (str): Base model architecture.
 
     Returns:
         image (tf.Tensor): Resized and padded image of shape (h, w, c).
@@ -121,9 +140,13 @@ def preprocess_image(path, input_shape):
     image = tf.image.decode_jpeg(image, channels=input_shape[2])
     image = tf.image.resize_with_pad(image, target_height=input_shape[0], target_width=input_shape[1])
 
+    # Scale pixels between -1 and 1
+    if architecture == 'resnet50v2':
+        image = preprocess_input(image)
+
     return image
 
-def fetch_dataset(df, batch_size, input_shape, shuffle=True):
+def fetch_dataset(df, batch_size, input_shape, architecture, shuffle=True):
     """
     Creates a Tensorflow Dataset from corresponding metadata, preprocessed images, and diagnosis codes.
 
@@ -131,6 +154,7 @@ def fetch_dataset(df, batch_size, input_shape, shuffle=True):
         df (pd.DataFrame): DataFrame with image paths and diagnosis codes.
         batch_size (int): Samples per batch.
         input_shape (tuple): Image shape (h, w, c) for model input.
+        architecture (str): Base model architecture.
         shuffle (bool): Optional shuffling.
 
     Returns:
@@ -146,7 +170,7 @@ def fetch_dataset(df, batch_size, input_shape, shuffle=True):
 
     def preprocess_all(meta_vector, path, dx_code):
         # Package metadata, preprocessed image, and dx_code
-        image = preprocess_image(path, input_shape)
+        image = preprocess_image(path, input_shape, architecture)
         return {'meta': meta_vector, 'image': image}, dx_code
 
     ds = ds.map(preprocess_all, num_parallel_calls=tf.data.AUTOTUNE)

@@ -10,7 +10,7 @@ def plot_dist(df, dx_names):
 
     Args:
         df (pd.DataFrame): DataFrame for HAM10000 dataset.
-        dx_names (list): Alphabetized diagnosis names.
+        dx_names (list): Diagnosis names.
 
     Returns:
         matplotlib.figure.Figure: Distribution plot.
