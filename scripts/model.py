@@ -1,4 +1,5 @@
 import numpy as np
+from pathlib import Path
 import tensorflow as tf
 from tensorflow.keras import Input, Sequential
 from tensorflow.keras.applications import EfficientNetB1, ResNet50V2
@@ -152,7 +153,7 @@ def unfreeze_layers(model, architecture, unfreeze, freeze_bn):
             if isinstance(layer, BatchNormalization):
                 layer.trainable = False
 
-def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, wd, alpha, gamma, smooth):
+def compile_model(model, initial_lr, decay_steps, warmup_target, warmup_steps, wd, alpha, gamma, smooth):
     """
     Compiles model using AdamW optimizer and sparse categorical cross-entropy loss, with optional cosine decay learning
     rate schedule and label smoothing.
@@ -160,8 +161,8 @@ def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, w
     Args:
         model (keras.Model): Model to compile.
         initial_lr (float): Starting learning rate.
-        warmup_target (float): Learning rate after warmup (use None for no warm-up).
         decay_steps (int): Number of steps for learning rate decay.
+        warmup_target (float): Learning rate after warmup (use None for no warm-up).
         warmup_steps (int): Number of steps for learning rate warmup.
         wd (float): Weight decay for optimizer.
         alpha (dict): Map of diagnosis codes (int) and weights (float). Must be JSON-compatible.
@@ -186,12 +187,13 @@ def compile_model(model, initial_lr, warmup_target, decay_steps, warmup_steps, w
     opt = AdamW(learning_rate=lr, weight_decay=wd)
     model.compile(optimizer=opt, loss=loss, metrics = ['accuracy'])
 
-def train_model(model, train_ds, val_ds, epochs, patience, threshold=0.001):
+def train_model(model, directory, train_ds, val_ds, epochs, patience, threshold=0.001):
     """
-    Trains model on dataset, with early stopping callback.
+    Trains model on dataset using early stopping and/or best-weights checkpointing.
 
     Args:
         model (keras.Model): Compiled model.
+        directory (Path): Directory to save the best checkpoint.
         train_ds (tf.data.Dataset): Training dataset.
         val_ds (tf.data.Dataset): Validation dataset.
         epochs (int): Maximum number of epochs.
@@ -201,6 +203,14 @@ def train_model(model, train_ds, val_ds, epochs, patience, threshold=0.001):
     Returns:
         keras.callbacks.History: Training history.
     """
+    filepath = directory / 'model.keras'
+
+    checkpoint = tf.keras.callbacks.ModelCheckpoint(
+        filepath=filepath,
+        monitor='val_loss',
+        save_best_only=True
+    )
+
     stop = tf.keras.callbacks.EarlyStopping(
         monitor='val_loss',
         min_delta=threshold,
@@ -209,7 +219,7 @@ def train_model(model, train_ds, val_ds, epochs, patience, threshold=0.001):
         restore_best_weights=True
     )
 
-    return model.fit(train_ds, validation_data=val_ds, epochs=epochs, callbacks=[stop])
+    return model.fit(train_ds, validation_data=val_ds, epochs=epochs, callbacks=[checkpoint, stop])
 
 def predict_dx(ds, model):
     """

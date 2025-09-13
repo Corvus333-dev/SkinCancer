@@ -33,7 +33,7 @@ def create_directory(architecture):
 
     return directory
 
-def save_model(directory, model, config, layer_state, history, hist_plot):
+def save_model(directory, model, config, history, hist_plot, layer_state):
     """
     Saves trained model and its associated metadata.
 
@@ -41,14 +41,14 @@ def save_model(directory, model, config, layer_state, history, hist_plot):
         directory (Path): Object pointing to experiment folder.
         model (keras.Model): Trained model.
         config (dataclass): Experiment configuration settings.
-        layer_state (dict): Map of layer names and training states.
         history (keras.callbacks.History): Training history.
         hist_plot (matplotlib.figure.Figure): Training history plot.
+        layer_state (dict): Map of layer names and training states.
 
     Returns:
         None
     """
-    model.save(directory / 'model.keras')
+    # model.save(directory / 'model.keras')
 
     with open(directory / 'config.json', 'w') as f:
         json.dump(asdict(config), f, indent=4)

@@ -61,8 +61,8 @@ def train(train_ds, val_ds, train_df):
     compile_model(
         model,
         initial_lr=cfg.train.initial_lr,
-        warmup_target=cfg.train.warmup_target,
         decay_steps=decay_steps,
+        warmup_target=cfg.train.warmup_target,
         warmup_steps=warmup_steps,
         wd=cfg.train.weight_decay,
         alpha=alpha,
@@ -70,12 +70,12 @@ def train(train_ds, val_ds, train_df):
         smooth=smooth
     )
 
-    layer_state = get_layer_state(model, cfg.exp.architecture)
-    history = train_model(model, train_ds, val_ds, epochs=cfg.train.epochs, patience=cfg.train.patience)
     directory = create_directory(cfg.exp.architecture)
+    history = train_model(model, directory, train_ds, val_ds, epochs=cfg.train.epochs, patience=cfg.train.patience)
     hist_plot = plot_hist(history.history, directory)
+    layer_state = get_layer_state(model, cfg.exp.architecture)
 
-    save_model(directory, model, cfg, layer_state, history, hist_plot)
+    save_model(directory, model, cfg, history, hist_plot, layer_state)
 
 def evaluate_and_predict(ds, dx_map, dx_names):
     model = tf.keras.models.load_model(cfg.exp.checkpoint)

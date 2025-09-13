@@ -33,7 +33,7 @@ class TrainConfig:
     focal_loss: Optional[Tuple[float, float, float]] = None
     initial_lr: float = 1e-3
     lr_decay: bool = True
-    patience: int = 5
+    patience: int = 10
     warmup_target: Optional[float] = None
     weight_decay: float = 1e-4
 
