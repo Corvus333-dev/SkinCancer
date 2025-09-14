@@ -22,7 +22,7 @@ from tensorflow.keras.optimizers.schedules import CosineDecay
 
 from scripts.keras_objects import CBAM, SparseCategoricalFocalCrossentropy
 
-def build_model(architecture, input_shape, dropout, classes=7):
+def build_model(backbone, input_shape, dropout, classes=7):
     """
     Instantiates a base model using EfficientNetB1 or ResNet50V2 architecture pretrained on ImageNet dataset, and
     attaches a custom top that includes gated metadata fusion, CBAM, dense stack, and softmax output.
@@ -31,7 +31,7 @@ def build_model(architecture, input_shape, dropout, classes=7):
     brightness, contrast, horizontal/vertical flip, rotation, translation, and zoom.
 
     Args:
-        architecture (str): Base model architecture.
+        backbone (str): Base model architecture.
         input_shape (tuple): Shape of input image.
         dropout (tuple): Dropout rates (ordered from bottom to top).
         classes (int): Number of classes (i.e., skin lesion types).
@@ -39,12 +39,12 @@ def build_model(architecture, input_shape, dropout, classes=7):
     Returns:
         tf.keras.Model: Functional model with frozen base layers.
     """
-    if architecture == 'efficientnetb1':
+    if backbone == 'efficientnetb1':
         model_type = EfficientNetB1
-    elif architecture == 'resnet50v2':
+    elif backbone == 'resnet50v2':
         model_type = ResNet50V2
     else:
-        raise AssertionError('Architecture validation should be handled by ExperimentConfig.')
+        raise AssertionError('Backbone validation should be handled by ExperimentConfig.')
 
     base_model = model_type(
         include_top=False,
@@ -102,13 +102,13 @@ def build_model(architecture, input_shape, dropout, classes=7):
 
     return Model(inputs=[image_input, meta_input], outputs=output)
 
-def unfreeze_layers(model, architecture, unfreeze, freeze_bn):
+def unfreeze_layers(model, backbone, unfreeze, freeze_bn):
     """
     Flags specified layers as trainable.
 
     Args:
         model (keras.Model): Initial convergence (top-calibrated) model.
-        architecture (str): Base model architecture.
+        backbone (str): Base model architecture.
         unfreeze (int | str | tuple): Layer specification for unfreezing:
             - int: unfreeze from this layer depth to the top
             - str: unfreeze from this layer name to the top
@@ -118,7 +118,7 @@ def unfreeze_layers(model, architecture, unfreeze, freeze_bn):
     Returns:
         None
     """
-    base_model = model.get_layer(architecture)
+    base_model = model.get_layer(backbone)
     base_model.trainable = True # Unfreezes parent container
 
     # Unfreeze from depth magnitude

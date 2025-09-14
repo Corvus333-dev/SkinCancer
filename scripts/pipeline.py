@@ -122,7 +122,7 @@ def load_data():
 
     return dx_map, dx_names, train_df, val_df, test_df
 
-def preprocess_image(path, input_shape, architecture):
+def preprocess_image(path, input_shape, backbone):
     """
     Decodes a JPEG-encoded image and resizes with pad.
 
@@ -131,7 +131,7 @@ def preprocess_image(path, input_shape, architecture):
     Args:
         path (tf.Tensor): Image path.
         input_shape (tuple): Image shape (h, w, c) for model input.
-        architecture (str): Base model architecture.
+        backbone (str): Base model architecture.
 
     Returns:
         image (tf.Tensor): Resized and padded image of shape (h, w, c).
@@ -141,12 +141,12 @@ def preprocess_image(path, input_shape, architecture):
     image = tf.image.resize_with_pad(image, target_height=input_shape[0], target_width=input_shape[1])
 
     # Scale pixels between -1 and 1
-    if architecture == 'resnet50v2':
+    if backbone == 'resnet50v2':
         image = preprocess_input(image)
 
     return image
 
-def fetch_dataset(df, batch_size, input_shape, architecture, shuffle=True):
+def fetch_dataset(df, batch_size, input_shape, backbone, shuffle=True):
     """
     Creates a Tensorflow Dataset from corresponding metadata, preprocessed images, and diagnosis codes.
 
@@ -154,7 +154,7 @@ def fetch_dataset(df, batch_size, input_shape, architecture, shuffle=True):
         df (pd.DataFrame): DataFrame with image paths and diagnosis codes.
         batch_size (int): Samples per batch.
         input_shape (tuple): Image shape (h, w, c) for model input.
-        architecture (str): Base model architecture.
+        backbone (str): Base model architecture.
         shuffle (bool): Optional shuffling.
 
     Returns:
@@ -170,7 +170,7 @@ def fetch_dataset(df, batch_size, input_shape, architecture, shuffle=True):
 
     def preprocess_all(meta_vector, path, dx_code):
         # Package metadata, preprocessed image, and dx_code
-        image = preprocess_image(path, input_shape, architecture)
+        image = preprocess_image(path, input_shape, backbone)
         return {'meta': meta_vector, 'image': image}, dx_code
 
     ds = ds.map(preprocess_all, num_parallel_calls=tf.data.AUTOTUNE)

@@ -17,18 +17,18 @@ def save_dist(dist_plot):
     dist_path = 'data/distribution.png'
     dist_plot.savefig(dist_path, dpi=300)
 
-def create_directory(architecture):
+def create_directory(backbone):
     """
-    Creates architecture-specific, timestamped directories for storing experiment results.
+    Creates a backbone-specific, timestamped directory for storing experiment results.
 
     Args:
-        architecture (str): Base model architecture.
+        backbone (str): Base model architecture.
 
     Returns:
         Path: Object pointing to new directory.
     """
     timestamp = datetime.now().strftime('%Y%m%d_%H%M')
-    directory = Path('models') / architecture / timestamp
+    directory = Path('models') / backbone / timestamp
     directory.mkdir(parents=True, exist_ok=True)
 
     return directory

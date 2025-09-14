@@ -26,18 +26,18 @@ def calculate_class_weight(train_df, boost, gamma):
     # Cast to JSON-compatible types (required for custom loss serialization)
     return {int(key): float(value) for key, value in zip(classes, weights)}
 
-def get_layer_state(model, architecture):
+def get_layer_state(model, backbone):
     """
     Extracts layer names and associated training states (unfrozen or frozen) from the base model.
 
     Args:
         model (keras.Model): Base model object.
-        architecture (str): Base model architecture.
+        backbone (str): Base model architecture.
 
     Returns:
         dict: Map of layer names and training states.
     """
-    base_model = model.get_layer(architecture)
+    base_model = model.get_layer(backbone)
     layer_state = {}
 
     for layer in base_model.layers:

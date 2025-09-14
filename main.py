@@ -10,7 +10,7 @@ from scripts.utils import calculate_class_weight, compute_prc, get_layer_state
 
 cfg = Config(
     exp=ExpConfig(
-        architecture='resnet50v2',
+        backbone='resnet50v2',
         mode='train',
         checkpoint=None,
         freeze_bn=False,
@@ -28,7 +28,7 @@ cfg = Config(
             6: 1.0   # vasc
         },
         dropout=(0.5, 0.25, 0.125),
-        epochs=1,
+        epochs=50,
         focal_loss=(0.5, 2.0, 0.1),
         initial_lr=1e-3,
         lr_decay=True,
@@ -42,10 +42,10 @@ def train(train_ds, val_ds, train_df):
     if cfg.exp.checkpoint:
         model = tf.keras.models.load_model(cfg.exp.checkpoint)
         if cfg.exp.unfreeze:
-            unfreeze_layers(model, cfg.exp.architecture, cfg.exp.unfreeze, cfg.exp.freeze_bn)
+            unfreeze_layers(model, cfg.exp.backbone, cfg.exp.unfreeze, cfg.exp.freeze_bn)
     else:
         model = build_model(
-            architecture=cfg.exp.architecture,
+            architecture=cfg.exp.backbone,
             input_shape=cfg.exp.input_shape,
             dropout=cfg.train.dropout
         )
@@ -72,10 +72,10 @@ def train(train_ds, val_ds, train_df):
         smooth=smooth
     )
 
-    directory = create_directory(cfg.exp.architecture)
+    directory = create_directory(cfg.exp.backbone)
     history = train_model(model, directory, train_ds, val_ds, epochs=cfg.train.epochs, patience=cfg.train.patience)
     hist_plot = plot_hist(history.history, directory)
-    layer_state = get_layer_state(model, cfg.exp.architecture)
+    layer_state = get_layer_state(model, cfg.exp.backbone)
 
     save_model(directory, model, cfg, history, hist_plot, layer_state)
 
@@ -97,7 +97,7 @@ def main():
     fetch_args = dict(
         batch_size=cfg.train.batch_size,
         input_shape=cfg.exp.input_shape,
-        architecture=cfg.exp.architecture
+        architecture=cfg.exp.backbone
     )
 
     if cfg.exp.mode == 'train':

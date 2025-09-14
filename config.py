@@ -5,7 +5,7 @@ BASE_MODELS = {'efficientnetb1': (244, 244, 3), 'resnet50v2': (224, 224, 3)}
 
 @dataclasses.dataclass
 class ExpConfig:
-    architecture: Literal['efficientnetb1', 'resnet50v2']
+    backbone: Literal['efficientnetb1', 'resnet50v2']
     mode: Literal['train', 'val', 'test']
     checkpoint: Optional[str] = None
     input_shape: tuple = dataclasses.field(init=False)
@@ -13,8 +13,8 @@ class ExpConfig:
     unfreeze: Optional[Union[int, str, Tuple[str, ...]]] = None
 
     def __post_init__(self):
-        if self.architecture not in BASE_MODELS:
-            raise ValueError(f'Invalid architecture: {self.architecture}')
+        if self.backbone not in BASE_MODELS:
+            raise ValueError(f'Invalid backbone: {self.backbone}')
 
         if self.mode not in {'train', 'val', 'test'}:
             raise ValueError(f'Invalid mode: {self.mode}')
@@ -22,7 +22,7 @@ class ExpConfig:
         if self.mode != 'train' and not self.checkpoint:
             raise ValueError('Model checkpoint required for val/test modes.')
 
-        self.input_shape = BASE_MODELS[self.architecture]
+        self.input_shape = BASE_MODELS[self.backbone]
 
 @dataclasses.dataclass
 class TrainConfig:
