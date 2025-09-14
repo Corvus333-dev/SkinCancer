@@ -3,7 +3,7 @@ import tensorflow as tf
 
 from config import Config, ExpConfig, TrainConfig
 from scripts.export import create_directory, save_model, save_results
-from scripts.model import build_model, compile_model, predict_dx, train_model, unfreeze_layers
+from scripts.model_ops import build_model, compile_model, predict_dx, train_model, unfreeze_layers
 from scripts.pipeline import load_data, fetch_dataset
 from scripts.plots import plot_cm, plot_hist, plot_prc
 from scripts.utils import calculate_class_weight, compute_prc, get_layer_state
@@ -45,7 +45,7 @@ def train(train_ds, val_ds, train_df):
             unfreeze_layers(model, cfg.exp.backbone, cfg.exp.unfreeze, cfg.exp.freeze_bn)
     else:
         model = build_model(
-            architecture=cfg.exp.backbone,
+            backbone=cfg.exp.backbone,
             input_shape=cfg.exp.input_shape,
             dropout=cfg.train.dropout
         )
