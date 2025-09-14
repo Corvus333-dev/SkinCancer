@@ -1,12 +1,7 @@
-from sklearn.metrics import classification_report, confusion_matrix
 import tensorflow as tf
 
-from config import Config, ExpConfig, TrainConfig
-from scripts.export import create_directory, save_model, save_results
-from scripts.model_ops import build_model, compile_model, predict_dx, train_model, unfreeze_layers
-from scripts.pipeline import load_data, fetch_dataset
-from scripts.plots import plot_cm, plot_hist, plot_prc
-from scripts.utils import calculate_class_weight, compute_prc, get_layer_state
+from config import *
+from scripts import export, model_ops, pipeline, plots, utils
 
 cfg = Config(
     exp=ExpConfig(
@@ -42,15 +37,15 @@ def train(train_ds, val_ds, train_df):
     if cfg.exp.checkpoint:
         model = tf.keras.models.load_model(cfg.exp.checkpoint)
         if cfg.exp.unfreeze:
-            unfreeze_layers(model, cfg.exp.backbone, cfg.exp.unfreeze, cfg.exp.freeze_bn)
+            model_ops.unfreeze_layers(model, cfg.exp.backbone, cfg.exp.unfreeze, cfg.exp.freeze_bn)
     else:
-        model = build_model(
+        model = model_ops.build_model(
             backbone=cfg.exp.backbone,
             input_shape=cfg.exp.input_shape,
             dropout=cfg.train.dropout
         )
 
-    alpha = calculate_class_weight(train_df, cfg.train.boost, cfg.train.focal_loss[0])
+    alpha = utils.calculate_class_weight(train_df, cfg.train.boost, cfg.train.focal_loss[0])
     gamma = cfg.train.focal_loss[1]
     smooth = cfg.train.focal_loss[2]
 
@@ -60,7 +55,7 @@ def train(train_ds, val_ds, train_df):
     else:
         decay_steps, warmup_steps = None, None
 
-    compile_model(
+    model_ops.compile_model(
         model,
         initial_lr=cfg.train.initial_lr,
         decay_steps=decay_steps,
@@ -72,27 +67,26 @@ def train(train_ds, val_ds, train_df):
         smooth=smooth
     )
 
-    directory = create_directory(cfg.exp.backbone)
-    history = train_model(model, directory, train_ds, val_ds, epochs=cfg.train.epochs, patience=cfg.train.patience)
-    hist_plot = plot_hist(history.history, directory)
-    layer_state = get_layer_state(model, cfg.exp.backbone)
+    directory = export.create_directory(cfg.exp.backbone)
+    history = model_ops.train_model(model, directory, train_ds, val_ds, epochs=cfg.train.epochs, patience=cfg.train.patience)
+    hist_plot = plots.plot_hist(history.history, directory)
+    layer_state = utils.get_layer_state(model, cfg.exp.backbone)
 
-    save_model(directory, model, cfg, history, hist_plot, layer_state)
+    export.save_model(directory, model, cfg, history, hist_plot, layer_state)
 
 def evaluate_and_predict(ds, dx_map, dx_names):
     model = tf.keras.models.load_model(cfg.exp.checkpoint)
-    p, y, y_hat = predict_dx(ds, model)
+    p, y, y_hat = model_ops.predict_dx(ds, model)
 
-    cr = classification_report(y, y_hat, target_names=dx_names, output_dict=True)
-    cm = confusion_matrix(y, y_hat)
-    cm_plot = plot_cm(cm, dx_names, cfg.exp.checkpoint, cfg.exp.mode)
-    prc_data = compute_prc(dx_names, p, y)
-    prc_plot = plot_prc(cfg.exp.checkpoint, cfg.exp.mode, dx_names, prc_data)
+    cm, cr = utils.compute_classification_metrics(y, y_hat, dx_names)
+    cm_plot = plots.plot_cm(cm, dx_names, cfg.exp.checkpoint, cfg.exp.mode)
+    prc_data = utils.compute_prc(dx_names, p, y)
+    prc_plot = plots.plot_prc(cfg.exp.checkpoint, cfg.exp.mode, dx_names, prc_data)
 
-    save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, prc_plot, cfg.exp.checkpoint, cfg.exp.mode)
+    export.save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, prc_plot, cfg.exp.checkpoint, cfg.exp.mode)
 
 def main():
-    dx_map, dx_names, train_df, val_df, test_df = load_data()
+    dx_map, dx_names, train_df, val_df, test_df = pipeline.load_data()
 
     fetch_args = dict(
         batch_size=cfg.train.batch_size,
@@ -101,16 +95,16 @@ def main():
     )
 
     if cfg.exp.mode == 'train':
-        train_ds = fetch_dataset(train_df, **fetch_args)
-        val_ds = fetch_dataset(val_df, **fetch_args, shuffle=False)
+        train_ds = pipeline.fetch_dataset(train_df, **fetch_args)
+        val_ds = pipeline.fetch_dataset(val_df, **fetch_args, shuffle=False)
         train(train_ds, val_ds, train_df)
 
     elif cfg.exp.mode == 'val':
-        val_ds = fetch_dataset(val_df, **fetch_args, shuffle=False)
+        val_ds = pipeline.fetch_dataset(val_df, **fetch_args, shuffle=False)
         evaluate_and_predict(val_ds, dx_map, dx_names)
 
     elif cfg.exp.mode == 'test':
-        test_ds = fetch_dataset(test_df, **fetch_args, shuffle=False)
+        test_ds = pipeline.fetch_dataset(test_df, **fetch_args, shuffle=False)
         evaluate_and_predict(test_ds, dx_map, dx_names)
 
 if __name__ == '__main__':

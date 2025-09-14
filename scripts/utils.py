@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.metrics import average_precision_score, precision_recall_curve
+from sklearn.metrics import average_precision_score, classification_report, confusion_matrix, precision_recall_curve
 
 def calculate_class_weight(train_df, boost, gamma):
     """
@@ -45,6 +45,24 @@ def get_layer_state(model, backbone):
         layer_state[layer.name] = state
 
     return layer_state
+
+def compute_classification_metrics(y, y_hat, dx_names):
+    """
+    Computes classification metrics using scikit-learn.
+
+    Args:
+        y (np.ndarray): True diagnosis indices.
+        y_hat (np.ndarray): Predicted diagnosis indices.
+        dx_names (list): Diagnosis names.
+
+    Returns:
+        cr (dict): Per-class metrics and aggregate averages (precision, recall, F1, support).
+        cm (np.ndarray): Confusion matrix of raw counts.
+    """
+    cr = classification_report(y, y_hat, target_names=dx_names, output_dict=True)
+    cm = confusion_matrix(y, y_hat)
+
+    return cr, cm
 
 def compute_prc(dx_names, p, y, classes=7):
     """
