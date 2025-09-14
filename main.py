@@ -68,7 +68,16 @@ def train(train_ds, val_ds, train_df):
     )
 
     directory = export.create_directory(cfg.exp.backbone)
-    history = model_ops.train_model(model, directory, train_ds, val_ds, epochs=cfg.train.epochs, patience=cfg.train.patience)
+
+    history = model_ops.train_model(
+        model,
+        directory,
+        train_ds,
+        val_ds,
+        epochs=cfg.train.epochs,
+        patience=cfg.train.patience
+    )
+
     hist_plot = plots.plot_hist(history.history, directory)
     layer_state = utils.get_layer_state(model, cfg.exp.backbone)
 
@@ -78,7 +87,7 @@ def evaluate_and_predict(ds, dx_map, dx_names):
     model = tf.keras.models.load_model(cfg.exp.checkpoint)
     p, y, y_hat = model_ops.predict_dx(ds, model)
 
-    cm, cr = utils.compute_classification_metrics(y, y_hat, dx_names)
+    cr, cm = utils.compute_clf_metrics(y, y_hat, dx_names)
     cm_plot = plots.plot_cm(cm, dx_names, cfg.exp.checkpoint, cfg.exp.mode)
     prc_data = utils.compute_prc(dx_names, p, y)
     prc_plot = plots.plot_prc(cfg.exp.checkpoint, cfg.exp.mode, dx_names, prc_data)
@@ -91,7 +100,7 @@ def main():
     fetch_args = dict(
         batch_size=cfg.train.batch_size,
         input_shape=cfg.exp.input_shape,
-        architecture=cfg.exp.backbone
+        backbone=cfg.exp.backbone
     )
 
     if cfg.exp.mode == 'train':

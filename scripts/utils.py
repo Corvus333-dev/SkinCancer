@@ -46,9 +46,9 @@ def get_layer_state(model, backbone):
 
     return layer_state
 
-def compute_classification_metrics(y, y_hat, dx_names):
+def compute_clf_metrics(y, y_hat, dx_names):
     """
-    Computes classification metrics using scikit-learn.
+    Computes classification report and confusion matrix.
 
     Args:
         y (np.ndarray): True diagnosis indices.
