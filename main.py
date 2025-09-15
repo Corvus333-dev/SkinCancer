@@ -6,7 +6,7 @@ from scripts import export, model_ops, pipeline, plots, utils
 # Experiment controller
 cfg = Config(
     exp=ExpConfig(
-        backbone='resnet50v2',
+        backbone='efficientnetb1',
         mode='train',
         checkpoint=None,
         freeze_bn=False,

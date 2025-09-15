@@ -2,7 +2,7 @@ import dataclasses
 from typing import Literal, Optional, Tuple, Union
 
 # Supported base models and input shapes
-BASE_MODELS = {'efficientnetb1': (244, 244, 3), 'resnet50v2': (224, 224, 3)}
+BASE_MODELS = {'efficientnetb1': (240, 240, 3), 'resnet50v2': (224, 224, 3)}
 
 @dataclasses.dataclass
 class ExpConfig:
