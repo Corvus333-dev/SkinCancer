@@ -3,6 +3,7 @@ import tensorflow as tf
 from config import *
 from scripts import export, model_ops, pipeline, plots, utils
 
+# Experiment controller
 cfg = Config(
     exp=ExpConfig(
         backbone='resnet50v2',

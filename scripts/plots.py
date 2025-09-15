@@ -74,7 +74,7 @@ def plot_cm(cm, dx_names, checkpoint, mode):
     Args:
         cm (np.ndarray): Confusion matrix.
         dx_names (list): Diagnosis names.
-        checkpoint (str): Location of saved model (used to extract experiment name).
+        checkpoint (str): Path to saved model (used to extract experiment name).
         mode (str): Validation or test mode designation.
 
     Returns:
@@ -118,7 +118,7 @@ def plot_prc(checkpoint, mode, dx_names, prc_data):
     Plots a precision-recall curve overlay for each diagnosis class.
 
     Args:
-        checkpoint (str): Location of saved model (used to extract experiment name).
+        checkpoint (str): Path to saved model (used to extract experiment name).
         mode (str): Validation or test mode designation.
         dx_names (list): Diagnosis names.
         prc_data (dict): Precision-recall curve values for each class.

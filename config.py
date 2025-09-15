@@ -1,10 +1,25 @@
 import dataclasses
 from typing import Literal, Optional, Tuple, Union
 
+# Supported base models and input shapes
 BASE_MODELS = {'efficientnetb1': (244, 244, 3), 'resnet50v2': (224, 224, 3)}
 
 @dataclasses.dataclass
 class ExpConfig:
+    """
+    Configuration for a single experiment run.
+
+    Attributes:
+        backbone (str): Base model architecture.
+        mode (str): Train, validation, or test mode.
+        checkpoint (str): Path to saved model. Required for 'val' or 'test' mode.
+        input_shape (tuple): Image dimensions expected by backbone (automatically set).
+        freeze_bn (bool): Freeze all batch normalization layers in backbone.
+        unfreeze (int | str | tuple): Layer specification for unfreezing:
+            - int: unfreeze from this layer depth to the top
+            - str: unfreeze from this layer name to the top
+            - tuple: unfreeze layers containing any of these keywords
+    """
     backbone: Literal['efficientnetb1', 'resnet50v2']
     mode: Literal['train', 'val', 'test']
     checkpoint: Optional[str] = None
