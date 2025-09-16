@@ -7,18 +7,22 @@ BASE_MODELS = {'efficientnetb1': (240, 240, 3), 'resnet50v2': (224, 224, 3)}
 @dataclasses.dataclass
 class ExpConfig:
     """
-    Configuration for a single experiment run.
+    General experiment settings.
 
     Attributes:
-        backbone (str): Base model architecture.
-        mode (str): Train, validation, or test mode.
-        checkpoint (str): Path to saved model. Required for 'val' or 'test' mode.
-        input_shape (tuple): Image dimensions expected by backbone (automatically set).
-        freeze_bn (bool): Freeze all batch normalization layers in backbone.
-        unfreeze (int | str | tuple): Layer specification for unfreezing:
-            - int: unfreeze from this layer depth to the top
-            - str: unfreeze from this layer name to the top
+        backbone: Base model architecture.
+        mode: Operating mode (i.e., train/val/test).
+        checkpoint: Path to saved model. Required for 'val' or 'test' modes.
+        input_shape: Image dimensions expected by backbone (auto set).
+        freeze_bn: Freeze all batch normalization layers in backbone.
+        unfreeze (int | str | tuple): Layers to unfreeze.
+            - int: unfreeze from this depth upward
+            - str: unfreeze from this layer name upward
             - tuple: unfreeze layers containing any of these keywords
+
+    Notes:
+        - Input shape is set to ImageNet-pretrained resolution to ensure compatibility with pretrained weights.
+        - Freezing batch normalization can improve training when fine-tuning small datasets or domain shift is minimal.
     """
     backbone: Literal['efficientnetb1', 'resnet50v2']
     mode: Literal['train', 'val', 'test']
@@ -41,6 +45,24 @@ class ExpConfig:
 
 @dataclasses.dataclass
 class TrainConfig:
+    """
+    Training hyperparameters.
+
+    Attributes:
+        batch_size: Samples per batch.
+        boost: Map of diagnosis codes to weight multipliers.
+            Example: {0: 1.0, 1: 1.4, ..., 6: 1.2}
+        dropout: Dropout rates for each dense layer (bottom to top).
+        epochs: Maximum training epochs.
+        focal_loss: Parameters (alpha, gamma, label_smoothing) for sparse categorical focal cross-entropy loss.
+            - alpha: inverse frequency weighting exponent (e.g., 0.5 = inverse sqrt, 1.0 = full inverse, etc.)
+            - gamma: focusing parameter (e.g., 0.0 = standard cross-entropy, 2.0 = strong focusing, etc.)
+            - label_smoothing: label smoothing factor (e.g., 0.0 = no smoothing, 0.1 = 10% smoothing, etc.)
+        initial_lr: Starting learning rate.
+        lr_decay: Use cosine decay.
+        patience: Number of epochs with no improvement after which training will be stopped.
+        weight_decay: L2 weight decay for optimizer.
+    """
     batch_size: int = 64
     boost: Optional[dict] = None
     dropout: Tuple[float, float, float] = (0.5, 0.25, 0.125)
