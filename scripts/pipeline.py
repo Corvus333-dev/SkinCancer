@@ -5,7 +5,10 @@ from sklearn.preprocessing import LabelEncoder
 import tensorflow as tf
 from tensorflow.keras.applications.resnet import preprocess_input
 
-def encode_labels():
+# Create project root path relative to this module
+ROOT = Path(__file__).resolve().parent.parent
+
+def encode_labels(df):
     """
     Assigns a unique number (diagnosis code) to each type of skin lesion (diagnosis name).
 
@@ -13,9 +16,6 @@ def encode_labels():
         df (pd.DataFrame): DataFrame containing diagnosis codes and metadata.
         dx_map (dict): Map of diagnosis codes to diagnosis names.
     """
-    data_path = 'data/HAM10000_metadata'
-    df = pd.read_csv(data_path)
-
     # Map diagnosis names to numerical values
     le = LabelEncoder()
     df['dx_code'] = le.fit_transform(df['dx'])
@@ -54,7 +54,7 @@ def map_image_paths(df):
     Returns:
         pd.DataFrame: Updated DataFrame containing image paths.
     """
-    image_folders = [Path('data/HAM10000_images_part_1/'), Path('data/HAM10000_images_part_2/')]
+    image_folders = [ROOT / 'data/HAM10000_images_part_1', ROOT / 'data/HAM10000_images_part_2']
     image_map = {}
     image_paths = []
 
@@ -114,7 +114,8 @@ def load_data():
         dx_names (list): Diagnosis names.
         pd.DataFrame: Training, validation, and test DataFrames (train_df, val_df, test_df).
     """
-    df, dx_map = encode_labels()
+    df = pd.read_csv(ROOT / 'data/HAM10000_metadata')
+    df, dx_map = encode_labels(df)
     dx_names = list(dx_map.values())
     df = map_image_paths(df)
     df = encode_meta(df)
