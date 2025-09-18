@@ -3,7 +3,7 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 import tensorflow as tf
-from tensorflow.keras.applications.resnet_v2 import preprocess_input
+from tensorflow.keras.applications.resnet import preprocess_input
 
 def encode_labels():
     """
@@ -126,7 +126,7 @@ def preprocess_image(path, input_shape, backbone):
     """
     Decodes a JPEG-encoded image and resizes with pad.
 
-    Note: Pixel scaling [0-255] is included in the model via a Rescaling layer for EfficientNet.
+    Note: EfficientNet normalization to [0, 1] is included in the model via a Rescaling layer.
 
     Args:
         path (tf.Tensor): Image path.
@@ -137,11 +137,11 @@ def preprocess_image(path, input_shape, backbone):
         image (tf.Tensor): Resized and padded image of shape (h, w, c).
     """
     image = tf.io.read_file(path)
-    image = tf.image.decode_jpeg(image, channels=input_shape[2])
+    image = tf.io.decode_jpeg(image, channels=input_shape[2])
     image = tf.image.resize_with_pad(image, target_height=input_shape[0], target_width=input_shape[1])
 
-    # Scale pixels between -1 and 1
-    if backbone == 'resnet50v2':
+    # Convert RGB to BGR and zero-center with respect to ImageNet dataset
+    if backbone == 'resnet50':
         image = preprocess_input(image)
 
     return image

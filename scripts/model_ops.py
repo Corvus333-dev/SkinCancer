@@ -2,7 +2,7 @@ import numpy as np
 from pathlib import Path
 import tensorflow as tf
 from tensorflow.keras import Input, Sequential
-from tensorflow.keras.applications import EfficientNetB1, ResNet50V2
+from tensorflow.keras.applications import EfficientNetB1, ResNet50
 from tensorflow.keras.layers import (
     BatchNormalization,
     Dense,
@@ -41,8 +41,8 @@ def build_model(backbone, input_shape, dropout, classes=7):
     """
     if backbone == 'efficientnetb1':
         model_type = EfficientNetB1
-    elif backbone == 'resnet50v2':
-        model_type = ResNet50V2
+    elif backbone == 'resnet50':
+        model_type = ResNet50
     else:
         raise AssertionError('Backbone validation should be handled by ExperimentConfig.')
 

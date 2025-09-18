@@ -2,7 +2,7 @@ import dataclasses
 from typing import Literal, Optional, Tuple, Union
 
 # Supported base models and input shapes
-BASE_MODELS = {'efficientnetb1': (240, 240, 3), 'resnet50v2': (224, 224, 3)}
+BASE_MODELS = {'efficientnetb1': (240, 240, 3), 'resnet50': (224, 224, 3)}
 
 @dataclasses.dataclass
 class ExpConfig:
@@ -24,7 +24,7 @@ class ExpConfig:
         - Input shape is set to ImageNet-pretrained resolution to ensure compatibility with pretrained weights.
         - Freezing batch normalization can improve training when fine-tuning small datasets or domain shift is minimal.
     """
-    backbone: Literal['efficientnetb1', 'resnet50v2']
+    backbone: Literal['efficientnetb1', 'resnet50']
     mode: Literal['train', 'val', 'test']
     checkpoint: Optional[str] = None
     input_shape: tuple = dataclasses.field(init=False)
