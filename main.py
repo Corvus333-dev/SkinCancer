@@ -23,7 +23,7 @@ cfg = Config(
             6: 1.0   # vasc
         },
         dropout=(0.5, 0.25, 0.125),
-        epochs=50,
+        epochs=100,
         focal_loss=(0.5, 2.0, 0.1),
         initial_lr=1e-3,
         lr_decay=True,

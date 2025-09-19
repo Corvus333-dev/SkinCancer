@@ -63,7 +63,7 @@ class TrainConfig:
     batch_size: int = 64
     boost: Optional[dict] = None
     dropout: Tuple[float, float, float] = (0.5, 0.25, 0.125)
-    epochs: int = 50
+    epochs: int = 100
     focal_loss: Optional[Tuple[float, float, float]] = None
     initial_lr: float = 1e-3
     lr_decay: bool = True
