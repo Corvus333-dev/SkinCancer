@@ -102,7 +102,7 @@ def build_model(backbone, input_shape, dropout, classes=7):
 
     return Model(inputs=[image_input, meta_input], outputs=output)
 
-def unfreeze_layers(model, backbone, unfreeze, freeze_bn):
+def unfreeze_layers(model, backbone, unfreeze):
     """
     Flags specified layers as trainable.
 
@@ -113,7 +113,6 @@ def unfreeze_layers(model, backbone, unfreeze, freeze_bn):
             - int: unfreeze from this layer depth to the top
             - str: unfreeze from this layer name to the top
             - tuple: unfreeze layers containing any of these keywords
-        freeze_bn (bool): Freeze batch normalization layers in base model
 
     Returns:
         None
@@ -146,12 +145,6 @@ def unfreeze_layers(model, backbone, unfreeze, freeze_bn):
     else:
         for layer in base_model.layers:
             layer.trainable = any(keyword in layer.name for keyword in unfreeze)
-
-    # Optionally freeze batch normalization layers
-    if freeze_bn:
-        for layer in base_model.layers:
-            if isinstance(layer, BatchNormalization):
-                layer.trainable = False
 
 def compile_model(model, initial_lr, decay_steps, warmup_target, warmup_steps, wd, alpha, gamma, smooth):
     """

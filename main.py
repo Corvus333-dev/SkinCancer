@@ -9,7 +9,6 @@ cfg = Config(
         backbone='efficientnetb1',
         mode='train',
         checkpoint=None,
-        freeze_bn=False,
         unfreeze=None
     ),
     train=TrainConfig(
@@ -38,7 +37,7 @@ def train(train_ds, val_ds, train_df):
     if cfg.exp.checkpoint:
         model = tf.keras.models.load_model(cfg.exp.checkpoint)
         if cfg.exp.unfreeze:
-            model_ops.unfreeze_layers(model, cfg.exp.backbone, cfg.exp.unfreeze, cfg.exp.freeze_bn)
+            model_ops.unfreeze_layers(model, cfg.exp.backbone, cfg.exp.unfreeze)
     else:
         model = model_ops.build_model(
             backbone=cfg.exp.backbone,

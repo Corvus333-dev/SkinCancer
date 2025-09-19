@@ -14,7 +14,6 @@ class ExpConfig:
         mode: Operating mode (i.e., train/val/test).
         checkpoint: Path to saved model. Required for 'val' or 'test' modes.
         input_shape: Image dimensions expected by backbone (auto set).
-        freeze_bn: Freeze all batch normalization layers in backbone.
         unfreeze (int | str | tuple): Layers to unfreeze.
             - int: unfreeze from this depth upward
             - str: unfreeze from this layer name upward
@@ -22,13 +21,11 @@ class ExpConfig:
 
     Notes:
         - Input shape is set to ImageNet-pretrained resolution to ensure compatibility with pretrained weights.
-        - Freezing batch normalization can improve training when fine-tuning small datasets or domain shift is minimal.
     """
     backbone: Literal['efficientnetb1', 'resnet50']
     mode: Literal['train', 'val', 'test']
     checkpoint: Optional[str] = None
     input_shape: tuple = dataclasses.field(init=False)
-    freeze_bn: bool = False
     unfreeze: Optional[Union[int, str, Tuple[str, ...]]] = None
 
     def __post_init__(self):
