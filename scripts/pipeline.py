@@ -73,13 +73,15 @@ def map_image_paths(df):
 
 def split_data(df):
     """
-    Splits DataFrame into training, validation, and test sets using a 72/17/11 ratio. Majority (nv) lesion groups with
-    multiple images are removed, and minority (non-nv) lesion groups with multiple images are added to the training set
-    to partially restore class balance, provide natural augmentation, and avoid data leakage. Stratification is applied
-    based on encoded labels after these removals.
+    Splits DataFrame into training, validation, and test sets using an initial 72/17/11 ratio. Lesion groups with
+    multiple images are removed to prevent data leakage, label-based stratification is applied, then minority lesion
+    groups with multiple images are added to the training set to address class imbalance, leverage natural augmentation
+    from varied clinical settings, and complement artificial augmentation.
 
     Notes:
         - This results in an effective split of approximately 80/12/8 for HAM10000 dataset.
+        - The effect of bias towards single-image majority samples has been considered.
+        - Assumes dx_code 5 represents majority class (nv)
 
     Args:
         df (pd.DataFrame): Full DataFrame, including image paths.
