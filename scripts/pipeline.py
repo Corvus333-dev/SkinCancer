@@ -73,9 +73,13 @@ def map_image_paths(df):
 
 def split_data(df):
     """
-    Splits DataFrame into training, validation, and test sets using an initial 75/15/10 split with stratification after
-    dropping duplicate lesion IDs. Places any images from the same lesion ID within the training set to prevent data
-    leakage and provide natural augmentation (this results in a final split of ~79/13/8 for HAM10000 dataset).
+    Splits DataFrame into training, validation, and test sets using a 72/17/11 ratio. Majority (nv) lesion groups with
+    multiple images are removed, and minority (non-nv) lesion groups with multiple images are added to the training set
+    to partially restore class balance, provide natural augmentation, and avoid data leakage. Stratification is applied
+    based on encoded labels after these removals.
+
+    Notes:
+        - This results in an effective split of approximately 80/12/8 for HAM10000 dataset.
 
     Args:
         df (pd.DataFrame): Full DataFrame, including image paths.
@@ -84,12 +88,13 @@ def split_data(df):
         pd.DataFrame: Training, validation, and test DataFrames (train_df, val_unique_df, test_unique_df).
     """
 
-    # Temporarily remove duplicate lesions
-    unique_df = df.drop_duplicates(subset=['lesion_id'])
+    dup_ids = df['lesion_id'][df['lesion_id'].duplicated()].unique()
+    unique_df = df.drop_duplicates('lesion_id')
+    unique_df = unique_df[~unique_df['lesion_id'].isin(dup_ids)]
 
     train_unique_df, temp_unique_df = train_test_split(
         unique_df,
-        test_size=0.25,
+        test_size=0.28,
         stratify=unique_df['dx_code'],
         random_state=9
     )
@@ -100,8 +105,9 @@ def split_data(df):
         random_state=9
     )
 
-    # Reintroduce duplicate minority lesions to training set
-    train_df = df[(df['lesion_id'].isin(train_unique_df['lesion_id'])) & (df['dx'] != 5)]
+    # Reintroduce all duplicate minority lesions to training set
+    minority_dup_df = df[df['lesion_id'].isin(dup_ids) & (df['dx_code'] != 5)]
+    train_df = pd.concat([train_unique_df, minority_dup_df], ignore_index=True)
 
     return train_df, val_unique_df, test_unique_df
 

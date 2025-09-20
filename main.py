@@ -6,13 +6,13 @@ from scripts import export, model_ops, pipeline, plots, utils
 # Experiment controller
 cfg = Config(
     exp=ExpConfig(
-        backbone='efficientnetb1',
+        backbone='resnet50',
         mode='train',
         checkpoint=None,
         unfreeze=None
     ),
     train=TrainConfig(
-        batch_size=64,
+        batch_size=32,
         boost={
             0: 1.0,  # akiec
             1: 1.0,  # bcc

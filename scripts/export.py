@@ -14,7 +14,7 @@ def save_dist(dist_plot):
     Returns:
         None
     """
-    dist_path = 'data/distribution.png'
+    dist_path = '../data/distribution.png'
     dist_plot.savefig(dist_path, dpi=300)
 
 def create_directory(backbone):
