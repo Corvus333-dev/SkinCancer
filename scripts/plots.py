@@ -26,7 +26,7 @@ def plot_dist(df, dx_names):
     ax.set_xlabel('Diagnosis')
     ax.set_ylabel('Number of Images')
     ax.set_title('HAM10000 Dataset Distribution')
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
+    ax.tick_params(axis='x', labelrotation=45)
 
     fig.tight_layout()
 
@@ -107,7 +107,7 @@ def plot_cm(cm, dx_names, checkpoint, mode):
     ax.set_xlabel('Predicted Diagnosis')
     ax.set_ylabel('Actual Diagnosis')
     ax.set_title(f'Normalized Confusion Matrix ({exp_name}, {mode})')
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
+    ax.tick_params(axis='x', labelrotation=45)
 
     fig.tight_layout()
 
