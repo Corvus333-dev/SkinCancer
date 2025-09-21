@@ -58,7 +58,7 @@ class TrainConfig:
         initial_lr: Starting learning rate.
         lr_decay: Use cosine decay.
         patience: Number of epochs with no improvement after which training will be stopped.
-        weight_decay: L2 weight decay for optimizer.
+        weight_decay: Weight decay for optimizer.
     """
     batch_size: int = 64
     boost: Optional[dict] = None

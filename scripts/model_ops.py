@@ -20,11 +20,11 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import AdamW
 from tensorflow.keras.optimizers.schedules import CosineDecay
 
-from scripts.keras_objects import CBAM, SparseCategoricalFocalCrossentropy
+from keras_objects import CBAM, SparseCategoricalFocalCrossentropy
 
 def build_model(backbone, input_shape, dropout, classes=7):
     """
-    Instantiates a base model using EfficientNetB1 or ResNet50V2 architecture pretrained on ImageNet dataset, and
+    Instantiates a base model using EfficientNetB1 or ResNet50 architecture pretrained on ImageNet dataset, and
     attaches a custom top that includes gated metadata fusion, CBAM, dense stack, and softmax output.
 
     Performs the following random augmentations to input:
@@ -33,7 +33,7 @@ def build_model(backbone, input_shape, dropout, classes=7):
     Args:
         backbone (str): Base model architecture.
         input_shape (tuple): Shape of input image.
-        dropout (tuple): Dropout rates (ordered from bottom to top).
+        dropout (tuple): Dropout rates for each dense layer (bottom to top).
         classes (int): Number of classes (i.e., skin lesion types).
 
     Returns:
@@ -109,9 +109,9 @@ def unfreeze_layers(model, backbone, unfreeze):
     Args:
         model (keras.Model): Initial convergence (top-calibrated) model.
         backbone (str): Base model architecture.
-        unfreeze (int | str | tuple): Layer specification for unfreezing:
-            - int: unfreeze from this layer depth to the top
-            - str: unfreeze from this layer name to the top
+        unfreeze (int | str | tuple): Layers to unfreeze.
+            - int: unfreeze from this depth upward
+            - str: unfreeze from this layer name upward
             - tuple: unfreeze layers containing any of these keywords
 
     Returns:
@@ -189,7 +189,7 @@ def train_model(model, directory, train_ds, val_ds, epochs, patience, threshold=
         directory (Path): Directory to save the best checkpoint.
         train_ds (tf.data.Dataset): Training dataset.
         val_ds (tf.data.Dataset): Validation dataset.
-        epochs (int): Maximum number of epochs.
+        epochs (int): Maximum training epochs.
         patience (int): Number of epochs with no improvement after which training will be stopped.
         threshold (float): Minimum change in loss to qualify as an improvement.
 
