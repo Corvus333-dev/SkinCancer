@@ -64,14 +64,12 @@ def save_model(directory, model, config, history, hist_plot, layer_state):
 
     hist_plot.savefig(directory / 'training_history.png', dpi=300)
 
-def save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, prc_plot, checkpoint, mode):
+def save_results(pred_df, cr, cm_plot, prc_data, prc_plot, checkpoint, mode):
     """
     Saves predictions, classification report, confusion matrix, and precision-recall curve.
 
     Args:
-        dx_map (dict): Map of diagnosis codes to diagnosis names.
-        y (list): True diagnosis indices.
-        y_hat (np.ndarray): Predicted diagnosis indices.
+        pred_df (pd.DataFrame): DataFrame containing prediction results (image_id, dx probability, actual, predicted).
         cr (dict): Classification report.
         cm_plot (matplotlib.figure.Figure): Confusion matrix plot.
         prc_data (dict): Precision-recall curve data.
@@ -82,21 +80,16 @@ def save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, prc_plot, checkpoint, 
     Returns:
         None
     """
-    df = pd.DataFrame({
-        'actual': [dx_map[i] for i in y],
-        'predicted': [dx_map[i] for i in y_hat]
-    })
-
     directory = Path(checkpoint).parent
 
     if mode == 'val':
-        df_path = directory / 'val_predictions.csv'
+        pred_df_path = directory / 'val_predictions.csv'
         cr_path = directory / 'val_classification_report.json'
         cm_path = directory / 'val_confusion_matrix.png'
         prc_data_path = directory / 'val_prc.json'
         prc_plot_path = directory / 'val_prc.png'
     elif mode == 'test':
-        df_path = directory / 'test_predictions.csv'
+        pred_df_path = directory / 'test_predictions.csv'
         cr_path = directory / 'test_classification_report.json'
         cm_path = directory / 'test_confusion_matrix.png'
         prc_data_path = directory / 'test_prc.json'
@@ -105,7 +98,7 @@ def save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, prc_plot, checkpoint, 
         raise AssertionError('Mode validation should be handled by ExperimentConfig.')
 
     # Save predictions
-    df.to_csv(df_path, index=False)
+    pred_df.to_csv(pred_df_path, index=False)
 
     # Save classification report
     with open(cr_path, 'w') as f:

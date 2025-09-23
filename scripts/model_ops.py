@@ -1,5 +1,7 @@
 import numpy as np
 from pathlib import Path
+
+import pandas as pd
 import tensorflow as tf
 from tensorflow.keras import Input, Sequential
 from tensorflow.keras.applications import EfficientNetB1, ResNet50
@@ -20,7 +22,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import AdamW
 from tensorflow.keras.optimizers.schedules import CosineDecay
 
-from keras_objects import CBAM, SparseCategoricalFocalCrossentropy
+from scripts.keras_objects import CBAM, SparseCategoricalFocalCrossentropy
 
 def build_model(backbone, input_shape, dropout, classes=7):
     """
@@ -214,21 +216,35 @@ def train_model(model, directory, train_ds, val_ds, epochs, patience, threshold=
 
     return model.fit(train_ds, validation_data=val_ds, epochs=epochs, callbacks=[checkpoint, stop])
 
-def predict_dx(ds, model):
+def predict_dx(ds, model, dx_map):
     """
-    Generates predicted diagnoses and collects associated true diagnoses.
+    Generates probability distributions, collects associated true diagnoses, and selects max-value predictions. Places
+    this data and corresponding image IDs into a DataFrame.
 
     Args:
-        ds (tf.data.Dataset): Batched dataset of (image, dx_code) pairs.
+        ds (tf.data.Dataset): Batched dataset of ({meta, image, image_path}, dx_code) pairs.
         model (keras.Model): Trained model with softmax output.
+        dx_map (dict): Map of diagnosis codes to diagnosis names.
 
     Returns:
         p (np.ndarray): Probability distributions.
         y (np.ndarray): True diagnosis indices.
         y_hat (np.ndarray): Predicted diagnosis indices.
+        pred_df (pd.DataFrame): DataFrame containing prediction results (image_id, dx probability, actual, predicted)
     """
     p = model.predict(ds)
     y = np.concatenate([dx_code.numpy() for _, dx_code in ds])
     y_hat = np.argmax(p, axis=1)
 
-    return p, y, y_hat
+    # Flatten batched dataset and decode string tensors element-wise
+    image_paths = [item['image_path'].numpy().decode() for item, _ in ds.unbatch()]
+    # Extract stems from decoded paths
+    image_ids = [Path(p).stem for p in image_paths]
+
+    # Place results in DataFrame
+    pred_df = pd.DataFrame(p, columns=[dx_map[i] for i in range(p.shape[1])])
+    pred_df['actual'] = [dx_map[i] for i in y]
+    pred_df['predicted'] = [dx_map[i] for i in y_hat]
+    pred_df.insert(0, 'image_id', image_ids)
+
+    return p, y, y_hat, pred_df

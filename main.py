@@ -85,14 +85,14 @@ def train(train_ds, val_ds, train_df):
 
 def evaluate_and_predict(ds, dx_map, dx_names):
     model = tf.keras.models.load_model(cfg.exp.checkpoint)
-    p, y, y_hat = model_ops.predict_dx(ds, model)
+    p, y, y_hat, pred_df = model_ops.predict_dx(ds, model, dx_map)
 
     cr, cm = utils.compute_clf_metrics(y, y_hat, dx_names)
     cm_plot = plots.plot_cm(cm, dx_names, cfg.exp.checkpoint, cfg.exp.mode)
     prc_data = utils.compute_prc(dx_names, p, y)
     prc_plot = plots.plot_prc(cfg.exp.checkpoint, cfg.exp.mode, dx_names, prc_data)
 
-    export.save_results(dx_map, y, y_hat, cr, cm_plot, prc_data, prc_plot, cfg.exp.checkpoint, cfg.exp.mode)
+    export.save_results(pred_df, cr, cm_plot, prc_data, prc_plot, cfg.exp.checkpoint, cfg.exp.mode)
 
 def main():
     dx_map, dx_names, train_df, val_df, test_df = pipeline.load_data()

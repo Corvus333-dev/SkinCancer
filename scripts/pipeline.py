@@ -167,7 +167,7 @@ def fetch_dataset(df, batch_size, input_shape, backbone, shuffle=True):
         shuffle (bool): Optional shuffling.
 
     Returns:
-        tf.data.Dataset: Batched dataset of (meta, image, dx_code) triplets.
+        tf.data.Dataset: Batched dataset of ({meta, image, image_path}, dx_code) pairs.
     """
     meta_prefixes = ['dx_type_', 'sex_', 'localization_', 'dataset_']
     meta_columns = [col for col in df.columns if col == 'age' or any(col.startswith(p) for p in meta_prefixes)]
@@ -178,9 +178,9 @@ def fetch_dataset(df, batch_size, input_shape, backbone, shuffle=True):
     ds = tf.data.Dataset.from_tensor_slices((meta_array, paths, dx_codes))
 
     def preprocess_all(meta_vector, path, dx_code):
-        # Package metadata, preprocessed image, and dx_code
+        # Package metadata, preprocessed image, image paths (used for ID tracking), and dx_code
         image = preprocess_image(path, input_shape, backbone)
-        return {'meta': meta_vector, 'image': image}, dx_code
+        return {'meta': meta_vector, 'image': image, 'image_path': path}, dx_code
 
     ds = ds.map(preprocess_all, num_parallel_calls=tf.data.AUTOTUNE)
 
