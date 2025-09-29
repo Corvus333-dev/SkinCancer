@@ -182,15 +182,15 @@ def compile_model(model, initial_lr, decay_steps, warmup_target, warmup_steps, w
     opt = AdamW(learning_rate=lr, weight_decay=wd)
     model.compile(optimizer=opt, loss=loss, metrics = ['accuracy'])
 
-def train_model(model, directory, train_ds, val_ds, epochs, patience, threshold=0.001):
+def train_model(model, train_ds, val_ds, exp_dir, epochs, patience, threshold=0.001):
     """
     Trains model on dataset using early stopping and/or best-weights checkpointing.
 
     Args:
         model (keras.Model): Compiled model.
-        directory (Path): Directory to save the best checkpoint.
         train_ds (tf.data.Dataset): Training dataset.
         val_ds (tf.data.Dataset): Validation dataset.
+        exp_dir (Path): Directory to save the best checkpoint.
         epochs (int): Maximum training epochs.
         patience (int): Number of epochs with no improvement after which training will be stopped.
         threshold (float): Minimum change in loss to qualify as an improvement.
@@ -198,7 +198,7 @@ def train_model(model, directory, train_ds, val_ds, epochs, patience, threshold=
     Returns:
         keras.callbacks.History: Training history.
     """
-    filepath = directory / 'model.keras'
+    filepath = exp_dir / 'model.keras'
 
     checkpoint = tf.keras.callbacks.ModelCheckpoint(
         filepath=filepath,
@@ -216,14 +216,14 @@ def train_model(model, directory, train_ds, val_ds, epochs, patience, threshold=
 
     return model.fit(train_ds, validation_data=val_ds, epochs=epochs, callbacks=[checkpoint, stop])
 
-def predict_dx(ds, model, dx_map):
+def predict_dx(model, ds, dx_map):
     """
     Generates probability distributions, collects associated true diagnoses, and selects max-value predictions. Places
     this data and corresponding image IDs into a DataFrame.
 
     Args:
-        ds (tf.data.Dataset): Batched dataset of ({meta, image, image_path}, dx_code) pairs.
         model (keras.Model): Trained model with softmax output.
+        ds (tf.data.Dataset): Batched dataset of ({meta, image, image_path}, dx_code) pairs.
         dx_map (dict): Map of diagnosis codes to diagnosis names.
 
     Returns:

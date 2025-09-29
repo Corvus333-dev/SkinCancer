@@ -118,9 +118,9 @@ def load_data():
     Executes initial pipeline, converting raw data into prepared datasets.
 
     Returns:
+        pd.DataFrame: Training, validation, and test DataFrames (train_df, val_df, test_df).
         dx_map (dict): Map of diagnosis codes to diagnosis names.
         dx_names (list): Diagnosis names.
-        pd.DataFrame: Training, validation, and test DataFrames (train_df, val_df, test_df).
     """
     df = pd.read_csv(ROOT / 'data/HAM10000_metadata')
     df, dx_map = encode_labels(df)
@@ -129,7 +129,7 @@ def load_data():
     df = encode_meta(df)
     train_df, val_df, test_df = split_data(df)
 
-    return dx_map, dx_names, train_df, val_df, test_df
+    return train_df, val_df, test_df, dx_map, dx_names
 
 def preprocess_image(path, input_shape, backbone):
     """

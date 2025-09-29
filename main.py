@@ -1,15 +1,17 @@
+from pathlib import Path
 import tensorflow as tf
 
 from config import *
-from scripts import export, model_ops, pipeline, plots, utils
+from scripts import ensemble, export, model_ops, pipeline, plots, utils
 
 # Experiment controller
 cfg = Config(
     exp=ExpConfig(
-        backbone='resnet50',
         mode='train',
-        checkpoint=None,
-        unfreeze=None
+        backbone='resnet50',
+        checkpoint='models/resnet50/20250928_2222/model.keras',
+        unfreeze='conv4_block5_1_conv',
+        best_models=None
     ),
     train=TrainConfig(
         batch_size=32,
@@ -24,16 +26,16 @@ cfg = Config(
         },
         dropout=(0.5, 0.25, 0.125),
         epochs=100,
-        focal_loss=(0.5, 2.0, 0.1),
-        initial_lr=1e-3,
+        focal_loss=(0.5, 1.9, 0.1),
+        initial_lr=1e-6,
         lr_decay=True,
         patience=10,
-        warmup_target=None,
+        warmup_target=1e-5,
         weight_decay=1e-4
     )
 )
 
-def train(train_ds, val_ds, train_df):
+def train(train_ds, val_ds, train_df, exp_dir):
     if cfg.exp.checkpoint:
         model = tf.keras.models.load_model(cfg.exp.checkpoint)
         if cfg.exp.unfreeze:
@@ -45,7 +47,8 @@ def train(train_ds, val_ds, train_df):
             dropout=cfg.train.dropout
         )
 
-    alpha = utils.calculate_class_weight(train_df, cfg.train.boost, cfg.train.focal_loss[0])
+    # Focal loss parameters
+    alpha = utils.calculate_class_weight(train_df, cfg.train.focal_loss[0], cfg.train.boost)
     gamma = cfg.train.focal_loss[1]
     smooth = cfg.train.focal_loss[2]
 
@@ -67,35 +70,36 @@ def train(train_ds, val_ds, train_df):
         smooth=smooth
     )
 
-    directory = export.create_directory(cfg.exp.backbone)
-
     history = model_ops.train_model(
         model,
-        directory,
         train_ds,
         val_ds,
+        exp_dir,
         epochs=cfg.train.epochs,
         patience=cfg.train.patience
     )
 
-    hist_plot = plots.plot_hist(history.history, directory)
+    hist_plot = plots.plot_hist(history.history, exp_dir)
     layer_state = utils.get_layer_state(model, cfg.exp.backbone)
 
-    export.save_model(directory, model, cfg, history, hist_plot, layer_state)
+    export.save_model(model, cfg, history, hist_plot, layer_state, exp_dir)
 
-def evaluate_and_predict(ds, dx_map, dx_names):
+def predict(ds, dx_map):
     model = tf.keras.models.load_model(cfg.exp.checkpoint)
-    p, y, y_hat, pred_df = model_ops.predict_dx(ds, model, dx_map)
+    p, y, y_hat, pred_df = model_ops.predict_dx(model, ds, dx_map)
 
+    return p, y, y_hat, pred_df
+
+def evaluate(p, y, y_hat, pred_df, dx_names, exp_dir):
     cr, cm = utils.compute_clf_metrics(y, y_hat, dx_names)
-    cm_plot = plots.plot_cm(cm, dx_names, cfg.exp.checkpoint, cfg.exp.mode)
-    prc_data = utils.compute_prc(dx_names, p, y)
-    prc_plot = plots.plot_prc(cfg.exp.checkpoint, cfg.exp.mode, dx_names, prc_data)
+    cm_plot = plots.plot_cm(cm, dx_names, cfg.exp.mode, exp_dir)
+    prc_data = utils.compute_prc(p, y, dx_names)
+    prc_plot = plots.plot_prc(prc_data, dx_names, cfg.exp.mode, exp_dir)
 
-    export.save_results(pred_df, cr, cm_plot, prc_data, prc_plot, cfg.exp.checkpoint, cfg.exp.mode)
+    export.save_results(pred_df, cr, cm_plot, prc_data, prc_plot, cfg.exp.mode, exp_dir)
 
 def main():
-    dx_map, dx_names, train_df, val_df, test_df = pipeline.load_data()
+    train_df, val_df, test_df, dx_map, dx_names = pipeline.load_data()
 
     fetch_args = dict(
         batch_size=cfg.train.batch_size,
@@ -104,17 +108,29 @@ def main():
     )
 
     if cfg.exp.mode == 'train':
+        exp_dir = export.make_exp_dir(cfg.exp.backbone)
         train_ds = pipeline.fetch_dataset(train_df, **fetch_args)
         val_ds = pipeline.fetch_dataset(val_df, **fetch_args, shuffle=False)
-        train(train_ds, val_ds, train_df)
+        train(train_ds, val_ds, train_df, exp_dir)
 
-    elif cfg.exp.mode == 'val':
-        val_ds = pipeline.fetch_dataset(val_df, **fetch_args, shuffle=False)
-        evaluate_and_predict(val_ds, dx_map, dx_names)
+    else:
+        if cfg.exp.mode == 'val':
+            exp_dir = Path(cfg.exp.checkpoint).parent
+            val_ds = pipeline.fetch_dataset(val_df, **fetch_args, shuffle=False)
+            p, y, y_hat, pred_df = predict(val_ds, dx_map)
 
-    elif cfg.exp.mode == 'test':
-        test_ds = pipeline.fetch_dataset(test_df, **fetch_args, shuffle=False)
-        evaluate_and_predict(test_ds, dx_map, dx_names)
+        elif cfg.exp.mode == 'test':
+            exp_dir = Path(cfg.exp.checkpoint).parent
+            test_ds = pipeline.fetch_dataset(test_df, **fetch_args, shuffle=False)
+            p, y, y_hat, pred_df = predict(test_ds, dx_map)
+
+        else: # Ensemble models
+            exp_dir = export.make_exp_dir(cfg.exp.mode)
+            merged_df = ensemble.merge_pred_dfs(cfg.exp.best_models, dx_names)
+            ensemble_df = ensemble.ensemble_models(merged_df, dx_names)
+            p, y, y_hat, pred_df = ensemble.get_pred_results(ensemble_df, dx_map, dx_names)
+
+        evaluate(p, y, y_hat, pred_df, dx_names, exp_dir)
 
 if __name__ == '__main__':
     main()

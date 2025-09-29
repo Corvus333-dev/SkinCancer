@@ -1,14 +1,14 @@
 import numpy as np
 from sklearn.metrics import average_precision_score, classification_report, confusion_matrix, precision_recall_curve
 
-def calculate_class_weight(train_df, boost, gamma):
+def calculate_class_weight(train_df, gamma, boost):
     """
     Calculates class weights using inverse frequency with adjustable exponent and class-specific multipliers.
 
     Args:
         train_df (pd.DataFrame): Training set DataFrame.
-        boost (dict): Map of diagnosis codes and weight multipliers.
         gamma (float): Exponent used for weight magnitude.
+        boost (dict): Map of diagnosis codes and weight multipliers.
 
     Returns:
         dict: Map of diagnosis codes and weights.
@@ -64,22 +64,21 @@ def compute_clf_metrics(y, y_hat, dx_names):
 
     return cr, cm
 
-def compute_prc(dx_names, p, y, classes=7):
+def compute_prc(p, y, dx_names):
     """
     Computes precision, recall, thresholds, and average precision values for each diagnosis class.
 
     Args:
-        dx_names (list): Diagnosis names.
         p (np.ndarray): Probability distributions.
         y (np.ndarray): True diagnosis indices.
-        classes (int): Number of classes.
+        dx_names (list): Diagnosis names.
 
     Returns:
         dict: Precision-recall curve values for each class.
     """
     prc_data = {}
 
-    for i in range(classes):
+    for i in range(len(dx_names)):
         y_true = np.equal(y, i)
         y_score = p[:, i]
 

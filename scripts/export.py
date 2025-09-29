@@ -17,54 +17,52 @@ def save_dist(dist_plot):
     dist_path = '../data/distribution.png'
     dist_plot.savefig(dist_path, dpi=300)
 
-def create_directory(backbone):
+def make_exp_dir(name):
     """
-    Creates a backbone-specific, timestamped directory for storing experiment results.
+    Creates a customizable-named, timestamped directory for storing experiment results.
 
     Args:
-        backbone (str): Base model architecture.
+        name (str): Descriptive name for mid-level directory (e.g., 'resnet50', 'ensemble', etc.).
 
     Returns:
-        Path: Object pointing to new directory.
+        Path: Object pointing to new directory (models/name/YYYYMMDD_HHMM).
     """
     timestamp = datetime.now().strftime('%Y%m%d_%H%M')
-    directory = Path('models') / backbone / timestamp
-    directory.mkdir(parents=True, exist_ok=True)
+    exp_dir = Path('models') / name / timestamp
+    exp_dir.mkdir(parents=True, exist_ok=True)
 
-    return directory
+    return exp_dir
 
-def save_model(directory, model, config, history, hist_plot, layer_state):
+def save_model(model, config, history, hist_plot, layer_state, exp_dir):
     """
-    Saves trained model and its associated metadata.
+    Saves trained model and its artifacts.
 
     Args:
-        directory (Path): Object pointing to experiment folder.
         model (keras.Model): Trained model.
         config (dataclass): Experiment configuration settings.
         history (keras.callbacks.History): Training history.
         hist_plot (matplotlib.figure.Figure): Training history plot.
         layer_state (dict): Map of layer names and training states.
+        exp_dir (Path): Object pointing to experiment folder.
 
     Returns:
         None
     """
-    # model.save(directory / 'model.keras')
-
-    with open(directory / 'config.json', 'w') as f:
+    with open(exp_dir / 'config.json', 'w') as f:
         json.dump(asdict(config), f, indent=4)
 
-    with open(directory / 'summary.txt', 'w', encoding='utf-8') as f:
+    with open(exp_dir / 'summary.txt', 'w', encoding='utf-8') as f:
         model.summary(print_fn=lambda x: f.write(x + '\n'))
 
-    with open(directory / 'layer_state.json', 'w') as f:
+    with open(exp_dir / 'layer_state.json', 'w') as f:
         json.dump(layer_state, f, indent=4)
 
-    with open(directory / 'training_history.json', 'w') as f:
+    with open(exp_dir / 'training_history.json', 'w') as f:
         json.dump(history.history, f, indent=4)
 
-    hist_plot.savefig(directory / 'training_history.png', dpi=300)
+    hist_plot.savefig(exp_dir / 'training_history.png', dpi=300)
 
-def save_results(pred_df, cr, cm_plot, prc_data, prc_plot, checkpoint, mode):
+def save_results(pred_df, cr, cm_plot, prc_data, prc_plot, mode, exp_dir):
     """
     Saves predictions, classification report, confusion matrix, and precision-recall curve.
 
@@ -74,28 +72,17 @@ def save_results(pred_df, cr, cm_plot, prc_data, prc_plot, checkpoint, mode):
         cm_plot (matplotlib.figure.Figure): Confusion matrix plot.
         prc_data (dict): Precision-recall curve data.
         prc_plot (matplotlib.figure.Figure): Precision-recall curve plot.
-        checkpoint (str): Location of saved model (used to extract parent directory).
-        mode (str): mode (str): Validation or test mode designation.
+        mode (str): mode (str): Mode setting (val/test/ensemble).
+        exp_dir (Path): Object pointing to experiment folder.
 
     Returns:
         None
     """
-    directory = Path(checkpoint).parent
-
-    if mode == 'val':
-        pred_df_path = directory / 'val_predictions.csv'
-        cr_path = directory / 'val_classification_report.json'
-        cm_path = directory / 'val_confusion_matrix.png'
-        prc_data_path = directory / 'val_prc.json'
-        prc_plot_path = directory / 'val_prc.png'
-    elif mode == 'test':
-        pred_df_path = directory / 'test_predictions.csv'
-        cr_path = directory / 'test_classification_report.json'
-        cm_path = directory / 'test_confusion_matrix.png'
-        prc_data_path = directory / 'test_prc.json'
-        prc_plot_path = directory / 'test_prc.png'
-    else:
-        raise AssertionError('Mode validation should be handled by ExperimentConfig.')
+    pred_df_path = exp_dir / f'{mode}_predictions.csv'
+    cr_path = exp_dir / f'{mode}_classification_report.json'
+    cm_path = exp_dir / f'{mode}_confusion_matrix.png'
+    prc_data_path = exp_dir / f'{mode}_prc.json'
+    prc_plot_path = exp_dir / f'{mode}_prc.png'
 
     # Save predictions
     pred_df.to_csv(pred_df_path, index=False)
