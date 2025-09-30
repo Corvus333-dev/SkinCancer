@@ -9,8 +9,8 @@ cfg = Config(
     exp=ExpConfig(
         mode='train',
         backbone='resnet50',
-        checkpoint='models/resnet50/20250928_2222/model.keras',
-        unfreeze='conv4_block5_1_conv',
+        checkpoint=None,
+        unfreeze=None,
         best_models=None
     ),
     train=TrainConfig(
@@ -26,11 +26,11 @@ cfg = Config(
         },
         dropout=(0.5, 0.25, 0.125),
         epochs=100,
-        focal_loss=(0.5, 1.9, 0.1),
-        initial_lr=1e-6,
+        focal_loss=(0.5, 2.0, 0.1),
+        initial_lr=1e-3,
         lr_decay=True,
         patience=10,
-        warmup_target=1e-5,
+        warmup_target=None,
         weight_decay=1e-4
     )
 )
@@ -126,9 +126,9 @@ def main():
 
         else: # Ensemble models
             exp_dir = export.make_exp_dir(cfg.exp.mode)
-            merged_df = ensemble.merge_pred_dfs(cfg.exp.best_models, dx_names)
+            merged_df = ensemble.merge_predictions(cfg.exp.best_models, dx_names)
             ensemble_df = ensemble.ensemble_models(merged_df, dx_names)
-            p, y, y_hat, pred_df = ensemble.get_pred_results(ensemble_df, dx_map, dx_names)
+            p, y, y_hat, pred_df = ensemble.unpack_predictions(ensemble_df, dx_map, dx_names)
 
         evaluate(p, y, y_hat, pred_df, dx_names, exp_dir)
 
