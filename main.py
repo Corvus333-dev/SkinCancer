@@ -26,7 +26,7 @@ cfg = Config(
         },
         dropout=(0.5, 0.25, 0.125),
         epochs=100,
-        focal_loss=(0.5, 2.0, 0.1),
+        focal_loss=(0.4, 1.9, 0.1),
         initial_lr=1e-3,
         lr_decay=True,
         patience=10,

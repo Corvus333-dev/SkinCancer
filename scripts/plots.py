@@ -4,16 +4,52 @@ import numpy as np
 from pathlib import Path
 import seaborn as sns
 
-def plot_dist(df, dx_names):
+def plot_age_dist(df, dx_names):
     """
-    Plots distribution of images used for diagnosis classification.
+    Plots age distribution by diagnosis as a 1.5 IQR boxplot.
+
+    Note: unnormalize ages and exclude sentinel ages (0.0) before calling.
+
+        Args:
+            df (pd.dataFrame): DataFrame containing 'dx' and 'age' columns.
+            dx_names (list): Diagnosis names.
+
+        Returns:
+            matplotlib.figure.Figure: Age distribution by diagnosis plot.
+    """
+    sns.set_style('whitegrid')
+    fig, ax = plt.subplots(figsize=(10, 7))
+
+    sns.boxplot(
+        data=df,
+        x='dx',
+        y='age',
+        order=dx_names,
+        color='cyan',
+        width=0.5,
+        fliersize=0.0,
+        ax=ax
+    )
+
+    ax.set_xlabel('Diagnosis')
+    ax.set_ylabel('Age (years)')
+    ax.set_title('Age Distribution by Diagnosis')
+    ax.tick_params(axis='x', labelrotation=45)
+
+    fig.tight_layout()
+
+    return fig
+
+def plot_dx_dist(df, dx_names):
+    """
+    Plots diagnosis (class) distributions as a bar chart.
 
     Args:
-        df (pd.DataFrame): DataFrame for HAM10000 dataset.
+        df (pd.DataFrame): DataFrame containing 'dx' column.
         dx_names (list): Diagnosis names.
 
     Returns:
-        matplotlib.figure.Figure: Distribution plot.
+        matplotlib.figure.Figure: Class distribution plot.
     """
     counts = df['dx'].value_counts()
 
@@ -25,7 +61,7 @@ def plot_dist(df, dx_names):
     ax.bar_label(bars, padding=3, fontsize=12)
     ax.set_xlabel('Diagnosis')
     ax.set_ylabel('Number of Images')
-    ax.set_title('HAM10000 Dataset Distribution')
+    ax.set_title('Class Distribution (after undersampling)')
     ax.tick_params(axis='x', labelrotation=45)
 
     fig.tight_layout()

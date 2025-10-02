@@ -4,18 +4,20 @@ import json
 import pandas as pd
 from pathlib import Path
 
-def save_dist(dist_plot):
+def save_eda(age_dist_plot, dx_dist_plot):
     """
-    Saves plot of diagnosis frequencies occurring in HAM10000 dataset.
+    Saves exploratory data analysis plots.
 
     Args:
-        dist_plot (matplotlib.figure.Figure): Distribution plot.
+        age_dist_plot (matplotlib.figure.Figure): Age distribution by diagnosis plot.
+        dx_dist_plot (matplotlib.figure.Figure): Diagnosis (class) distribution plot.
 
     Returns:
         None
     """
-    dist_path = '../data/distribution.png'
-    dist_plot.savefig(dist_path, dpi=300)
+    data_dir = Path('../data')
+    age_dist_plot.savefig(data_dir / 'age_distribution.png', dpi=300)
+    dx_dist_plot.savefig(data_dir / 'dx_distribution.png', dpi=300)
 
 def make_exp_dir(name):
     """
