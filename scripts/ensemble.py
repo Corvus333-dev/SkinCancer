@@ -55,7 +55,7 @@ def ensemble_models(merged_df, dx_names):
             - predicted (ensemble-predicted diagnosis name)
     """
     prob_cols = [c for c in merged_df.columns if any(c.startswith(dx_name) for dx_name in dx_names)]
-    mean_probs = merged_df[prob_cols].groupby(lambda c: c.split('_')[0], axis=1).mean()
+    mean_probs = merged_df[prob_cols].T.groupby(lambda c: c.split('_')[0]).mean().T
     mean_probs['predicted'] = mean_probs.idxmax(axis=1)
 
     ensemble_df = pd.concat([merged_df[['image_id', 'actual']], mean_probs], axis=1)
