@@ -1,4 +1,7 @@
+from cProfile import label
+
 import matplotlib
+import matplotlib.patches as mp
 import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
@@ -40,25 +43,36 @@ def plot_age_dist(df, dx_names):
 
     return fig
 
-def plot_dx_dist(df, dx_names):
+def plot_dx_dist(exp_counts, dropped, used, dx_names):
     """
-    Plots diagnosis (class) distributions as a bar chart.
+    Plots diagnosis (class) distributions after undersampling as a bar chart. Includes an overlay for dropped samples.
 
     Args:
-        df (pd.DataFrame): DataFrame containing 'dx' column.
+        exp_counts (pd.Series): Diagnosis value counts after undersampling.
+        dropped (int): Number of dropped images.
+        used (int): Number of used images.
         dx_names (list): Diagnosis names.
 
     Returns:
         matplotlib.figure.Figure: Class distribution plot.
     """
-    counts = df['dx'].value_counts()
-
     sns.set_style('whitegrid')
     fig, ax = plt.subplots(figsize=(10, 7))
 
-    sns.barplot(x=counts.index, y=counts.values, ax=ax, color='cyan', order=dx_names)
+    # Plot experiment counts
+    sns.barplot(x=exp_counts.index, y=exp_counts.values, ax=ax, color='cyan', order=dx_names)
+
     bars = ax.containers[0]
     ax.bar_label(bars, padding=3, fontsize=12)
+
+    # Overlay undersampled portion
+    ax.bar(dx_names.index('nv'), dropped, bottom=exp_counts['nv'], color='gray', hatch='/', alpha=0.5)
+
+    # Legend entries
+    exp_patch = mp.Patch(color='cyan', label=f'Used Images: {used:>9}')
+    dropped_patch = mp.Patch(color='gray', hatch='///', alpha=0.5, label=f'Dropped Images: {dropped}')
+    ax.legend(handles=[dropped_patch, exp_patch], loc='upper left')
+
     ax.set_xlabel('Diagnosis')
     ax.set_ylabel('Number of Images')
     ax.set_title('Class Distribution (after undersampling)')
