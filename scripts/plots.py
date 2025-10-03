@@ -1,5 +1,3 @@
-from cProfile import label
-
 import matplotlib
 import matplotlib.patches as mp
 import matplotlib.pyplot as plt
