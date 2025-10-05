@@ -4,20 +4,19 @@ import json
 import pandas as pd
 from pathlib import Path
 
-def save_eda(age_dist_plot, dx_dist_plot):
+def save_eda(plot, name):
     """
     Saves exploratory data analysis plots.
 
     Args:
-        age_dist_plot (matplotlib.figure.Figure): Age distribution by diagnosis plot.
-        dx_dist_plot (matplotlib.figure.Figure): Diagnosis (class) distribution plot.
+        plot (matplotlib.figure.Figure): Distribution plot.
+        name (str): Filename prefix.
 
     Returns:
         None
     """
-    data_dir = Path('../data')
-    age_dist_plot.savefig(data_dir / 'age_distribution.png', dpi=300)
-    dx_dist_plot.savefig(data_dir / 'dx_distribution.png', dpi=300)
+    data_dir = Path('../data/plots')
+    plot.savefig(data_dir / f'{name}_dist.png', dpi=300)
 
 def make_exp_dir(name):
     """

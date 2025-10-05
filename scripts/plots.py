@@ -26,7 +26,7 @@ def plot_age_dist(df, dx_names):
         x='dx',
         y='age',
         order=dx_names,
-        color='cyan',
+        color='#29AF7F',
         width=0.5,
         fliersize=0.0,
         ax=ax
@@ -58,7 +58,7 @@ def plot_dx_dist(exp_counts, dropped, used, dx_names):
     fig, ax = plt.subplots(figsize=(10, 7))
 
     # Plot experiment counts
-    sns.barplot(x=exp_counts.index, y=exp_counts.values, ax=ax, color='cyan', order=dx_names)
+    sns.barplot(x=exp_counts.index, y=exp_counts.values, ax=ax, color='#29AF7F', order=dx_names)
 
     bars = ax.containers[0]
     ax.bar_label(bars, padding=3, fontsize=12)
@@ -67,13 +67,43 @@ def plot_dx_dist(exp_counts, dropped, used, dx_names):
     ax.bar(dx_names.index('nv'), dropped, bottom=exp_counts['nv'], color='gray', hatch='/', alpha=0.5)
 
     # Legend entries
-    exp_patch = mp.Patch(color='cyan', label=f'Used Images: {used:>9}')
+    exp_patch = mp.Patch(color='#29AF7F', label=f'Used Images: {used:>9}')
     dropped_patch = mp.Patch(color='gray', hatch='///', alpha=0.5, label=f'Dropped Images: {dropped}')
     ax.legend(handles=[dropped_patch, exp_patch], loc='upper left')
 
     ax.set_xlabel('Diagnosis')
     ax.set_ylabel('Number of Images')
-    ax.set_title('Class Distribution (after undersampling)')
+    ax.set_title('HAM10000 Class Distribution')
+    ax.tick_params(axis='x', labelrotation=45)
+
+    fig.tight_layout()
+
+    return fig
+
+def plot_meta_dist(df, category, palette, title, dx_names):
+    """
+    Plots metadata category distributions by diagnosis as a bar chart.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing 'dx' and category-mapped 'count' columns.
+        category (str): Metadata category
+        palette (str): Color palette used for plotting.
+        title (str): Plot title subject and legend title.
+        dx_names (list): Diagnosis names.
+
+    Returns:
+        matplotlib.figure.Figure: Metadata category distribution by diagnosis plot.
+    """
+    sns.set_style('whitegrid')
+    fig, ax = plt.subplots(figsize=(10, 7))
+    pal = sns.color_palette(palette, len(df[category].unique()))
+
+    sns.barplot(data=df, x='dx', y='count', ax=ax, palette=pal, hue=category, order=dx_names)
+
+    ax.set_xlabel('Diagnosis')
+    ax.set_ylabel('Proportion')
+    ax.set_title(f'{title} Distribution by Diagnosis')
+    ax.legend(title=title)
     ax.tick_params(axis='x', labelrotation=45)
 
     fig.tight_layout()
@@ -147,7 +177,7 @@ def plot_cm(cm, dx_names, mode, exp_dir):
         annot=annot,
         ax=ax,
         cbar_kws={'label': 'Prediction Rate'},
-        cmap='cool',
+        cmap='viridis',
         fmt='',
         xticklabels=dx_names,
         yticklabels=dx_names
