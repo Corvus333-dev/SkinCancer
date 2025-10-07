@@ -4,6 +4,7 @@ from tensorflow.keras.layers import (
     Concatenate,
     Conv2D,
     Dense,
+    Dropout,
     GlobalAveragePooling2D,
     GlobalMaxPooling2D,
     Layer,
@@ -12,6 +13,60 @@ from tensorflow.keras.layers import (
 )
 from tensorflow.keras.losses import Loss
 from tensorflow.keras.saving import register_keras_serializable
+
+@register_keras_serializable()
+class FusionGate(Layer):
+    """
+    Fuses metadata into feature maps via a perceptron and gating mechanism.
+
+    Learns two forms of modulation:
+        - alpha: a homogeneous scalar applied to all channels.
+        - gate: heterogeneous channel-wise activations derived from metadata.
+
+    Args:
+        dropout_rate (float): Dropout rate applied to metadata perceptron.
+    """
+    def __init__(self, dropout_rate=0.125, name='fusion_gate', **kwargs):
+        super().__init__(name=name, **kwargs)
+        self.dropout_rate = dropout_rate
+        self.alpha = self.add_weight(initializer='ones', dtype=tf.float32, trainable=True, name='alpha')
+        self.meta_dense = Dense(64, activation='swish')
+        self.meta_dropout = Dropout(dropout_rate)
+
+    def build(self, input_shape):
+        # Constructs channel-wise gating layer based on feature map depth.
+        channels = input_shape[0][-1]
+        self.gate = Dense(channels, activation='tanh', name='gate')
+        self.reshape = Reshape((1, 1, channels))
+
+        super().build(input_shape)
+
+    def call(self, inputs):
+        """
+        Projects metadata input through a perceptron with dropout, computes channel-wise gating activations, and applies
+        alpha-modulated fusion with the feature maps.
+
+        Args:
+            inputs (list): [x, meta_input]
+                - x: Feature tensor of shape (batch_size, h, w, c)
+                - meta_input: Metadata tensor of shape (batch_size, m)
+
+        Returns:
+            tf.Tensor: Metadata-fused feature maps.
+        """
+        x, meta_input = inputs
+        m = self.meta_dense(meta_input)
+        m = self.meta_dropout(m)
+        m = self.gate(m)
+        m = self.reshape(m)
+
+        return x * (1 + self.alpha * m)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({'dropout_rate': self.dropout_rate})
+
+        return config
 
 @register_keras_serializable()
 class CBAM(Layer):
