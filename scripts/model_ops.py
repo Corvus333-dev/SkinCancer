@@ -15,8 +15,7 @@ from tensorflow.keras.layers import (
     RandomFlip,
     RandomRotation,
     RandomTranslation,
-    RandomZoom,
-    Reshape
+    RandomZoom
 )
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import AdamW
