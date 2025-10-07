@@ -24,9 +24,9 @@ cfg = Config(
             5: 1.0,  # nv
             6: 1.0   # vasc
         },
-        dropout=(0.5, 0.25, 0.125),
+        dropout_rates=(0.5, 0.25, 0.125),
         epochs=100,
-        focal_loss=(0.4, 1.9, 0.1),
+        focal_loss=(0.5, 2.0, 0.1),
         initial_lr=1e-3,
         lr_decay=True,
         patience=10,
@@ -44,7 +44,7 @@ def train(train_ds, val_ds, train_df, exp_dir):
         model = model_ops.build_model(
             backbone=cfg.exp.backbone,
             input_shape=cfg.exp.input_shape,
-            dropout=cfg.train.dropout
+            dropout_rates=cfg.train.dropout_rates
         )
 
     # Focal loss parameters

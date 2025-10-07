@@ -56,7 +56,7 @@ class TrainConfig:
         batch_size: Samples per batch.
         boost: Map of diagnosis codes to weight multipliers.
             Example: {0: 1.0, 1: 1.4, ..., 6: 1.2}
-        dropout: Dropout rates for each dense layer (bottom to top).
+        dropout_rates: Dropout rates applied to each dense layer (bottom to top).
         epochs: Maximum training epochs.
         focal_loss: Parameters (alpha, gamma, label_smoothing) for sparse categorical focal cross-entropy loss.
             - alpha: inverse frequency weighting exponent (e.g., 0.5 = inverse sqrt, 1.0 = full inverse, etc.)
@@ -69,7 +69,7 @@ class TrainConfig:
     """
     batch_size: int = 64
     boost: Optional[dict] = None
-    dropout: Tuple[float, float, float] = (0.5, 0.25, 0.125)
+    dropout_rates: Tuple[float, float, float] = (0.5, 0.25, 0.125)
     epochs: int = 100
     focal_loss: Optional[Tuple[float, float, float]] = None
     initial_lr: float = 1e-3

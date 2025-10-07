@@ -23,7 +23,7 @@ from tensorflow.keras.optimizers.schedules import CosineDecay
 
 from scripts.keras_objects import CBAM, FusionGate, SparseCategoricalFocalCrossentropy
 
-def build_model(backbone, input_shape, dropout, classes=7):
+def build_model(backbone, input_shape, dropout_rates, classes=7):
     """
     Instantiates a base model using EfficientNetB1 or ResNet50 architecture pretrained on ImageNet dataset, and
     attaches a custom top that includes gated metadata fusion, CBAM, dense stack, and softmax output.
@@ -34,7 +34,7 @@ def build_model(backbone, input_shape, dropout, classes=7):
     Args:
         backbone (str): Base model architecture.
         input_shape (tuple): Shape of input image.
-        dropout (tuple): Dropout rates for each dense layer (bottom to top).
+        dropout_rates (tuple): Dropout rates applied to each dense layer (bottom to top).
         classes (int): Number of classes (i.e., skin lesion types).
 
     Returns:
@@ -83,15 +83,15 @@ def build_model(backbone, input_shape, dropout, classes=7):
     # Dense stack
     x = Dense(512, activation='swish')(x)
     x = BatchNormalization()(x)
-    x = Dropout(dropout[0])(x)
+    x = Dropout(dropout_rates[0])(x)
 
     x = Dense(256, activation='swish')(x)
     x = BatchNormalization()(x)
-    x = Dropout(dropout[1])(x)
+    x = Dropout(dropout_rates[1])(x)
 
     x = Dense(128, activation='swish')(x)
     x = BatchNormalization()(x)
-    x = Dropout(dropout[2])(x)
+    x = Dropout(dropout_rates[2])(x)
 
     output = Dense(classes, activation='softmax')(x)
 
