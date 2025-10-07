@@ -15,15 +15,6 @@ cfg = Config(
     ),
     train=TrainConfig(
         batch_size=32,
-        boost={
-            0: 1.0,  # akiec
-            1: 1.0,  # bcc
-            2: 1.0,  # bkl
-            3: 1.0,  # df
-            4: 1.0,  # mel
-            5: 1.0,  # nv
-            6: 1.0   # vasc
-        },
         dropout_rates=(0.5, 0.25, 0.125),
         epochs=100,
         focal_loss=(0.5, 2.0, 0.1),
@@ -48,7 +39,7 @@ def train(train_ds, val_ds, train_df, exp_dir):
         )
 
     # Focal loss parameters
-    alpha = utils.calculate_class_weight(train_df, cfg.train.focal_loss[0], cfg.train.boost)
+    alpha = utils.calculate_class_weight(train_df, cfg.train.focal_loss[0])
     gamma = cfg.train.focal_loss[1]
     smooth = cfg.train.focal_loss[2]
 

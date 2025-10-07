@@ -1,14 +1,13 @@
 import numpy as np
 from sklearn.metrics import average_precision_score, classification_report, confusion_matrix, precision_recall_curve
 
-def calculate_class_weight(train_df, gamma, boost):
+def calculate_class_weight(train_df, gamma):
     """
-    Calculates class weights using inverse frequency with adjustable exponent and class-specific multipliers.
+    Calculates class weights using inverse frequency with adjustable exponent.
 
     Args:
         train_df (pd.DataFrame): Training set DataFrame.
         gamma (float): Exponent used for weight magnitude.
-        boost (dict): Map of diagnosis codes and weight multipliers.
 
     Returns:
         dict: Map of diagnosis codes and weights.
@@ -16,11 +15,6 @@ def calculate_class_weight(train_df, gamma, boost):
     y = train_df['dx_code'].values
     classes, counts = np.unique(y, return_counts=True)
     weights = (len(y) / (len(classes) * counts)) ** gamma
-
-    if boost:
-        for key, value in boost.items():
-            weights[key] *= value
-
     weights /= np.mean(weights)
 
     # Cast to JSON-compatible types (required for custom loss serialization)
