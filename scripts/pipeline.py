@@ -37,8 +37,8 @@ def encode_meta(df):
     df['age'] = df['age'].fillna(0.0) / 100 # Sentinel value of 0.0 for missing ages
     df = pd.get_dummies(
         df,
-        prefix=['dx_type', 'sex', 'localization', 'dataset'],
-        columns=['dx_type', 'sex', 'localization', 'dataset'],
+        prefix=['sex', 'localization'],
+        columns=['sex', 'localization'],
         drop_first=True
     )
 
