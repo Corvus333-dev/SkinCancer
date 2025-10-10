@@ -16,7 +16,7 @@ def save_eda(plot, name):
         None
     """
     data_dir = Path('../data/plots')
-    plot.savefig(data_dir / f'{name}_dist.png', dpi=300)
+    plot.savefig(data_dir / f'{name}.png', dpi=300)
 
 def make_exp_dir(name):
     """

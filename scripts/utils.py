@@ -87,3 +87,10 @@ def compute_prc(p, y, dx_names):
         }
 
     return prc_data
+
+def clean_axis(ax, hide_labels=True, hide_spines=True):
+    if hide_labels:
+        ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
+    if hide_spines:
+        for spine in ax.spines.values():
+            spine.set_visible(False)
