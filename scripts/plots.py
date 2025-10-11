@@ -5,7 +5,7 @@ import numpy as np
 from pathlib import Path
 import seaborn as sns
 
-import utils
+from scripts.utils import clean_axis
 
 def plot_age_dist(df, dx_names):
     """
@@ -121,16 +121,16 @@ def plot_images(img_dfs: dict):
     for i, dx in enumerate(max_tp['dx']):
         best_img = plt.imread(max_tp.loc[max_tp['dx'] == dx, 'image_path'].item())
         ax[0, i].imshow(best_img)
-        utils.clean_axis(ax[0, i])
+        clean_axis(ax[0, i])
 
         boundary_img = plt.imread(min_tp.loc[min_tp['dx'] == dx, 'image_path'].item())
         ax[1, i].imshow(boundary_img)
-        utils.clean_axis(ax[1, i])
+        clean_axis(ax[1, i])
 
         worst_img = plt.imread(min_fn.loc[min_fn['dx'] == dx, 'image_path'].item())
         ax[2, i].imshow(worst_img)
         ax[2, i].set_xlabel(dx, fontsize=7)
-        utils.clean_axis(ax[2, i])
+        clean_axis(ax[2, i])
 
         def ylabel(row, top, bot):
             ax[row, 0].set_ylabel(
