@@ -113,7 +113,23 @@ def plot_meta_dist(df, category, palette, title, dx_names):
     return fig
 
 def plot_images(img_dfs: dict):
-    max_tp, min_tp, min_fn = img_dfs.values()
+    """
+    Plots a 3x7 grid of sample images ranked by ground-truth confidence for each diagnosis.
+
+    Each column corresponds to one diagnosis (dx), and rows (top to bottom) represent:
+        1. Highest ground-truth confidence true positive image
+        2. Lowest ground-truth confidence true positive image
+        3. Lowest ground-truth confidence false negative image
+
+    Args:
+        img_dfs (dict): Dictionary containing three DataFrames (max_tp, min_tp, min_fn) with columns:
+            - 'dx': diagnosis label/name
+            - 'image_path': path to image file
+
+    Returns:
+        matplotlib.figure.Figure: Confidence-based sample images by diagnosis plot.
+    """
+    max_tp, min_tp, min_fn = img_dfs.values() # Assumes specific ordering
 
     fig, ax = plt.subplots(3, 7, figsize=(7, 3))
     fig.suptitle('Best, Near-miss, and Worst Samples by Diagnosis (GT Confidence)', fontsize=7, y=0.90)
@@ -123,8 +139,8 @@ def plot_images(img_dfs: dict):
         ax[0, i].imshow(best_img)
         clean_axis(ax[0, i])
 
-        boundary_img = plt.imread(min_tp.loc[min_tp['dx'] == dx, 'image_path'].item())
-        ax[1, i].imshow(boundary_img)
+        near_miss_img = plt.imread(min_tp.loc[min_tp['dx'] == dx, 'image_path'].item())
+        ax[1, i].imshow(near_miss_img)
         clean_axis(ax[1, i])
 
         worst_img = plt.imread(min_fn.loc[min_fn['dx'] == dx, 'image_path'].item())
@@ -133,6 +149,7 @@ def plot_images(img_dfs: dict):
         clean_axis(ax[2, i])
 
         def ylabel(row, top, bot):
+            # Generates pretty y-labels with subscripts
             ax[row, 0].set_ylabel(
                 f'{top}\n' + rf'$p_{{\mathrm{{{bot}}}}}$',
                 labelpad=15, rotation=0, y=0.25, fontsize=7

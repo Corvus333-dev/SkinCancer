@@ -89,6 +89,7 @@ def compute_prc(p, y, dx_names):
     return prc_data
 
 def clean_axis(ax, hide_labels=True, hide_spines=True):
+    # Hide axis ticks and/or spines for cleaner subplot visuals
     if hide_labels:
         ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
     if hide_spines:
