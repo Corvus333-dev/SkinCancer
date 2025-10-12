@@ -5,22 +5,26 @@ raw_df = pd.read_csv('../data/HAM10000_metadata')
 train_df, val_df, test_df, _, dx_names = pipeline.load_data()
 exp_df = pd.concat([train_df, val_df, test_df], ignore_index=True)
 
-def explore_age_dist():
+def render_age_dist(bias_check=False):
     age_df = raw_df.copy()
+    age_df = age_df.fillna(0.0) # Count both NaN and 0 values as 'unknown'
 
-    # Count both NaN and 0 values as 'unknown'
-    age_df = age_df.fillna(0.0)
-    unknown = (age_df['age'] == 0.0).sum()
+    # Unknown age bias sanity check
+    if bias_check:
+        unknown = (age_df['age'] == 0.0).sum()
+        total = len(age_df)
+        print(f'Age unknown for {unknown} of {total} samples...')
+        for dx in dx_names:
+            zeros = ((age_df['age'] == 0) & (age_df['dx'] == dx)).sum()
+            subtotal = (age_df['dx'] == dx).sum()
+            print(f'{dx}: {zeros} of {subtotal}')
 
-    total = len(age_df)
     age_df = age_df[age_df['age'] > 0]
-
-    print(f'Age unknown for {unknown} of {total} samples.')
 
     plot = plots.plot_age_dist(age_df, dx_names)
     export.save_eda(plot, 'age_dist')
 
-def explore_dx_dist():
+def render_dx_dist():
     exp_counts = exp_df['dx'].value_counts()
     raw_counts = raw_df['dx'].value_counts()
     dropped = raw_counts['nv'] - exp_counts['nv']
@@ -29,7 +33,7 @@ def explore_dx_dist():
     plot = plots.plot_dx_dist(exp_counts, dropped, used, dx_names)
     export.save_eda(plot, 'dx_dist')
 
-def explore_meta_dist():
+def render_meta_dist():
     plot_cfg = {
         'sex': {'palette': ['#440154', '#29AF7F', '#FDE725'], 'label': 'Sex'},
         'localization': {'palette': 'tab20', 'label': 'Lesion Localization'},
@@ -46,7 +50,7 @@ def explore_meta_dist():
         plot = plots.plot_meta_dist(df_meta, category, palette, title, dx_names)
         export.save_eda(plot, f'{category}_dist')
 
-def explore_images():
+def render_images():
     df = pd.read_csv('../' + path)
     results = {'max_tp': {}, 'min_tp': {}, 'min_fn': {}}
     img_dfs = {}
@@ -67,14 +71,14 @@ def explore_images():
     export.save_eda(plot, 'lesions')
 
 if __name__ == '__main__':
-    mode = int(input('Enter analysis mode (0 for EDA, 1 for post-run): '))
+    mode = int(input('Enter rendering mode (1: pre-run, 2: post-run): '))
 
-    if mode == 0:
-        explore_age_dist()
-        explore_dx_dist()
-        explore_meta_dist()
-    elif mode == 1:
+    if mode == 1:
+        render_age_dist()
+        render_dx_dist()
+        render_meta_dist()
+    elif mode == 2:
         path = input('Enter path to predictions CSV: ').strip()
-        explore_images()
+        render_images()
     else:
-        raise ValueError(f'Invalid analysis mode: {mode}')
+        raise ValueError(f'Invalid rendering mode: {mode}')
