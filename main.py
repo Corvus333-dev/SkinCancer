@@ -70,10 +70,10 @@ def train(train_ds, val_ds, train_df, exp_dir):
         patience=cfg.train.patience
     )
 
-    hist_plot = plots.plot_hist(history.history, exp_dir)
+    hist_fig = plots.plot_hist(history.history, exp_dir)
     layer_state = utils.get_layer_state(model, cfg.exp.backbone)
 
-    export.save_model(model, cfg, history, hist_plot, layer_state, exp_dir)
+    export.save_model(model, cfg, history, hist_fig, layer_state, exp_dir)
 
 def predict(ds, dx_map):
     model = tf.keras.models.load_model(cfg.exp.checkpoint)
@@ -83,11 +83,11 @@ def predict(ds, dx_map):
 
 def evaluate(p, y, y_hat, pred_df, dx_names, exp_dir):
     cr, cm = utils.compute_clf_metrics(y, y_hat, dx_names)
-    cm_plot = plots.plot_cm(cm, dx_names, cfg.exp.mode, exp_dir)
+    cm_fig = plots.plot_cm(cm, dx_names, cfg.exp.mode, exp_dir)
     prc_data = utils.compute_prc(p, y, dx_names)
-    prc_plot = plots.plot_prc(prc_data, dx_names, cfg.exp.mode, exp_dir)
+    prc_fig = plots.plot_prc(prc_data, dx_names, cfg.exp.mode, exp_dir)
 
-    export.save_results(pred_df, cr, cm_plot, prc_data, prc_plot, cfg.exp.mode, exp_dir)
+    export.save_results(pred_df, cr, cm_fig, prc_data, prc_fig, cfg.exp.mode, exp_dir)
 
 def main():
     train_df, val_df, test_df, dx_map, dx_names = pipeline.load_data()

@@ -21,8 +21,8 @@ def render_age_dist(bias_check=False):
 
     age_df = age_df[age_df['age'] > 0]
 
-    plot = plots.plot_age_dist(age_df, dx_names)
-    export.save_eda(plot, 'age_dist')
+    fig = plots.plot_age_dist(age_df, dx_names)
+    export.save_fig(fig, 'age_dist')
 
 def render_dx_dist():
     exp_counts = exp_df['dx'].value_counts()
@@ -30,8 +30,8 @@ def render_dx_dist():
     dropped = raw_counts['nv'] - exp_counts['nv']
     used = len(raw_df) - dropped
 
-    plot = plots.plot_dx_dist(exp_counts, dropped, used, dx_names)
-    export.save_eda(plot, 'dx_dist')
+    fig = plots.plot_dx_dist(exp_counts, dropped, used, dx_names)
+    export.save_fig(fig, 'dx_dist')
 
 def render_meta_dist():
     plot_cfg = {
@@ -47,8 +47,8 @@ def render_meta_dist():
         df_meta = df_meta.groupby(['dx', category]).size().reset_index(name='count')
         df_meta['count'] = df_meta.groupby('dx')['count'].transform(lambda x: x / x.sum())
 
-        plot = plots.plot_meta_dist(df_meta, category, palette, title, dx_names)
-        export.save_eda(plot, f'{category}_dist')
+        fig = plots.plot_meta_dist(df_meta, category, palette, title, dx_names)
+        export.save_fig(fig, f'{category}_dist')
 
 def render_images():
     df = pd.read_csv('../' + path)
@@ -67,8 +67,8 @@ def render_images():
         img_dfs[name] = pd.DataFrame({'dx': id_map.keys(), 'image_id': id_map.values()})
         img_dfs[name] = pipeline.map_image_paths(img_dfs[name]).drop(columns=['image_id'])
 
-    plot = plots.plot_images(img_dfs)
-    export.save_eda(plot, 'lesions')
+    fig = plots.plot_images(img_dfs)
+    export.save_fig(fig, 'lesions')
 
 if __name__ == '__main__':
     mode = int(input('Enter rendering mode (1: pre-run, 2: post-run): '))

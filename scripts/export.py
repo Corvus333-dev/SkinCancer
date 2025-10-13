@@ -4,19 +4,20 @@ import json
 import pandas as pd
 from pathlib import Path
 
-def save_eda(plot, name):
+def save_fig(fig, name):
     """
-    Saves exploratory data analysis plots.
+    Saves a Matplotlib Figure to the 'plots' directory.
 
     Args:
-        plot (matplotlib.figure.Figure): Distribution plot.
-        name (str): Filename prefix.
+        fig (matplotlib.figure.Figure): Figure to save.
+        name (str): Base filename (without extension).
 
     Returns:
         None
     """
-    data_dir = Path('../data/plots')
-    plot.savefig(data_dir / f'{name}.png', dpi=300)
+    fig_dir = Path('../data/plots')
+    fig_dir.mkdir(parents=True, exist_ok=True)
+    fig.savefig(fig_dir / f'{name}.png', dpi=300)
 
 def make_exp_dir(name):
     """
@@ -34,7 +35,7 @@ def make_exp_dir(name):
 
     return exp_dir
 
-def save_model(model, config, history, hist_plot, layer_state, exp_dir):
+def save_model(model, config, history, hist_fig, layer_state, exp_dir):
     """
     Saves trained model and its artifacts.
 
@@ -42,7 +43,7 @@ def save_model(model, config, history, hist_plot, layer_state, exp_dir):
         model (keras.Model): Trained model.
         config (dataclass): Experiment configuration settings.
         history (keras.callbacks.History): Training history.
-        hist_plot (matplotlib.figure.Figure): Training history plot.
+        hist_fig (matplotlib.figure.Figure): Training history figure.
         layer_state (dict): Map of layer names and training states.
         exp_dir (Path): Object pointing to experiment folder.
 
@@ -61,18 +62,18 @@ def save_model(model, config, history, hist_plot, layer_state, exp_dir):
     with open(exp_dir / 'training_history.json', 'w') as f:
         json.dump(history.history, f, indent=4)
 
-    hist_plot.savefig(exp_dir / 'training_history.png', dpi=300)
+    hist_fig.savefig(exp_dir / 'training_history.png', dpi=300)
 
-def save_results(pred_df, cr, cm_plot, prc_data, prc_plot, mode, exp_dir):
+def save_results(pred_df, cr, cm_fig, prc_data, prc_fig, mode, exp_dir):
     """
     Saves predictions, classification report, confusion matrix, and precision-recall curve.
 
     Args:
         pred_df (pd.DataFrame): DataFrame containing prediction results (image_id, dx probability, actual, predicted).
         cr (dict): Classification report.
-        cm_plot (matplotlib.figure.Figure): Confusion matrix plot.
+        cm_fig (matplotlib.figure.Figure): Confusion matrix figure.
         prc_data (dict): Precision-recall curve data.
-        prc_plot (matplotlib.figure.Figure): Precision-recall curve plot.
+        prc_fig (matplotlib.figure.Figure): Precision-recall curve figure.
         mode (str): mode (str): Mode setting (val/test/ensemble).
         exp_dir (Path): Object pointing to experiment folder.
 
@@ -83,7 +84,7 @@ def save_results(pred_df, cr, cm_plot, prc_data, prc_plot, mode, exp_dir):
     cr_path = exp_dir / f'{mode}_classification_report.json'
     cm_path = exp_dir / f'{mode}_confusion_matrix.png'
     prc_data_path = exp_dir / f'{mode}_prc.json'
-    prc_plot_path = exp_dir / f'{mode}_prc.png'
+    prc_fig_path = exp_dir / f'{mode}_prc.png'
 
     # Save predictions
     pred_df.to_csv(pred_df_path, index=False)
@@ -93,11 +94,11 @@ def save_results(pred_df, cr, cm_plot, prc_data, prc_plot, mode, exp_dir):
         json.dump(cr, f, indent=4)
 
     # Save confusion matrix
-    cm_plot.savefig(cm_path, dpi=300)
+    cm_fig.savefig(cm_path, dpi=300)
 
     # Save precision-recall curve data
     with open(prc_data_path, 'w') as f:
         json.dump(prc_data, f, indent=4)
 
     # Save precision-recall curve plot
-    prc_plot.savefig(prc_plot_path, dpi=300)
+    prc_fig.savefig(prc_fig_path, dpi=300)
