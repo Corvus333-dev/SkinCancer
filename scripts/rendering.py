@@ -7,11 +7,11 @@ exp_df = pd.concat([train_df, val_df, test_df], ignore_index=True)
 
 def render_age_dist(bias_check=False):
     age_df = raw_df.copy()
-    age_df = age_df.fillna(0.0) # Count both NaN and 0 values as 'unknown'
+    age_df = age_df.fillna(0.0) # Treat NaN as 0 (unknown age)
 
-    # Unknown age bias sanity check
+    # Optional sanity check for unknown age bias
     if bias_check:
-        unknown = (age_df['age'] == 0.0).sum()
+        unknown = (age_df['age'] == 0.0).sum() # Count all unknown ages
         total = len(age_df)
         print(f'Age unknown for {unknown} of {total} samples...')
         for dx in dx_names:
