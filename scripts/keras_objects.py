@@ -11,6 +11,7 @@ from tensorflow.keras.layers import (
     Multiply,
     Reshape
 )
+from tensorflow.keras.metrics import F1Score
 from tensorflow.keras.losses import Loss
 from tensorflow.keras.saving import register_keras_serializable
 
@@ -233,3 +234,13 @@ class SparseCategoricalFocalCrossentropy(Loss):
         })
 
         return config
+
+@register_keras_serializable()
+class SparseF1Score(F1Score):
+    def update_state(self, y, y_hat, sample_weight=None):
+        # Convert sparse integer labels to one-hot for F1Score compatibility
+        y = tf.one_hot(tf.cast(y, tf.int32), depth=y_hat.shape[-1])
+        return super().update_state(y, y_hat, sample_weight)
+
+    def get_config(self):
+        return super().get_config()

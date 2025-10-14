@@ -8,16 +8,16 @@ from scripts import ensemble, export, model_ops, pipeline, plots, utils
 cfg = Config(
     exp=ExpConfig(
         mode='train',
-        backbone='resnet50',
+        backbone='efficientnetb1',
         checkpoint=None,
         unfreeze=None,
         best_models=None
     ),
     train=TrainConfig(
-        batch_size=32,
+        batch_size=64,
         dropout_rates=(0.5, 0.25, 0.125),
         epochs=100,
-        focal_loss=(0.5, 2.0, 0.1),
+        focal_loss=(0.4, 2.0, 0.1),
         initial_lr=1e-3,
         lr_decay=True,
         patience=10,

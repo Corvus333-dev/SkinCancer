@@ -21,7 +21,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import AdamW
 from tensorflow.keras.optimizers.schedules import CosineDecay
 
-from scripts.keras_objects import CBAM, FusionGate, SparseCategoricalFocalCrossentropy
+from scripts.keras_objects import CBAM, FusionGate, SparseCategoricalFocalCrossentropy, SparseF1Score
 
 def build_model(backbone, input_shape, dropout_rates, classes=7):
     """
@@ -173,7 +173,8 @@ def compile_model(model, initial_lr, decay_steps, warmup_target, warmup_steps, w
 
     loss = SparseCategoricalFocalCrossentropy(alpha, gamma, smooth)
     opt = AdamW(learning_rate=lr, weight_decay=wd)
-    model.compile(optimizer=opt, loss=loss, metrics = ['accuracy'])
+    macro_f1 = SparseF1Score(average='macro', name='macro_f1')
+    model.compile(optimizer=opt, loss=loss, metrics = ['accuracy', macro_f1])
 
 def train_model(model, train_ds, val_ds, exp_dir, epochs, patience, threshold=0.001):
     """
@@ -195,8 +196,10 @@ def train_model(model, train_ds, val_ds, exp_dir, epochs, patience, threshold=0.
 
     checkpoint = tf.keras.callbacks.ModelCheckpoint(
         filepath=filepath,
-        monitor='val_loss',
-        save_best_only=True
+        monitor='val_macro_f1',
+        verbose=0,
+        save_best_only=True,
+        mode='max'
     )
 
     stop = tf.keras.callbacks.EarlyStopping(
@@ -204,7 +207,7 @@ def train_model(model, train_ds, val_ds, exp_dir, epochs, patience, threshold=0.
         min_delta=threshold,
         patience=patience,
         verbose=1,
-        restore_best_weights=True
+        restore_best_weights=False
     )
 
     return model.fit(train_ds, validation_data=val_ds, epochs=epochs, callbacks=[checkpoint, stop])
