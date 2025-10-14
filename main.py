@@ -1,7 +1,7 @@
 from pathlib import Path
 import tensorflow as tf
 
-from config import *
+from config import Config, ExpConfig, TrainConfig
 from scripts import ensemble, export, model_ops, pipeline, plots, utils
 
 # Experiment controller
