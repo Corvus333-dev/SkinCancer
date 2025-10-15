@@ -1,10 +1,10 @@
 import numpy as np
 from pathlib import Path
-
 import pandas as pd
 import tensorflow as tf
 from tensorflow.keras import Input, Sequential
 from tensorflow.keras.applications import EfficientNetB1, ResNet50
+
 from tensorflow.keras.layers import (
     BatchNormalization,
     Dense,
