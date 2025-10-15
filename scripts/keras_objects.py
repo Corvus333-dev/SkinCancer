@@ -1,10 +1,10 @@
 import tensorflow as tf
 from tensorflow.keras.activations import sigmoid
+
 from tensorflow.keras.layers import (
     Concatenate,
     Conv2D,
     Dense,
-    Dropout,
     GlobalAveragePooling2D,
     GlobalMaxPooling2D,
     GaussianNoise,
