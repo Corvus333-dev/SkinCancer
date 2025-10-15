@@ -7,6 +7,7 @@ from tensorflow.keras.layers import (
     Dropout,
     GlobalAveragePooling2D,
     GlobalMaxPooling2D,
+    GaussianNoise,
     Layer,
     Multiply,
     Reshape
@@ -18,21 +19,21 @@ from tensorflow.keras.saving import register_keras_serializable
 @register_keras_serializable()
 class FusionGate(Layer):
     """
-    Fuses metadata into feature maps via a perceptron and gating mechanism.
+    Fuses metadata into feature maps via a single-layer perceptron (SLP) and gating mechanism.
 
     Learns two forms of modulation:
         - alpha: a homogeneous scalar applied to all channels.
         - gate: heterogeneous channel-wise activations derived from metadata.
 
     Args:
-        dropout_rate (float): Dropout rate applied to metadata perceptron.
+        stddev (float): Standard deviation of Gaussian noise applied to SLP activations.
     """
-    def __init__(self, dropout_rate=0.125, name='fusion_gate', **kwargs):
+    def __init__(self, stddev=0.03, name='fusion_gate', **kwargs):
         super().__init__(name=name, **kwargs)
-        self.dropout_rate = dropout_rate
+        self.stddev = stddev
         self.alpha = self.add_weight(initializer='ones', dtype=tf.float32, trainable=True, name='alpha')
-        self.meta_dense = Dense(64, activation='swish')
-        self.meta_dropout = Dropout(dropout_rate)
+        self.dense = Dense(64, activation='swish')
+        self.noise = GaussianNoise(stddev)
 
     def build(self, input_shape):
         # Constructs channel-wise gating layer based on feature map depth.
@@ -44,8 +45,8 @@ class FusionGate(Layer):
 
     def call(self, inputs):
         """
-        Projects metadata input through a perceptron with dropout, computes channel-wise gating activations, and applies
-        alpha-modulated fusion with the feature maps.
+        Projects metadata input through an SLP, adds Gaussian noise, computes channel-wise gating activations,
+        and applies alpha-modulated fusion with the feature maps.
 
         Args:
             inputs (list): [x, meta_input]
@@ -56,8 +57,8 @@ class FusionGate(Layer):
             tf.Tensor: Metadata-fused feature maps.
         """
         x, meta_input = inputs
-        m = self.meta_dense(meta_input)
-        m = self.meta_dropout(m)
+        m = self.dense(meta_input)
+        m = self.noise(m)
         m = self.gate(m)
         m = self.reshape(m)
 
@@ -65,7 +66,7 @@ class FusionGate(Layer):
 
     def get_config(self):
         config = super().get_config()
-        config.update({'dropout_rate': self.dropout_rate})
+        config.update({'stddev': self.stddev})
 
         return config
 
