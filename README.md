@@ -30,7 +30,7 @@ The HAM10000 dataset consists of 10015 dermoscopic images of common skin lesions
 | Melanoma                                      | mel   | ❌ Malignant       |
 | Vascular Lesions                              | vasc  | ⚠️ Usually Benign |
 
-Due to the extreme class imbalance, melanocytic nevi were undersampled by removing their duplicate lesions, whereas 
+Due to extreme class imbalance, melanocytic nevi were undersampled by removing their duplicate lesions, whereas 
 duplicate images from minority classes were retained in the training set. This preserves lesion-level integrity across 
 splits while leveraging minority duplicates as natural augmentation.
 
