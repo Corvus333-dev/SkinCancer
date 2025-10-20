@@ -18,7 +18,7 @@ alone, and aware of its uncertainty.
 
 ## Dataset
 
-The HAM10000 dataset consists of 10015 dermoscopic images of common skin lesions:
+The HAM10000 dataset consists of 10015 dermoscopic images of biologically diverse skin lesions:
 
 | Lesion Type                                   | Label | Category          |
 |-----------------------------------------------|-------|-------------------|
@@ -34,13 +34,15 @@ The HAM10000 dataset consists of 10015 dermoscopic images of common skin lesions
 
 ![Dataset distribution](data/plots/dx_dist.png)
 > Due to extreme class imbalance, melanocytic nevi were undersampled by removing their duplicate images, whereas 
-duplicate images from minority classes were retained in the training set. This preserves lesion-level integrity across 
-splits while leveraging minority duplicates as natural augmentation.
+> duplicate images from minority classes were retained in the training set. This preserves lesion-level integrity across 
+> splits while leveraging minority duplicates as natural augmentation.
 
 ### Lesion Visualization:
 
 ![Lesion images](data/plots/lesions.png)
-> Representative example images for each diagnosis category, showing tiered variation in lesion appearance.
+> Sample images arranged by the ensemble model's predicted probability for the ground-truth 
+> diagnosis. Rows correspond to high, medium, and low confidence cases, revealing morphological 
+> heterogeneity and task difficulty (even for dermatologists!).
 
 ### Citation
 
