@@ -1,6 +1,6 @@
 # Teaching AI to Spot Skin Cancer
 
-![Cartoon header](assets/lesion_cartoon.png)
+![Lesion cartoon](assets/lesion_cartoon.png)
 
 > Transfer learning ensemble that leverages dermoscopic image features and patient metadata via multimodal fusion for 
 > multi-class skin lesion diagnosis.
@@ -30,14 +30,19 @@ The HAM10000 dataset consists of 10015 dermoscopic images of common skin lesions
 | Melanoma                                      | mel   | ❌ Malignant       |
 | Vascular Lesions                              | vasc  | ⚠️ Usually Benign |
 
-Due to extreme class imbalance, melanocytic nevi were undersampled by removing their duplicate lesions, whereas 
+### Partial Balancing Effect:
+
+![Dataset distribution](data/plots/dx_dist.png)
+> Due to extreme class imbalance, melanocytic nevi were undersampled by removing their duplicate images, whereas 
 duplicate images from minority classes were retained in the training set. This preserves lesion-level integrity across 
 splits while leveraging minority duplicates as natural augmentation.
 
-### Partial Balancing Result
+### Lesion Visualization:
 
-![Dataset distribution](data/plots/dx_dist.png)
+![Lesion images](data/plots/lesions.png)
+> Representative example images for each diagnosis category, showing tiered variation in lesion appearance.
 
 ### Citation
+
 Tschandl, P. (2018). The HAM10000 dataset, a large collection of multi-source dermatoscopic images of common pigmented 
 skin lesions (Version V4) [dataset]. Harvard Dataverse. https://doi.org/10.7910/DVN/DBW86T
