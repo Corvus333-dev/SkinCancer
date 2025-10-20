@@ -117,47 +117,47 @@ def plot_images(img_dfs: dict):
     Plots a 3x7 grid of sample images ranked by ground-truth confidence for each diagnosis.
 
     Each column corresponds to one diagnosis (dx), and rows (top to bottom) represent:
-        1. Highest ground-truth confidence true positive image
-        2. Lowest ground-truth confidence true positive image
-        3. Lowest ground-truth confidence false negative image
+        1. Maximum ground-truth confidence image
+        2. Median ground-truth confidence image
+        3. Minimum ground-truth confidence image
 
     Args:
-        img_dfs (dict): Dictionary containing three DataFrames (max_tp, min_tp, min_fn) with columns:
+        img_dfs (dict): Dictionary containing three DataFrames (max, med, min) with columns:
             - 'dx': diagnosis label/name
             - 'image_path': path to image file
 
     Returns:
         matplotlib.figure.Figure: Confidence-based sample images by diagnosis plot.
     """
-    max_tp, min_tp, min_fn = img_dfs.values() # Assumes specific ordering
+    max_df, med_df, min_df = img_dfs.values() # Assumes specific ordering
 
     fig, ax = plt.subplots(3, 7, figsize=(7, 3))
-    fig.suptitle('Best, Near-miss, and Worst Samples by Diagnosis (GT Confidence)', fontsize=7, y=0.90)
+    fig.suptitle('Representative Lesions Across Confidence Tiers by Diagnosis', fontsize=7, y=0.90)
 
-    for i, dx in enumerate(max_tp['dx']):
-        best_img = plt.imread(max_tp.loc[max_tp['dx'] == dx, 'image_path'].item())
-        ax[0, i].imshow(best_img)
+    for i, dx in enumerate(max_df['dx']):
+        max_img = plt.imread(max_df.loc[max_df['dx'] == dx, 'image_path'].item())
+        ax[0, i].imshow(max_img)
         clean_axis(ax[0, i])
 
-        near_miss_img = plt.imread(min_tp.loc[min_tp['dx'] == dx, 'image_path'].item())
-        ax[1, i].imshow(near_miss_img)
+        med_img = plt.imread(med_df.loc[med_df['dx'] == dx, 'image_path'].item())
+        ax[1, i].imshow(med_img)
         clean_axis(ax[1, i])
 
-        worst_img = plt.imread(min_fn.loc[min_fn['dx'] == dx, 'image_path'].item())
-        ax[2, i].imshow(worst_img)
+        min_img = plt.imread(min_df.loc[min_df['dx'] == dx, 'image_path'].item())
+        ax[2, i].imshow(min_img)
         ax[2, i].set_xlabel(dx, fontsize=7)
         clean_axis(ax[2, i])
 
-        def ylabel(row, top, bot):
-            # Generates pretty y-labels with subscripts
-            ax[row, 0].set_ylabel(
-                f'{top}\n' + rf'$p_{{\mathrm{{{bot}}}}}$',
-                labelpad=15, rotation=0, y=0.25, fontsize=7
-            )
+    def ylabel(row, bot):
+        # Generates pretty y-labels with subscripts
+        ax[row, 0].set_ylabel(
+            rf'$p_{{\mathrm{{{bot}}}}}$',
+            labelpad=10, rotation=0, y=0.375, fontsize=7
+        )
 
-        ylabel(0, 'TP', 'max')
-        ylabel(1, 'TP', 'min')
-        ylabel(2, 'FN', 'min')
+    ylabel(0, 'max')
+    ylabel(1, 'med')
+    ylabel(2, 'min')
 
     plt.tight_layout()
 

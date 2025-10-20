@@ -52,16 +52,17 @@ def render_meta_dist():
 
 def render_images():
     df = pd.read_csv('../' + path)
-    results = {'max_tp': {}, 'min_tp': {}, 'min_fn': {}}
+    results = {'max': {}, 'med': {}, 'min': {}}
     img_dfs = {}
 
     for dx in dx_names:
-        tps = df[(df.actual == dx) & (df.predicted == dx)]
-        fns = df[(df.actual == dx) & (df.predicted != dx)]
+        sub_df = df[df.actual == dx]
+        med = sub_df[dx].median()
+        med_idx = (sub_df[dx] - med).abs().idxmin()
 
-        results['max_tp'][dx] = tps.loc[tps[dx].idxmax(), 'image_id']
-        results['min_tp'][dx] = tps.loc[tps[dx].idxmin(), 'image_id']
-        results['min_fn'][dx] = fns.loc[fns[dx].idxmin(), 'image_id']
+        results['max'][dx] = sub_df.loc[sub_df[dx].idxmax(), 'image_id']
+        results['med'][dx] = sub_df.loc[med_idx, 'image_id']
+        results['min'][dx] = sub_df.loc[sub_df[dx].idxmin(), 'image_id']
 
     for name, id_map in results.items():
         img_dfs[name] = pd.DataFrame({'dx': id_map.keys(), 'image_id': id_map.values()})
