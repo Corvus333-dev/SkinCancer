@@ -49,7 +49,7 @@ Three clinically relevant metadata categories were used during model training: a
 (e.g., neck, back, etc.), and sex. These features capture demographic and anatomical patterns that a custom fusion 
 mechanism exploits to improve lesion classification.
 
-Exploratory visualizations of these distributions are available [here](tbd.png).
+Exploratory visualizations of these distributions are available [here](assets/meta_dist.pdf).
 
 ### Acquisition
 
