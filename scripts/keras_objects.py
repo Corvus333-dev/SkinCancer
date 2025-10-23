@@ -28,7 +28,7 @@ class FusionGate(Layer):
     Args:
         stddev (float): Standard deviation of Gaussian noise applied to SLP activations.
     """
-    def __init__(self, stddev=0.05, name='fusion_gate', **kwargs):
+    def __init__(self, stddev=0.05, name='fusion', **kwargs):
         super().__init__(name=name, **kwargs)
         self.stddev = stddev
         self.alpha = self.add_weight(initializer='ones', dtype=tf.float32, trainable=True, name='alpha')

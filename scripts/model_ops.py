@@ -83,22 +83,21 @@ def build_model(backbone, input_shape, dropout_rates, classes=7):
     x = GlobalAveragePooling2D()(x)
     x = BatchNormalization()(x)
 
-    # Dense stack
-    x = Dense(512, activation='swish')(x)
+    x = Dense(512, activation='swish', name='funnel_top')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout_rates[0])(x)
 
-    x = Dense(256, activation='swish')(x)
+    x = Dense(256, activation='swish', name='funnel_mid')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout_rates[1])(x)
 
-    x = Dense(128, activation='swish')(x)
+    x = Dense(128, activation='swish', name='funnel_bot')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout_rates[2])(x)
 
     output = Dense(classes, activation='softmax', name='softmax')(x)
 
-    return Model(inputs=[image_input, meta_input], outputs=output)
+    return Model(inputs=[image_input, meta_input], outputs=output, name='FuFuNet')
 
 def unfreeze_layers(model, backbone, unfreeze):
     """
