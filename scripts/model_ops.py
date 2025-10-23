@@ -26,7 +26,7 @@ from scripts.keras_objects import CBAM, FusionGate, SparseCategoricalFocalCrosse
 def build_model(backbone, input_shape, dropout_rates, classes=7):
     """
     Instantiates a base model using EfficientNetB1 or ResNet50 architecture pretrained on ImageNet dataset, and
-    attaches a custom top that includes gated metadata fusion, CBAM, dense stack, and softmax output.
+    attaches a custom top that includes gated metadata fusion, CBAM, fully-connected compression, and softmax output.
 
     Performs the following random augmentations to input:
     brightness, contrast, horizontal/vertical flip, rotation, translation, and zoom.
@@ -55,8 +55,7 @@ def build_model(backbone, input_shape, dropout_rates, classes=7):
 
     base_model.trainable = False # Recursive (freezes all sub-layers)
 
-    # Augmentation block
-    augment_layers = Sequential(
+    augmentation = Sequential(
         [
             RandomBrightness(0.15),
             RandomContrast(0.15),
@@ -68,11 +67,28 @@ def build_model(backbone, input_shape, dropout_rates, classes=7):
         name='augmentation'
     )
 
+    funnel = Sequential(
+        [
+            Dense(512, activation='swish', name='funnel_top'),
+            BatchNormalization(),
+            Dropout(dropout_rates[0]),
+
+            Dense(256, activation='swish', name='funnel_mid'),
+            BatchNormalization(),
+            Dropout(dropout_rates[1]),
+
+            Dense(128, activation='swish', name='funnel_bot'),
+            BatchNormalization(),
+            Dropout(dropout_rates[2]),
+        ],
+        name='funnel'
+    )
+
     # Inputs
     image_input = Input(name='image', shape=input_shape)
     meta_input = Input(name='meta', shape=(17,))
 
-    x = augment_layers(image_input) # Explicit 'training=bool' is not required
+    x = augmentation(image_input) # Explicit 'training=bool' is not required
     x = base_model(x)
 
     # Gated metadata fusion
@@ -83,17 +99,8 @@ def build_model(backbone, input_shape, dropout_rates, classes=7):
     x = GlobalAveragePooling2D()(x)
     x = BatchNormalization()(x)
 
-    x = Dense(512, activation='swish', name='funnel_top')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(dropout_rates[0])(x)
-
-    x = Dense(256, activation='swish', name='funnel_mid')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(dropout_rates[1])(x)
-
-    x = Dense(128, activation='swish', name='funnel_bot')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(dropout_rates[2])(x)
+    # FC compression
+    x = funnel(x)
 
     output = Dense(classes, activation='softmax', name='softmax')(x)
 
