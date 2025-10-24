@@ -82,3 +82,5 @@ used to compute class logits.</li>
 </td>
 </tr>
 </table>
+
+*Tip for mobile users: rotate device horizontally for larger schematic rendering.*
