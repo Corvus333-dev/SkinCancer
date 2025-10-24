@@ -84,3 +84,13 @@ used to compute class logits.</li>
 </table>
 
 *Tip for mobile users: rotate device horizontally for larger schematic.*
+
+## References
+He, K., Zhang, X., Ren, S., & Sun, J. (2015). *Deep Residual Learning for Image Recognition* 
+[arXiv:1512.03385](https://arxiv.org/abs/1512.03385)
+
+Tan, M., & Le, Q. V. (2019). *EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks* 
+[arXiv:1905.11946](https://arxiv.org/abs/1905.11946)
+
+Woo, S., Park, J., Lee, J.-Y., & Kweon, I. S. (2018). *CBAM: Convolutional Block Attention Module* 
+[arXiv:1807.06521](https://arxiv.org/abs/1807.06521)
