@@ -57,10 +57,28 @@ Tschandl, P. (2018). The HAM10000 dataset, a large collection of multi-source de
 skin lesions (Version V4) [dataset]. Harvard Dataverse. https://doi.org/10.7910/DVN/DBW86T
 
 ## Architecture
-![Model Schematic](assets/model.png)
+<table>
+<tr>
+<td width="300">
+<img src="assets/model.png" width="287">
+</td>
+<td width="300" valign="top">
 
-> Metadata is mapped into channel-wise gates via a single-layer perceptron with Gaussian noise regularization. A 
-> learnable scalar adjusts gate potency before multiplicative fusion with convolutional features, allowing the model to 
-> globally modulate metadata influence. The fused tensor traverses a convolutional block attention module (CBAM) that 
-> applies channel and spatial attention for adaptive feature enhancement. A dense funnel distills discriminative cues 
-> used to compute class logits. Softmax probabilities from swappable CNN backbones are ensembled for performance gains.
+<ul>
+<li>Metadata is mapped into channel-wise gates via a single-layer perceptron with Gaussian noise regularization.</li>
+<br>
+<li>A learnable scalar adjusts gate potency before multiplicative fusion with convolutional features, allowing the model to 
+globally modulate metadata influence.</li>
+<br>
+<li>The fused tensor traverses a convolutional block attention module (CBAM) that 
+applies channel and spatial attention for adaptive feature enhancement.</li>
+<br>
+<li>A dense funnel distills discriminative cues 
+used to compute class logits.</li>
+<br>
+<li>Softmax probabilities from swappable CNN backbones are ensembled for performance gains.</li>
+</ul>
+
+</td>
+</tr>
+</table>
