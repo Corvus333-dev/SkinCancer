@@ -85,6 +85,40 @@ used to compute class logits.</li>
 
 *Tip for mobile users: rotate device horizontally for larger schematic.*
 
+## Methodology
+A base CNN model pretrained on the ImageNet dataset was used for initial feature extraction. Calibration of a custom 
+classification head was done first to prevent catastrophic forgetting during subsequent fine-tuning stages. Unfreezing 
+was carried out in two phases: high-level feature adaptation followed by mid-level feature adaptation. Due to 
+considerable domain shift between HAM10000 and ImageNet, a more aggressive learning rate schedule was used during the 
+first unfreeze to encourage remapping of nontransferable high-level features.
+
+### Loss Function
+Focal loss was used instead of standard cross-entropy loss in order to accommodate class imbalance and sample-wise 
+classification difficulty. A variant of this algorithm was implemented as a custom `Loss` object to handle sparse labels
+and use inverse-frequency class-weighted alpha values. The general form is:
+
+$$\text{FL}(p_t) = -\alpha_t (1 - p_t)^\gamma \log(p_t)$$
+
+Where: 
+- $p_t$ is the true class probability
+- $\alpha_t$ is the balancing parameter
+- $\gamma_t$ is the focusing parameter 
+
+### Multimodal Fusion
+Metadata tensors derived from nonlinear gating were indirectly combined with image tensors via multiplicative fusion—rather than concatenation—to 
+account for incompatible semantic structures between modalities:
+
+$$x(1 + \alpha m)$$
+
+Here, $x$ is the image tensor, $m$ is the metadata tensor, and $\alpha$ is a learnable scaling factor.
+
+### Training Loop
+1. Head calibration
+2. Low-depth unfreeze
+3. Mid-depth unfreeze
+4. Hyperparameter tuning or architectural modification
+5. Repeat 1-4 (as needed)
+
 ## References
 He, K., Zhang, X., Ren, S., & Sun, J. (2015). *Deep Residual Learning for Image Recognition* 
 [arXiv:1512.03385](https://arxiv.org/abs/1512.03385)
