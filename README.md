@@ -86,33 +86,43 @@ used to compute class logits.</li>
 *Tip for mobile users: rotate device horizontally for larger schematic.*
 
 ## Methodology
-A base CNN model pretrained on the ImageNet dataset was used for initial feature extraction. Calibration of a custom 
-classification head was done first to prevent catastrophic forgetting during subsequent fine-tuning stages. Unfreezing 
-was carried out in two phases: high-level feature adaptation followed by mid-level feature adaptation. Due to 
-considerable domain shift between HAM10000 and ImageNet, a more aggressive learning rate schedule was used during the 
-first unfreeze to encourage remapping of nontransferable high-level features.
+A CNN backbone pretrained on ImageNet was used for initial feature extraction. A custom classification head was first 
+calibrated to prevent catastrophic forgetting during fine-tuning. Unfreezing proceeded in two phases: high-level feature 
+adaptation followed by mid-level feature adaptation. Due to considerable domain shift between HAM10000 and ImageNet, a 
+more aggressive learning rate schedule was used during the first unfreeze to encourage remapping of nontransferable 
+high-level features. Predictions from distinct models were ensembled by averaging per-diagnosis probabilities to 
+encourage complementary decision boundaries.
 
 ### Loss Function
 Focal loss was used instead of standard cross-entropy loss in order to accommodate class imbalance and sample-wise 
 classification difficulty. A variant of this algorithm was implemented as a custom `Loss` object to handle sparse labels
-and use inverse-frequency class-weighted alpha values. The general form is:
+and use inverse-frequency class-weighted $\alpha$ values. The general form is:
 
 $$\text{FL}(p_t) = -\alpha_t (1 - p_t)^\gamma \log(p_t)$$
 
 Where: 
 - $p_t$ is the true class probability
 - $\alpha_t$ is the balancing parameter
-- $\gamma_t$ is the focusing parameter 
+- $\gamma$ is the focusing parameter
 
 ### Multimodal Fusion
-Metadata tensors derived from nonlinear gating were indirectly combined with image tensors via multiplicative fusion—rather than concatenation—to 
-account for incompatible semantic structures between modalities:
+A gated metadata tensor, derived via nonlinear activation, was multiplicatively fused with its corresponding image 
+tensor—rather than concatenated—to account for incompatible semantic structures between modalities:
 
 $$x(1 + \alpha m)$$
 
 Here, $x$ is the image tensor, $m$ is the metadata tensor, and $\alpha$ is a learnable scaling factor.
 
+### Dense Funnel
+Simple classifiers are typical for this type of transfer learning application, particularly for moderately sized 
+datasets. However, experiments showed improved performance with greater expressive capacity at the network head. 
+Subsequently, a slightly larger, funnel-like architecture of three dense layers was used, with node counts and dropout 
+rates halved sequentially across layers.
+
 ### Training Loop
+This iterative workflow was employed to balance computational efficiency with deliberate, manual oversight during model 
+development:  
+
 1. Head calibration
 2. Low-depth unfreeze
 3. Mid-depth unfreeze
