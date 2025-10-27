@@ -129,6 +129,22 @@ This iterative workflow was employed to balance computational efficiency with ma
 4. Hyperparameter tuning or architectural modification
 5. Repeat 1-4 (as needed)
 
+## Results
+
+### Classification Summary
+
+| Model          | Accuracy | Macro-F1 |
+|----------------|----------|----------|
+| EfficientNetB1 | 86.6%    | 0.713    |
+| ResNet50       | 86.4%    | 0.614    |
+| Ensemble       | 88.3%    | 0.718    |
+
+### Confusion Matrix
+![Confusion matrix](assets/confusion_matrix.png)
+
+### Precision-Recall Curves
+![PRC](assets/prc.png)
+
 ## References
 He, K., Zhang, X., Ren, S., & Sun, J. (2015). *Deep Residual Learning for Image Recognition* 
 [arXiv:1512.03385](https://arxiv.org/abs/1512.03385)
