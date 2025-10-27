@@ -17,7 +17,7 @@ def save_fig(fig, name):
     """
     fig_dir = Path('../data/plots')
     fig_dir.mkdir(parents=True, exist_ok=True)
-    fig.savefig(fig_dir / f'{name}.png', dpi=300)
+    fig.savefig(fig_dir / f'{name}.png', dpi=150)
 
 def make_exp_dir(name):
     """
@@ -62,7 +62,7 @@ def save_model(model, config, history, hist_fig, layer_state, exp_dir):
     with open(exp_dir / 'training_history.json', 'w') as f:
         json.dump(history.history, f, indent=4)
 
-    hist_fig.savefig(exp_dir / 'training_history.png', dpi=300)
+    hist_fig.savefig(exp_dir / 'training_history.png', dpi=150)
 
 def save_results(pred_df, cr, cm_fig, prc_data, prc_fig, mode, exp_dir):
     """
@@ -94,11 +94,11 @@ def save_results(pred_df, cr, cm_fig, prc_data, prc_fig, mode, exp_dir):
         json.dump(cr, f, indent=4)
 
     # Save confusion matrix
-    cm_fig.savefig(cm_path, dpi=300)
+    cm_fig.savefig(cm_path, dpi=150)
 
     # Save precision-recall curve data
     with open(prc_data_path, 'w') as f:
         json.dump(prc_data, f, indent=4)
 
     # Save precision-recall curve plot
-    prc_fig.savefig(prc_fig_path, dpi=300)
+    prc_fig.savefig(prc_fig_path, dpi=150)

@@ -260,7 +260,7 @@ def plot_prc(prc_data, dx_names, mode, exp_dir):
     exp_name = exp_dir.name
 
     cmap = matplotlib.cm.get_cmap('tab10')
-    fig, ax = plt.subplots(figsize=(9, 9))
+    fig, ax = plt.subplots(figsize=(10, 10))
 
     for i, dx in enumerate(dx_names):
         precision = prc_data[dx]['precision']
