@@ -111,17 +111,17 @@ tensor—rather than concatenated—to account for incompatible semantic structu
 
 $$x(1 + \alpha m)$$
 
-Here, $x$ is the image tensor, $m$ is the metadata tensor, and $\alpha$ is a learnable scaling factor.
+Here, $x$ is the image tensor, $m$ is the metadata tensor, and $\alpha$ is a learnable scaling factor. This fusion 
+process biases the subsequent CBAM toward metadata-relevant attributes and image regions.
 
 ### Dense Funnel
-Simple classifiers are typical for this type of transfer learning application, particularly for moderately sized 
-datasets. However, experiments showed improved performance with greater expressive capacity at the network head. 
-Subsequently, a slightly larger, funnel-like architecture of three dense layers was used, with node counts and dropout 
-rates halved sequentially across layers.
+Simple classifiers are typical for this type of transfer learning, particularly with moderately sized datasets. However, 
+experiments showed better performance when increasing the expressive capacity of the network head: a slightly larger, 
+funnel-like architecture of three dense layers, with node counts and dropout rates halved sequentially. `swish` 
+activations were used instead of `relu` to mitigate 'dead neuron' issues and maintain smoother gradients.
 
 ### Training Loop
-This iterative workflow was employed to balance computational efficiency with deliberate, manual oversight during model 
-development:  
+This iterative workflow was employed to balance computational efficiency with manual oversight during model development:  
 
 1. Head calibration
 2. Low-depth unfreeze
