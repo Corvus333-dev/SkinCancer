@@ -90,8 +90,8 @@ A CNN backbone pretrained on ImageNet was used for initial feature extraction. A
 calibrated to prevent catastrophic forgetting during fine-tuning. Unfreezing proceeded in two phases: high-level feature 
 adaptation followed by mid-level feature adaptation. Due to considerable domain shift between HAM10000 and ImageNet, a 
 more aggressive learning rate schedule was used during the first unfreeze to encourage remapping of nontransferable 
-high-level features. Predictions from distinct models were ensembled by averaging per-diagnosis probabilities to 
-encourage complementary decision boundaries.
+high-level features. Lastly, predictions from distinct models were ensembled by averaging per-diagnosis probabilities, 
+promoting complementary decision boundaries.
 
 ### Loss Function
 Focal loss was used instead of standard cross-entropy loss in order to accommodate class imbalance and sample-wise 
