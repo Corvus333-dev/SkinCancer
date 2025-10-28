@@ -64,9 +64,9 @@ def save_model(model, config, history, hist_fig, layer_state, exp_dir):
 
     hist_fig.savefig(exp_dir / 'training_history.png', dpi=150)
 
-def save_results(pred_df, cr, cm_fig, prc_data, prc_fig, mode, exp_dir):
+def save_results(pred_df, cr, cm_fig, prc_data, prc_fig, mode, best_models, exp_dir):
     """
-    Saves predictions, classification report, confusion matrix, and precision-recall curve.
+    Saves predictions, classification report, confusion matrix, precision-recall curve, and ensemble log.
 
     Args:
         pred_df (pd.DataFrame): DataFrame containing prediction results (image_id, dx probability, actual, predicted).
@@ -75,6 +75,7 @@ def save_results(pred_df, cr, cm_fig, prc_data, prc_fig, mode, exp_dir):
         prc_data (dict): Precision-recall curve data.
         prc_fig (matplotlib.figure.Figure): Precision-recall curve figure.
         mode (str): mode (str): Mode setting (val/test/ensemble).
+        best_models (tuple): Paths to ensembled models.
         exp_dir (Path): Object pointing to experiment folder.
 
     Returns:
@@ -102,3 +103,9 @@ def save_results(pred_df, cr, cm_fig, prc_data, prc_fig, mode, exp_dir):
 
     # Save precision-recall curve plot
     prc_fig.savefig(prc_fig_path, dpi=150)
+
+    # Log ensembled models
+    if mode == 'ensemble':
+       with open(exp_dir / 'models.txt', 'w') as f:
+           for model in best_models:
+               f.write(model + '\n')

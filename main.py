@@ -87,7 +87,7 @@ def evaluate(p, y, y_hat, pred_df, dx_names, exp_dir):
     prc_data = utils.compute_prc(p, y, dx_names)
     prc_fig = plots.plot_prc(prc_data, dx_names, cfg.exp.mode, exp_dir)
 
-    export.save_results(pred_df, cr, cm_fig, prc_data, prc_fig, cfg.exp.mode, exp_dir)
+    export.save_results(pred_df, cr, cm_fig, prc_data, prc_fig, cfg.exp.mode, cfg.exp.best_models, exp_dir)
 
 def main():
     train_df, val_df, test_df, dx_map, dx_names = pipeline.load_data()
