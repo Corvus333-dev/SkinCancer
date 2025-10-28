@@ -136,8 +136,8 @@ This iterative workflow was employed to balance computational efficiency with ma
 | Model          | Accuracy | Macro-F1 |
 |----------------|----------|----------|
 | EfficientNetB1 | 86.6%    | 0.713    |
-| ResNet50       | 86.4%    | 0.614    |
-| Ensemble       | 88.3%    | 0.718    |
+| ResNet50       | 86.1%    | 0.649    |
+| Ensemble       | 88.4%    | 0.730    |
 
 ### Confusion Matrix
 ![Confusion matrix](assets/confusion_matrix.png)
