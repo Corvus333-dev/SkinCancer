@@ -146,7 +146,7 @@ This iterative workflow was employed to balance computational efficiency with ma
 ![PRC](assets/prc.png)
 
 ## Usage
-Extract HAM10000 image archives into `/data`, keeping the original folder names:
+Extract HAM10000 images archive into `/data`, keeping the original folder names:
 ```
 /data/
 ├── HAM10000_images_part_1/
@@ -177,15 +177,14 @@ cfg = Config(
 )
 ```
 ### Instructions:
-1. New train: `mode='train'`, `checkpoint=None`, `unfreeze=None`
-2. Continue train: set `checkpoint='path/to/model.keras` and `unfreeze='layer_name'`
-3. Validate/Test: `mode='validate'` (or `'test'`) and set `checkpoint`
-4. Ensemble: `mode='ensemble'` and fill `best_models`
+- Fresh Run: `mode='train'`, `checkpoint=None`, `unfreeze=None`
+- Resume Train: set `checkpoint='path/to/model.keras` and `unfreeze='layer_name'`
+- Validate/Test: `mode='validate'` or `mode='test'`, and set `checkpoint`
+- Ensemble: `mode='ensemble'` and populate `best_models`
 
 #### Notes:
-- Everything is type-enforced and documented—editing `cfg` directly is safe.
-- Adjust hyperparameters as needed.
-- `python main.py`
+- `cfg` is type-enforced and documented—editing it directly is safe.
+- Set nonapplicable fields to `None`
 
 ## References
 He, K., Zhang, X., Ren, S., & Sun, J. (2015). *Deep Residual Learning for Image Recognition* 
