@@ -178,7 +178,7 @@ cfg = Config(
 ```
 ### Instructions:
 - Fresh Run: `mode='train'`, `checkpoint=None`, `unfreeze=None`
-- Resume Train: set `checkpoint='path/to/model.keras` and `unfreeze='layer_name'`
+- Resume Train: set `checkpoint='path/to/model.keras'` and `unfreeze='layer_name'`
 - Validate/Test: `mode='validate'` or `mode='test'`, and set `checkpoint`
 - Ensemble: `mode='ensemble'` and populate `best_models`
 
