@@ -145,6 +145,48 @@ This iterative workflow was employed to balance computational efficiency with ma
 ### Precision-Recall Curves
 ![PRC](assets/prc.png)
 
+## Usage
+Extract HAM10000 image archives into `/data`, keeping the original folder names:
+```
+/data/
+├── HAM10000_images_part_1/
+└── HAM10000_images_part_2/
+```
+
+The top-level configuration object is:
+```python
+cfg = Config(
+    exp=ExpConfig(
+        mode='train',
+        backbone='resnet50',
+        checkpoint=None,
+        unfreeze=None,
+        best_models=None
+    ),
+    train=TrainConfig(
+        batch_size=64,
+        dropout_rates=(0.5, 0.25, 0.125),
+        epochs=100,
+        focal_loss=(0.5, 2.0, 0.1),
+        initial_lr=1e-3,
+        lr_decay=True,
+        patience=10,
+        warmup_target=None,
+        weight_decay=1e-4
+    )
+)
+```
+### Instructions:
+1. New train: `mode='train'`, `checkpoint=None`, `unfreeze=None`
+2. Continue train: set `checkpoint='path/to/model.keras` and `unfreeze='layer_name'`
+3. Validate/Test: `mode='validate'` (or `'test'`) and set `checkpoint`
+4. Ensemble: `mode='ensemble'` and fill `best_models`
+
+#### Notes:
+- Everything is type-enforced and documented—editing `cfg` directly is safe.
+- Adjust hyperparameters as needed.
+- `python main.py`
+
 ## References
 He, K., Zhang, X., Ren, S., & Sun, J. (2015). *Deep Residual Learning for Image Recognition* 
 [arXiv:1512.03385](https://arxiv.org/abs/1512.03385)
