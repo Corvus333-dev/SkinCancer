@@ -45,7 +45,7 @@ def plot_age_dist(df, dx_names):
 
 def plot_dx_dist(exp_counts, dropped, used, dx_names):
     """
-    Plots diagnosis (class) distributions after undersampling as a bar chart. Includes an overlay for dropped samples.
+    Plots diagnosis (class) distribution after undersampling as a bar chart. Includes an overlay for dropped samples.
 
     Args:
         exp_counts (pd.Series): Diagnosis value counts after undersampling.
