@@ -1,3 +1,12 @@
+"""
+Exploratory visualization utility for class/metadata distributions and model prediction examples.
+
+This module should be executed directly, and is intended for twofold dataset analysis:
+
+    1. Pre-run: renders exploratory plots for class, age, lesion localization, and sex distributions.
+    2. Post-run: renders representative lesion images using predicted ground-truth probabilities from a CSV file.
+"""
+
 import pandas as pd
 import export, pipeline, plots
 
@@ -5,6 +14,17 @@ raw_df = pd.read_csv('../data/HAM10000_metadata')
 train_df, val_df, test_df, _, dx_names = pipeline.load_data()
 exp_df = pd.concat([train_df, val_df, test_df], ignore_index=True)
 
+# Plot class distribution
+def render_dx_dist():
+    exp_counts = exp_df['dx'].value_counts()
+    raw_counts = raw_df['dx'].value_counts()
+    dropped = raw_counts['nv'] - exp_counts['nv']
+    used = len(raw_df) - dropped
+
+    fig = plots.plot_dx_dist(exp_counts, dropped, used, dx_names)
+    export.save_fig(fig, 'dx_dist')
+
+# Plot age distribution
 def render_age_dist(bias_check=False):
     age_df = raw_df.copy()
     age_df = age_df.fillna(0.0) # Treat NaN as 0 (unknown age)
@@ -24,15 +44,7 @@ def render_age_dist(bias_check=False):
     fig = plots.plot_age_dist(age_df, dx_names)
     export.save_fig(fig, 'age_dist')
 
-def render_dx_dist():
-    exp_counts = exp_df['dx'].value_counts()
-    raw_counts = raw_df['dx'].value_counts()
-    dropped = raw_counts['nv'] - exp_counts['nv']
-    used = len(raw_df) - dropped
-
-    fig = plots.plot_dx_dist(exp_counts, dropped, used, dx_names)
-    export.save_fig(fig, 'dx_dist')
-
+# Plot lesion localization and sex distributions
 def render_meta_dist():
     plot_cfg = {
         'sex': {'palette': ['#440154', '#29AF7F', '#FDE725'], 'label': 'Sex'},
@@ -50,6 +62,7 @@ def render_meta_dist():
         fig = plots.plot_meta_dist(df_meta, category, palette, title, dx_names)
         export.save_fig(fig, f'{category}_dist')
 
+# Plot representative lesion images
 def render_images():
     df = pd.read_csv('../' + path)
     results = {'max': {}, 'med': {}, 'min': {}}
