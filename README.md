@@ -145,6 +145,20 @@ This iterative workflow was employed to balance computational efficiency with ma
 ### Precision-Recall Curves
 ![PRC](assets/prc.png)
 
+## Discussion
+Even after undersampling duplicate nevi samples, class imbalance (57.2% majority) remained substantial. 
+`SparseCategoricalFocalCrossentropy` improved minority-class signal recovery, while preserving strong performance 
+(95.3% F1) on the majority class. Despite this, clinically-critical confusion persisted between benign keratoses 
+and melanomas, with a misclassification rate of ~15%. This overlap is well documented in dermoscopy, where similar 
+confusion rates are observed among clinicians. Additional methods (e.g., ensembling with a binary melanoma classifier, 
+incorporating morphological priors, etc.) would be needed to better resolve these decision boundaries.
+
+`EarlyStopping` with validation-loss monitoring, dropout, and weight decay reduced overfitting to the training set. 
+However, after extensive hyperparameter tuning and checkpointing based on validation macro-F1, generalization to the 
+test set degraded, suggesting overfitting to the validation set. Ensembling mitigated this effect by averaging out 
+model-specific noise and bias. The end result was an improvement in both performance and robustness without substantial 
+inference-time cost, owing to the efficiency of the underlying CNNs.
+
 ## Usage
 Extract HAM10000 images archive into `/data`, keeping the original folder names:
 ```
@@ -187,6 +201,9 @@ cfg = Config(
 - Set nonapplicable fields to `None`
 
 ## References
+Carrera et al. (2017). *Dermoscopic Clues for Diagnosing Melanomas That Resemble Seborrheic Keratosis* 
+[PMID: 28355453](https://pubmed.ncbi.nlm.nih.gov/28355453)
+
 He, K., Zhang, X., Ren, S., & Sun, J. (2015). *Deep Residual Learning for Image Recognition* 
 [arXiv:1512.03385](https://arxiv.org/abs/1512.03385)
 
