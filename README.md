@@ -120,6 +120,11 @@ experiments showed better performance when increasing the expressive capacity of
 funnel-like architecture of three dense layers, with node counts and dropout rates halved sequentially. `swish` 
 activations were used instead of `relu` to mitigate 'dead neuron' issues and maintain smoother gradients.
 
+### Ensemble
+Models with different backbones and/or trained with distinct focal loss parameters exhibited diverse classification 
+behaviors. Accordingly, six models were selected for ensembling based on CNN architecture and subtle focal loss 
+variations to stabilize predictions and reduce variance.
+
 ### Training Loop
 This iterative workflow was employed to balance computational efficiency with manual oversight during model development:  
 
@@ -138,6 +143,9 @@ This iterative workflow was employed to balance computational efficiency with ma
 | EfficientNetB1 | 86.6%    | 0.713    |
 | ResNet50       | 86.1%    | 0.649    |
 | Ensemble       | 88.4%    | 0.730    |
+
+*Non-ensemble metrics represent averages across models sharing the same CNN architecture but trained with focal loss 
+parameter offsets ($\pm 0.1$ in $\alpha$ and/or $\gamma$)*.
 
 ### Confusion Matrix
 ![Confusion matrix](assets/confusion_matrix.png)
