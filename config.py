@@ -18,7 +18,7 @@ class ExpConfig:
             - int: unfreeze from this depth upward
             - str: unfreeze from this layer name upward
             - tuple: unfreeze layers containing any of these keywords
-        best_models: Paths to best models for ensembling (minimum of two required for 'ensemble' mode).
+        model_pool: Paths to models selected for ensembling (minimum of two required for 'ensemble' mode).
 
     Notes:
         - Input shape is set to ImageNet-pretrained resolution to ensure compatibility with pretrained weights.
@@ -28,7 +28,7 @@ class ExpConfig:
     checkpoint: Optional[str] = None
     input_shape: tuple = dataclasses.field(init=False)
     unfreeze: Optional[Union[int, str, Tuple[str, ...]]] = None
-    best_models: Optional[Tuple[str, ...]] = None
+    model_pool: Optional[Tuple[str, ...]] = None
 
     def __post_init__(self):
         if self.mode not in {'train', 'val', 'test', 'ensemble'}:

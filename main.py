@@ -11,7 +11,7 @@ cfg = Config(
         backbone='efficientnetb1',
         checkpoint=None,
         unfreeze=None,
-        best_models=None
+        model_pool=None
     ),
     train=TrainConfig(
         batch_size=64,
@@ -87,7 +87,7 @@ def evaluate(p, y, y_hat, pred_df, dx_names, exp_dir):
     prc_data = utils.compute_prc(p, y, dx_names)
     prc_fig = plots.plot_prc(prc_data, dx_names, cfg.exp.mode, exp_dir)
 
-    export.save_results(pred_df, cr, cm_fig, prc_data, prc_fig, cfg.exp.mode, cfg.exp.best_models, exp_dir)
+    export.save_results(pred_df, cr, cm_fig, prc_data, prc_fig, cfg.exp.mode, cfg.exp.model_pool, exp_dir)
 
 def main():
     train_df, val_df, test_df, dx_map, dx_names = pipeline.load_data()
@@ -117,7 +117,7 @@ def main():
 
         else: # Ensemble models
             exp_dir = export.make_exp_dir(cfg.exp.mode)
-            merged_df = ensemble.merge_predictions(cfg.exp.best_models, dx_names)
+            merged_df = ensemble.merge_predictions(cfg.exp.model_pool, dx_names)
             ensemble_df = ensemble.ensemble_models(merged_df, dx_names)
             p, y, y_hat, pred_df = ensemble.unpack_predictions(ensemble_df, dx_map, dx_names)
 
