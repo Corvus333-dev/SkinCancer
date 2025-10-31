@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 
-def merge_predictions(model_pool, dx_names):
+def merge_predictions(model_pool, dx_names, source='test'):
     """
     Merges per-model prediction DataFrames on 'image_id' into a single DataFrame. Class probability columns are renamed
     with a timestamp suffix (to distinguish models). Model-specific 'predicted' columns are dropped. One shared 'actual'
@@ -10,6 +10,7 @@ def merge_predictions(model_pool, dx_names):
     Args:
          model_pool (tuple): Paths to models selected for ensembling (minimum of two required).
          dx_names (list): Diagnosis names.
+         source (str): Predictions source to use for ensembling (i.e., determines which CSV files are used).
 
     Returns:
         pd.DataFrame: Merged DataFrame containing, for each sample:
@@ -23,7 +24,7 @@ def merge_predictions(model_pool, dx_names):
     for model in model_pool:
         exp_dir = Path(model).parent
         timestamp = exp_dir.name
-        df = pd.read_csv(exp_dir / 'val_predictions.csv')
+        df = pd.read_csv(exp_dir / f'{source}_predictions.csv')
         df = df.drop(columns='predicted')
         df = df.rename(columns={dx_name: f'{dx_name}_{timestamp}' for dx_name in dx_names})
         dfs.append(df)
