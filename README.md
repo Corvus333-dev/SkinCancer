@@ -123,7 +123,9 @@ activations were used instead of `relu` to mitigate 'dead neuron' issues and mai
 ### Ensemble
 Models with different backbones and/or trained with distinct focal loss parameters exhibited diverse classification 
 behaviors. Accordingly, six models were selected for ensembling based on CNN architecture and subtle focal loss 
-variations to stabilize predictions and reduce variance.
+variations to stabilize predictions and reduce variance:
+
+![Focal Loss Configuration](assets/focal_loss.png)
 
 ### Training Loop
 This iterative workflow was employed to balance computational efficiency with manual oversight during model development:  
@@ -145,27 +147,28 @@ This iterative workflow was employed to balance computational efficiency with ma
 | Ensemble       | 88.4%    | 0.730    |
 
 *Non-ensemble metrics represent averages across models sharing the same CNN architecture but trained with focal loss 
-parameter offsets ($\pm 0.1$ in $\alpha$ and/or $\gamma$)*.
+parameter offsets of ± 0.1.*
 
 ### Confusion Matrix
-![Confusion matrix](assets/confusion_matrix.png)
+![Confusion Matrix](assets/confusion_matrix.png)
 
 ### Precision-Recall Curves
 ![PRC](assets/prc.png)
 
 ## Discussion
 Even after undersampling duplicate nevi samples, class imbalance (57.2% majority) remained substantial. 
-`SparseCategoricalFocalCrossentropy` improved minority-class signal recovery, while preserving strong performance 
+`SparseCategoricalFocalCrossentropy` improved minority-class signal recovery, while maintaining strong performance 
 (95.3% F1) on the majority class. Despite this, clinically-critical confusion persisted between benign keratoses 
 and melanomas, with a misclassification rate of ~15%. This overlap is well documented in dermoscopy, where similar 
 confusion rates are observed among clinicians. Additional methods (e.g., ensembling with a binary melanoma classifier, 
 incorporating morphological priors, etc.) would be needed to better resolve these decision boundaries.
 
-`EarlyStopping` with validation-loss monitoring, dropout, and weight decay reduced overfitting to the training set. 
-However, after extensive hyperparameter tuning and checkpointing based on validation macro-F1, generalization to the 
-test set degraded, suggesting overfitting to the validation set. Ensembling mitigated this effect by averaging out 
-model-specific noise and bias. The end result was an improvement in both performance and robustness without substantial 
-inference-time cost, owing to the efficiency of the underlying CNNs.
+`EarlyStopping` with validation-loss monitoring, dropout regularization, and weight decay reduced overfitting to the 
+training set. However, extensive hyperparameter tuning and macro-F1 checkpointing introduced mild overfitting to the 
+validation set. Rather than suppress this behavior (e.g., by modifying callbacks), it was integrated into the design: 
+ensembling leveraged the resulting diversity to average out model-specific noise while preserving complementary decision 
+boundaries. This yielded improved performance and robustness with negligible inference-time cost, owing to the 
+efficiency of the underlying CNNs.
 
 ## Usage
 Extract HAM10000 images archive into `/data`, keeping the original folder names:
