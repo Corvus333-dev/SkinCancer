@@ -158,7 +158,7 @@ parameter offsets of ± 0.1.*
 ## Discussion
 Even after undersampling duplicate nevi samples, class imbalance (57.2% majority) remained substantial. 
 `SparseCategoricalFocalCrossentropy` improved minority-class signal recovery, while maintaining strong performance 
-(95.3% F1) on the majority class. Despite this, clinically-critical confusion persisted between benign keratoses 
+(95.3% accuracy) on the majority class. Despite this, clinically-critical confusion persisted between benign keratoses 
 and melanomas, with a misclassification rate of ~15%. This overlap is well documented in dermoscopy, where similar 
 confusion rates are observed among clinicians. Additional methods (e.g., ensembling with a binary melanoma classifier, 
 incorporating morphological priors, etc.) would be needed to better resolve these decision boundaries.
@@ -186,7 +186,7 @@ cfg = Config(
         backbone='resnet50',
         checkpoint=None,
         unfreeze=None,
-        best_models=None
+        model_pool=None
     ),
     train=TrainConfig(
         batch_size=64,
@@ -205,7 +205,7 @@ cfg = Config(
 - Fresh Run: `mode='train'`, `checkpoint=None`, `unfreeze=None`
 - Resume Train: set `checkpoint='path/to/model.keras'` and `unfreeze='layer_name'`
 - Validate/Test: `mode='validate'` or `mode='test'`, and set `checkpoint`
-- Ensemble: `mode='ensemble'` and populate `best_models`
+- Ensemble: `mode='ensemble'` and populate `model_pool`
 
 #### Notes:
 - `cfg` is type-enforced and documented—editing it directly is safe.
