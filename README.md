@@ -86,7 +86,7 @@ used to compute class logits.</li>
 *Tip for mobile users: rotate device horizontally for larger schematic.*
 
 ## Methodology
-A CNN backbone pretrained on ImageNet was used for initial feature extraction. A custom classification head was first 
+A CNN backbone pretrained on ImageNet was used for initial feature extraction. A unique classification head was first 
 calibrated to prevent catastrophic forgetting during fine-tuning. Unfreezing proceeded in two phases: high-level feature 
 adaptation followed by mid-level feature adaptation. Due to considerable domain shift between HAM10000 and ImageNet, a 
 more aggressive learning rate schedule was used during the first unfreeze to encourage remapping of nontransferable 
@@ -95,8 +95,8 @@ promoting complementary decision boundaries.
 
 ### Loss Function
 Focal loss was used instead of standard cross-entropy loss in order to accommodate class imbalance and sample-wise 
-classification difficulty. A variant of this algorithm was implemented as a custom `Loss` object to handle sparse labels
-and use inverse-frequency class-weighted $\alpha$ values. The general form is:
+classification difficulty. A variant of this algorithm was implemented as a specialized `Loss` object to handle sparse 
+labels and use inverse-frequency class-weighted $\alpha$ values. The general form is:
 
 $$\text{FL}(p_t) = -\alpha_t (1 - p_t)^\gamma \log(p_t)$$
 
