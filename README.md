@@ -223,3 +223,12 @@ Tan, M., & Le, Q. V. (2019). *EfficientNet: Rethinking Model Scaling for Convolu
 
 Woo, S., Park, J., Lee, J.-Y., & Kweon, I. S. (2018). *CBAM: Convolutional Block Attention Module* 
 [arXiv:1807.06521](https://arxiv.org/abs/1807.06521)
+
+## Ideas
+Potential improvements that may be explored in the future:
+
+- Additional dataset support (e.g., ISIC 2019)
+- Bayesian optimization (low priority; may exacerbate validation noise)
+- Cloud GPU training with a ConvNeXt backbone
+- Deployment (high priority)
+- Melanoma specialist model
