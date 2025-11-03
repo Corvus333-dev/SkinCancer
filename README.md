@@ -11,9 +11,9 @@ In about four minutes, someone will die from skin cancer. It's a disease that hi
 eye, yet often overlooked until it's too late. The absurd irony is that most of these cases are preventable; the clues 
 are literally right on the surface.
 
-This project builds a deep learning tool for screening skin lesions. Two lightweight models 
+This project builds a deep learning tool for screening skin lesions. Variants of two lightweight models 
 (EfficientNetB1 and ResNet50) learn from dermoscopy images paired with patient metadata, each generating independent 
-predictions. An ensemble merges these into a consensus diagnosis, providing immediate and consistent assessments.
+predictions. An ensemble merges these into a consensus diagnosis, providing immediate and reliable assessments.
 
 ## Dataset
 
