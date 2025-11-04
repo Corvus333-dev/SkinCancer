@@ -42,7 +42,7 @@ class ExpConfig:
             raise ValueError('Model checkpoint required for val/test modes.')
 
         if self.mode == 'ensemble':
-            if not self.best_models or len(self.best_models) < 2:
+            if not self.model_pool or len(self.model_pool) < 2:
                 raise ValueError('At least two models required for ensembling.')
 
         self.input_shape = BASE_MODELS[self.backbone]
