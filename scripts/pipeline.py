@@ -71,7 +71,7 @@ def map_image_paths(df):
 
     return df
 
-def split_data(df, seed=333):
+def split_data(df, seed):
     """
     Splits DataFrame into training, validation, and test sets using an initial 72/17/11 ratio. Lesion groups with
     multiple images are removed to prevent data leakage, label-based stratification is applied, then minority lesion
@@ -85,7 +85,7 @@ def split_data(df, seed=333):
 
     Args:
         df (pd.DataFrame): Full DataFrame, including image paths.
-        seed (int): Seed for random number generator.
+        seed (int): Controls random number generator used to split dataset.
 
     Returns:
         pd.DataFrame: Training, validation, and test DataFrames (train_df, val_unique_df, test_unique_df).
@@ -114,9 +114,12 @@ def split_data(df, seed=333):
 
     return train_df, val_unique_df, test_unique_df
 
-def load_data():
+def load_data(seed):
     """
     Executes initial pipeline, converting raw data into prepared datasets.
+
+    Args:
+        seed (int): Seed for random number generator.
 
     Returns:
         pd.DataFrame: Training, validation, and test DataFrames (train_df, val_df, test_df).
@@ -128,7 +131,7 @@ def load_data():
     dx_names = list(dx_map.values())
     df = map_image_paths(df)
     df = encode_meta(df)
-    train_df, val_df, test_df = split_data(df)
+    train_df, val_df, test_df = split_data(df, seed)
 
     return train_df, val_df, test_df, dx_map, dx_names
 

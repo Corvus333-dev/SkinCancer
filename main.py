@@ -21,6 +21,7 @@ cfg = Config(
         initial_lr=1e-3,
         lr_decay=True,
         patience=10,
+        seed=333,
         warmup_target=None,
         weight_decay=1e-4
     )
@@ -90,7 +91,7 @@ def evaluate(p, y, y_hat, pred_df, dx_names, exp_dir):
     export.save_results(pred_df, cr, cm_fig, prc_data, prc_fig, cfg.exp.mode, cfg.exp.model_pool, exp_dir)
 
 def main():
-    train_df, val_df, test_df, dx_map, dx_names = pipeline.load_data()
+    train_df, val_df, test_df, dx_map, dx_names = pipeline.load_data(cfg.train.seed)
 
     fetch_args = dict(
         batch_size=cfg.train.batch_size,

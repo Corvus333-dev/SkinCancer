@@ -63,6 +63,7 @@ class TrainConfig:
         initial_lr: Starting learning rate.
         lr_decay: Use cosine decay.
         patience: Number of epochs with no improvement after which training will be stopped.
+        seed (int): Controls random number generator used to split dataset.
         weight_decay: Weight decay for optimizer.
     """
     batch_size: int = 64
@@ -72,6 +73,7 @@ class TrainConfig:
     initial_lr: float = 1e-3
     lr_decay: bool = True
     patience: int = 10
+    seed: int = 333
     warmup_target: Optional[float] = None
     weight_decay: float = 1e-4
 
