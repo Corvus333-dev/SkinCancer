@@ -71,7 +71,7 @@ def map_image_paths(df):
 
     return df
 
-def split_data(df):
+def split_data(df, seed=333):
     """
     Splits DataFrame into training, validation, and test sets using an initial 72/17/11 ratio. Lesion groups with
     multiple images are removed to prevent data leakage, label-based stratification is applied, then minority lesion
@@ -85,6 +85,7 @@ def split_data(df):
 
     Args:
         df (pd.DataFrame): Full DataFrame, including image paths.
+        seed (int): Seed for random number generator.
 
     Returns:
         pd.DataFrame: Training, validation, and test DataFrames (train_df, val_unique_df, test_unique_df).
@@ -98,13 +99,13 @@ def split_data(df):
         unique_df,
         test_size=0.28,
         stratify=unique_df['dx_code'],
-        random_state=9
+        random_state=seed
     )
     val_unique_df, test_unique_df = train_test_split(
         temp_unique_df,
         test_size=0.4,
         stratify=temp_unique_df['dx_code'],
-        random_state=9
+        random_state=seed
     )
 
     # Reintroduce all duplicate minority lesions to training set
