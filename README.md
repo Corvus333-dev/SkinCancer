@@ -170,6 +170,14 @@ ensembling leveraged the resulting diversity to average out model-specific noise
 boundaries. This yielded improved performance and robustness with negligible inference-time cost, owing to the 
 efficiency of the underlying CNNs.
 
+Models were sensitive to the seed used in `train_test_split`, which is to be expected for only 7725 samples. Ideally, 
+k-fold cross-validation and/or extensive multi-seed averaging would provide more stable predictions, but these 
+techniques are beyond the project's computational scope. Instead, several seeds were tested, and a typical 
+(i.e., non-outlier) representative was selected for ensembling. Lastly, it was important not to fine-tune too many 
+mid-level weights, as most of these proved to be highly transferable. Unfreezing down to `block5d_expand_conv` and 
+`conv4_block5_1_conv` for EfficientNetB1 and ResNet50, respectively, achieved the best balance between adaptation and 
+generalization.
+
 ## Usage
 Extract HAM10000 images archive into `/data`, keeping the original folder names:
 ```
@@ -206,6 +214,10 @@ cfg = Config(
 - Resume Train: set `checkpoint='path/to/model.keras'` and `unfreeze='layer_name'`
 - Validate/Test: `mode='validate'` or `mode='test'`, and set `checkpoint`
 - Ensemble: `mode='ensemble'` and populate `model_pool`
+
+#### Unfreezing:
+After a training run, `layer_state.json` is exported to its associated experiment directory. This can be used to confirm 
+which layers were trainable, and serves as a layer name reference for subsequent unfreezing operations.
 
 #### Notes:
 - `cfg` is type-enforced and documented—editing it directly is safe.
