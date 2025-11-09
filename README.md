@@ -51,6 +51,9 @@ mechanism exploits to improve lesion classification.
 
 Exploratory visualizations of these distributions are available [here](assets/meta_dist.pdf).
 
+Note: origin clinic and diagnostic confirmation type were excluded from fusion due to extreme bias and uncertain 
+biological correlation.
+
 ### Acquisition
 
 Tschandl, P. (2018). The HAM10000 dataset, a large collection of multi-source dermatoscopic images of common pigmented 
@@ -170,13 +173,12 @@ ensembling leveraged the resulting diversity to average out model-specific noise
 boundaries. This yielded improved performance and robustness with negligible inference-time cost, owing to the 
 efficiency of the underlying CNNs.
 
-Models were sensitive to the seed used in `train_test_split`, which is to be expected for only 7725 samples. Ideally, 
-k-fold cross-validation and/or extensive multi-seed averaging would provide more stable predictions, but these 
-techniques are beyond the project's computational scope. Instead, several seeds were tested, and a typical 
-(i.e., non-outlier) representative was selected for ensembling. Lastly, it was important not to fine-tune too many 
-mid-level weights, as most of these proved to be highly transferable. Unfreezing down to `block5d_expand_conv` and 
-`conv4_block5_1_conv` for EfficientNetB1 and ResNet50, respectively, achieved the best balance between adaptation and 
-generalization.
+Models were sensitive to the seed used in `train_test_split`, as expected for only 7725 samples. Ideally, k-fold 
+cross-validation and/or extensive multi-seed averaging would provide more stable predictions, but these methods exceeded 
+the project's computational budget. Instead, several seeds were tested, and a non-outlier representative was selected 
+for ensembling. It was essential to avoid overtuning mid-level weights, as most proved highly transferable. Unfreezing 
+down to `block5d_expand_conv` and `conv4_block5_1_conv` for EfficientNetB1 and ResNet50, respectively, offered the best 
+trade-off between adaptation and generalization.
 
 ## Usage
 Extract HAM10000 images archive into `/data`, keeping the original folder names:
