@@ -145,9 +145,9 @@ This iterative workflow was employed to balance computational efficiency with ma
 
 | Model          | Accuracy | Macro-F1 |
 |----------------|----------|----------|
-| EfficientNetB1 | 86.6%    | 0.713    |
-| ResNet50       | 86.1%    | 0.649    |
-| Ensemble       | 88.4%    | 0.730    |
+| EfficientNetB1 | 87.9%    | 0.690    |
+| ResNet50       | 87.2%    | 0.622    |
+| Ensemble       | 90.3%    | 0.703    |
 
 *Non-ensemble metrics represent averages across models sharing the same CNN architecture but trained with focal loss 
 parameter offsets of ± 0.1.*
