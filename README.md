@@ -245,4 +245,5 @@ Potential improvements that may be explored in the future:
 - Bayesian optimization (low priority; may exacerbate validation noise)
 - Cloud GPU training with a ConvNeXt backbone
 - Deployment (high priority)
+- Hair segmentation and inpainting
 - Melanoma specialist model
