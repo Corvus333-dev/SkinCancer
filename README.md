@@ -51,8 +51,8 @@ mechanism exploits to improve lesion classification.
 
 Exploratory visualizations of these distributions are available [here](assets/meta_dist.pdf).
 
-Note: origin clinic and diagnostic confirmation type were excluded from fusion due to extreme bias and uncertain 
-biological correlation.
+*Origin clinic and diagnostic confirmation type were excluded from fusion due to extreme bias and uncertain biological 
+correlation.*
 
 ### Acquisition
 
@@ -70,14 +70,13 @@ skin lesions (Version V4) [dataset]. Harvard Dataverse. https://doi.org/10.7910/
 <ul>
 <li>Metadata is mapped into channel-wise gates via a single-layer perceptron with Gaussian noise regularization.</li>
 <br>
-<li>A learnable scalar adjusts gate potency before multiplicative fusion with convolutional features, allowing the model to 
-globally modulate metadata influence.</li>
+<li>A learnable scalar adjusts gate potency before multiplicative fusion with convolutional features, allowing the model 
+to globally modulate metadata influence.</li>
 <br>
-<li>The fused tensor traverses a convolutional block attention module (CBAM) that 
-applies channel and spatial attention for adaptive feature enhancement.</li>
+<li>The fused tensor traverses a convolutional block attention module (CBAM) that applies channel and spatial attention 
+for adaptive feature enhancement.</li>
 <br>
-<li>A dense funnel distills discriminative cues 
-used to compute class logits.</li>
+<li>A dense funnel distills discriminative cues used to compute class logits.</li>
 <br>
 <li>Softmax probabilities from swappable CNN backbones are ensembled for performance gains.</li>
 </ul>
@@ -159,12 +158,14 @@ parameter offsets of ± 0.1.*
 ![PRC](assets/prc.png)
 
 ## Discussion
-Even after undersampling duplicate nevi samples, class imbalance (57.2% majority) remained substantial. 
+Even after undersampling duplicate melanocytic nevi samples, class imbalance (57.2% majority) remained substantial. 
 `SparseCategoricalFocalCrossentropy` improved minority-class signal recovery, while maintaining strong performance 
-(95.3% accuracy) on the majority class. Despite this, clinically-critical confusion persisted between benign keratoses 
-and melanomas, with a misclassification rate of ~15%. This overlap is well documented in dermoscopy, where similar 
-confusion rates are observed among clinicians. Additional methods (e.g., ensembling with a binary melanoma classifier, 
-incorporating morphological priors, etc.) would be needed to better resolve these decision boundaries.
+(0.966 F1) on the majority class. However, clinically-critical confusion persisted between melanomas and benign 
+keratoses (~12%), consistent with known physician error patterns. The model also misclassified a subset of melanomas as 
+melanocytic nevi (~23%), indicating that majority-class representation still dominates the loss landscape despite 
+mitigation efforts. This effect is most evident for melanoma, which has inherently ambiguous morphology. Additional 
+methods (e.g., ensembling with a binary melanoma classifier, incorporating morphological priors, etc.) are needed to 
+better resolve these decision boundaries.
 
 `EarlyStopping` with validation-loss monitoring, dropout regularization, and weight decay reduced overfitting to the 
 training set. However, extensive hyperparameter tuning and macro-F1 checkpointing introduced mild overfitting to the 
@@ -206,6 +207,7 @@ cfg = Config(
         initial_lr=1e-3,
         lr_decay=True,
         patience=10,
+        seed=333,
         warmup_target=None,
         weight_decay=1e-4
     )
@@ -218,19 +220,22 @@ cfg = Config(
 - Ensemble: `mode='ensemble'` and populate `model_pool`
 
 #### Unfreezing:
-After a training run, `layer_state.json` is exported to its associated experiment directory. This can be used to confirm 
-which layers were trainable, and serves as a layer name reference for subsequent unfreezing operations.
+After each training run, `layer_state.json` is exported to the corresponding experiment directory. This file logs which 
+layers were trainable and provides `layer.name` entries as a reference for subsequent unfreezing operations.
 
 #### Notes:
 - `cfg` is type-enforced and documented—editing it directly is safe.
-- Set nonapplicable fields to `None`
+- Set nonapplicable `ExpConfig` fields to `None`
 
 ## References
 Carrera et al. (2017). *Dermoscopic Clues for Diagnosing Melanomas That Resemble Seborrheic Keratosis* 
-[PMID: 28355453](https://pubmed.ncbi.nlm.nih.gov/28355453)
+[DOI: 10.1001/jamadermatol.2017.0129](https://doi.org/10.1001/jamadermatol.2017.0129)
 
 He, K., Zhang, X., Ren, S., & Sun, J. (2015). *Deep Residual Learning for Image Recognition* 
 [arXiv:1512.03385](https://arxiv.org/abs/1512.03385)
+
+Kittler, H. (2021). *Evolution of the Clinical, Dermoscopic and Pathologic Diagnosis of Melanoma* 
+[DOI: 10.5826/dpc.11S1a163S](https://doi.org/10.5826/dpc.11s1a163s)
 
 Tan, M., & Le, Q. V. (2019). *EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks* 
 [arXiv:1905.11946](https://arxiv.org/abs/1905.11946)
