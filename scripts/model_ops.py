@@ -60,9 +60,9 @@ def build_model(backbone, input_shape, dropout_rates, classes=7):
             RandomBrightness(0.15),
             RandomContrast(0.15),
             RandomFlip('horizontal_and_vertical'),
-            RandomRotation(0.15),
-            RandomTranslation(0.15, 0.15),
-            RandomZoom((-0.15, 0.15))
+            RandomRotation(0.125),
+            RandomTranslation(0.075, 0.075),
+            RandomZoom((0.0, 0.15), (0.0, 0.15))
         ],
         name='augmentation'
     )
