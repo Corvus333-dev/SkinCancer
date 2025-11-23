@@ -27,7 +27,7 @@ cfg = Config(
     )
 )
 
-def train(train_ds, val_ds, train_df, exp_dir):
+def train(train_ds, val_ds, train_df, n_classes, n_meta_features, exp_dir):
     if cfg.exp.checkpoint:
         model = tf.keras.models.load_model(cfg.exp.checkpoint)
         if cfg.exp.unfreeze:
@@ -36,7 +36,9 @@ def train(train_ds, val_ds, train_df, exp_dir):
         model = model_ops.build_model(
             backbone=cfg.exp.backbone,
             input_shape=cfg.exp.input_shape,
-            dropout_rates=cfg.train.dropout_rates
+            dropout_rates=cfg.train.dropout_rates,
+            n_classes=n_classes,
+            n_metadata_features=n_meta_features
         )
 
     # Focal loss parameters
@@ -101,19 +103,19 @@ def main():
 
     if cfg.exp.mode == 'train':
         exp_dir = export.make_exp_dir(cfg.exp.backbone)
-        train_ds = pipeline.fetch_dataset(train_df, **fetch_args)
-        val_ds = pipeline.fetch_dataset(val_df, **fetch_args, shuffle=False)
-        train(train_ds, val_ds, train_df, exp_dir)
+        train_ds, n_classes, n_meta_features = pipeline.fetch_dataset(train_df, **fetch_args)
+        val_ds, _, _ = pipeline.fetch_dataset(val_df, **fetch_args, shuffle=False)
+        train(train_ds, val_ds, train_df, n_classes, n_meta_features, exp_dir)
 
     else:
         if cfg.exp.mode == 'val':
             exp_dir = Path(cfg.exp.checkpoint).parent
-            val_ds = pipeline.fetch_dataset(val_df, **fetch_args, shuffle=False)
+            val_ds, _, _ = pipeline.fetch_dataset(val_df, **fetch_args, shuffle=False)
             p, y, y_hat, pred_df = predict(val_ds, dx_map)
 
         elif cfg.exp.mode == 'test':
             exp_dir = Path(cfg.exp.checkpoint).parent
-            test_ds = pipeline.fetch_dataset(test_df, **fetch_args, shuffle=False)
+            test_ds, _, _ = pipeline.fetch_dataset(test_df, **fetch_args, shuffle=False)
             p, y, y_hat, pred_df = predict(test_ds, dx_map)
 
         else: # Ensemble models

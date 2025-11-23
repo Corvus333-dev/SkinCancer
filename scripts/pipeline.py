@@ -172,6 +172,8 @@ def fetch_dataset(df, batch_size, input_shape, backbone, shuffle=True):
 
     Returns:
         tf.data.Dataset: Batched dataset of ({meta, image, image_path}, dx_code) pairs.
+        n_classes (int): Number of classes.
+        n_meta_features (int): Number of metadata features.
     """
     meta_prefixes = ['dx_type_', 'sex_', 'localization_', 'dataset_']
     meta_columns = [col for col in df.columns if col == 'age' or any(col.startswith(p) for p in meta_prefixes)]
@@ -179,10 +181,14 @@ def fetch_dataset(df, batch_size, input_shape, backbone, shuffle=True):
     paths = df['image_path'].values
     dx_codes = df['dx_code'].values
 
+    # Dynamically count classes and metadata features for flexible dataset support
+    n_classes = df['dx_code'].nunique()
+    n_meta_features = meta_array.shape[1]
+
     ds = tf.data.Dataset.from_tensor_slices((meta_array, paths, dx_codes))
 
+    # Package metadata, preprocessed image, image paths (used for ID tracking), and dx_code
     def preprocess_all(meta_vector, path, dx_code):
-        # Package metadata, preprocessed image, image paths (used for ID tracking), and dx_code
         image = preprocess_image(path, input_shape, backbone)
         return {'meta': meta_vector, 'image': image, 'image_path': path}, dx_code
 
@@ -193,4 +199,4 @@ def fetch_dataset(df, batch_size, input_shape, backbone, shuffle=True):
 
     ds = ds.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
-    return ds
+    return ds, n_classes, n_meta_features

@@ -23,7 +23,7 @@ from tensorflow.keras.optimizers.schedules import CosineDecay
 
 from scripts.keras_objects import CBAM, FusionGate, SparseCategoricalFocalCrossentropy, SparseF1Score
 
-def build_model(backbone, input_shape, dropout_rates, classes=7):
+def build_model(backbone, input_shape, dropout_rates, n_classes, n_metadata_features):
     """
     Instantiates a base model using EfficientNetB1 or ResNet50 architecture pretrained on ImageNet dataset, and
     attaches a custom top that includes gated metadata fusion, CBAM, fully-connected compression, and softmax output.
@@ -35,7 +35,8 @@ def build_model(backbone, input_shape, dropout_rates, classes=7):
         backbone (str): Base model architecture.
         input_shape (tuple): Shape of input image.
         dropout_rates (tuple): Dropout rates applied to each dense layer (bottom to top).
-        classes (int): Number of classes (i.e., skin lesion types).
+        n_classes (int): Number of classes.
+        n_metadata_features (int): Number of metadata features.
 
     Returns:
         tf.keras.Model: Functional model with frozen base layers.
@@ -86,7 +87,7 @@ def build_model(backbone, input_shape, dropout_rates, classes=7):
 
     # Inputs
     image_input = Input(name='image', shape=input_shape)
-    meta_input = Input(name='meta', shape=(17,))
+    meta_input = Input(name='meta', shape=(n_metadata_features,))
 
     x = augmentation(image_input) # Explicit 'training=bool' is not required
     x = base_model(x)
@@ -102,7 +103,7 @@ def build_model(backbone, input_shape, dropout_rates, classes=7):
     # FC compression
     x = funnel(x)
 
-    output = Dense(classes, activation='softmax', name='softmax')(x)
+    output = Dense(n_classes, activation='softmax', name='softmax')(x)
 
     return Model(inputs=[image_input, meta_input], outputs=output, name='FuFuNet')
 
