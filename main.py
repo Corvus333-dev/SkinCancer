@@ -7,8 +7,8 @@ from scripts import ensemble, export, model_ops, pipeline, plots, utils
 # Experiment controller
 cfg = Config(
     exp=ExpConfig(
-        mode='ensemble',
-        backbone=None,
+        mode='train',
+        backbone='densenet121',
         checkpoint=None,
         unfreeze=None,
     ),

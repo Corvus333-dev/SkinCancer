@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import tensorflow as tf
 from tensorflow.keras import Input, Sequential
-from tensorflow.keras.applications import EfficientNetB1, ResNet50
+from tensorflow.keras.applications import DenseNet121, EfficientNetB1, ResNet50
 
 from tensorflow.keras.layers import (
     BatchNormalization,
@@ -25,8 +25,8 @@ from scripts.keras_objects import CBAM, FusionGate, SparseCategoricalFocalCrosse
 
 def build_model(backbone, input_shape, dropout_rates, n_classes, n_metadata_features):
     """
-    Instantiates a base model using EfficientNetB1 or ResNet50 architecture pretrained on ImageNet dataset, and
-    attaches a custom top that includes gated metadata fusion, CBAM, fully-connected compression, and softmax output.
+    Instantiates a base model using DenseNet121, EfficientNetB1, or ResNet50 architecture pretrained on ImageNet
+    dataset, and attaches a header with gated metadata fusion, CBAM, fully-connected compression, and softmax output.
 
     Performs the following random augmentations to input:
     brightness, contrast, horizontal/vertical flip, rotation, translation, and zoom.
@@ -41,7 +41,9 @@ def build_model(backbone, input_shape, dropout_rates, n_classes, n_metadata_feat
     Returns:
         tf.keras.Model: Functional model with frozen base layers.
     """
-    if backbone == 'efficientnetb1':
+    if backbone == 'densenet121':
+        model_type = DenseNet121
+    elif backbone == 'efficientnetb1':
         model_type = EfficientNetB1
     elif backbone == 'resnet50':
         model_type = ResNet50

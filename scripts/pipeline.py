@@ -3,7 +3,8 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 import tensorflow as tf
-from tensorflow.keras.applications.resnet import preprocess_input
+from tensorflow.keras.applications.densenet import preprocess_input as ppd
+from tensorflow.keras.applications.resnet import preprocess_input as ppr
 
 # Create project root path relative to this module
 ROOT = Path(__file__).resolve().parent.parent
@@ -154,8 +155,10 @@ def preprocess_image(path, input_shape, backbone):
     image = tf.image.resize_with_pad(image, target_height=input_shape[0], target_width=input_shape[1])
 
     # Convert RGB to BGR and zero-center with respect to ImageNet dataset
-    if backbone == 'resnet50':
-        image = preprocess_input(image)
+    if backbone == 'densenet121':
+        image = ppd(image)
+    elif backbone == 'resnet50':
+        image = ppr(image)
 
     return image
 
