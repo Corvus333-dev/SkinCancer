@@ -18,7 +18,7 @@ class ExpConfig:
             - int: unfreeze from this depth upward
             - str: unfreeze from this layer name upward
             - tuple: unfreeze layers containing any of these keywords
-        model_pool: Paths to models selected for ensembling (minimum of two required for 'ensemble' mode).
+        model_pool: Paths to models used in ensemble (auto set).
 
     Notes:
         - Input shape is set to ImageNet-pretrained resolution to ensure compatibility with pretrained weights.
@@ -40,10 +40,6 @@ class ExpConfig:
 
         if self.mode in ('val', 'test') and not self.checkpoint:
             raise ValueError('Model checkpoint required for val/test modes.')
-
-        if self.mode == 'ensemble':
-            if not self.model_pool or len(self.model_pool) < 2:
-                raise ValueError('At least two models required for ensembling.')
 
         self.input_shape = BASE_MODELS[self.backbone]
 

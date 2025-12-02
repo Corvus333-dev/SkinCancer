@@ -1,40 +1,86 @@
+import itertools
 import pandas as pd
 from pathlib import Path
+from sklearn.metrics import cohen_kappa_score, f1_score
 
-def merge_predictions(model_pool, dx_names, source='test'):
+from config import BASE_MODELS
+
+# Create project root path relative to this module
+ROOT = Path(__file__).resolve().parent.parent
+
+def pool_models():
     """
-    Merges per-model prediction DataFrames on 'image_id' into a single DataFrame. Class probability columns are renamed
-    with a timestamp suffix (to distinguish models). Model-specific 'predicted' columns are dropped. One shared 'actual'
-    (ground truth diagnosis) column is kept.
+    Collects paths to the most recent subexperiment for each model variant.
 
-    Args:
-         model_pool (tuple): Paths to models selected for ensembling (minimum of two required).
-         dx_names (list): Diagnosis names.
-         source (str): Predictions source to use for ensembling (i.e., determines which CSV files are used).
+    Expected directory structure:
+
+        /models/
+        ├──backbone_1/ (e.g., ResNet50)
+        │  ├──experiment_1/ (e.g., alpha_05_gamma_20)
+        │  │  ├──20251130_2111
+        │  │  └──YYYYMMDD_HHMM (i.e., latest timestamp)
+        │  └──experiment_n/
+        └──backbone_n/
 
     Returns:
-        pd.DataFrame: Merged DataFrame containing, for each sample:
-            - image_id
-            - per-model probability distributions (with suffixed column names)
-            - ground truth diagnosis
-    """
-    dfs = []
+        list: Path objects pointing to final experiment directories.
 
-    # Load and format DataFrames
-    for model in model_pool:
-        exp_dir = Path(model).parent
-        timestamp = exp_dir.name
+    """
+    top_dir = Path(ROOT / 'models')
+    model_pool = []
+
+    for backbone_dir in top_dir.iterdir():
+        if backbone_dir.name not in BASE_MODELS.keys():
+            continue
+        for variant_dir in backbone_dir.iterdir():
+            exp_dirs = sorted(variant_dir.iterdir())
+            if exp_dirs:
+                model_pool.append(exp_dirs[-1])
+
+    return model_pool
+
+def load_predictions(model_pool, dx_names, source='val'):
+    """
+    Loads a predictions CSV for each experiment directory in the model pool and caches the results as DataFrames with
+    model-specific column name suffixes.
+
+    Args:
+        model_pool (list or tuple): Path objects pointing to directories containing predictions CSV files.
+        dx_names (list): Diagnosis names.
+        source (str): Predictions source ('val' or 'test').
+
+    Returns:
+        dict: Map of experiment directory (Path) to predicted probability distributions (DataFrame).
+
+    """
+    cache = {}
+
+    for exp_dir in model_pool:
+        tag = exp_dir.name
         df = pd.read_csv(exp_dir / f'{source}_predictions.csv')
         df = df.drop(columns='predicted')
-        df = df.rename(columns={dx_name: f'{dx_name}_{timestamp}' for dx_name in dx_names})
-        dfs.append(df)
+        df = df.rename(columns={dx_name: f'{dx_name}_{tag}' for dx_name in dx_names})
+        cache[exp_dir] = df
 
+    return cache
+
+def merge_predictions(cache, combo):
+    """
+    Merges predicted probability distributions from multiple models on 'image_id', keeping the ground-truth column from
+    the first DataFrame and dropping it from the rest.
+
+    Args:
+        cache (dict): Map of experiment directory (Path) to predicted probability distributions (DataFrame).
+        combo (tuple): Path objects corresponding to optimal model subset.
+
+    Returns:
+        pd.DataFrame: Merged DataFrame containing per-model probability distributions and ground truths.
+    """
+    dfs = [cache[exp_dir] for exp_dir in combo]
     left_df = dfs[0]
 
-    # Merge DataFrames
     for df in dfs[1:]:
-        df = df.drop(columns='actual')
-        left_df = left_df.merge(df, on='image_id')
+        left_df = left_df.merge(df.drop(columns='actual'), on='image_id')
 
     return left_df
 
@@ -87,3 +133,54 @@ def unpack_predictions(ensemble_df, dx_map, dx_names):
     y_hat = ensemble_df['predicted'].map(name_to_code).to_numpy()
 
     return p, y, y_hat, ensemble_df
+
+def optimize_ensemble(cache, dx_map, dx_names, r=4):
+    """
+    Exhaustively evaluates all size-r model subsets and selects the combination that maximizes Cohen's kappa score.
+
+    Computational complexity grows combinatorially:
+        C(n, r) = n! / r! / (n - r)!
+
+    Args:
+        cache (dict): Map of experiment directory (Path) to predicted probability distributions (DataFrame).
+        dx_map (dict): Map of diagnosis codes to diagnosis names.
+        dx_names (list): Diagnosis names.
+        r (int): Length of the model combination sequence.
+
+    Returns:
+        tuple: Path objects corresponding to optimal model subset.
+    """
+    best_ensemble = None
+    best_score = float('-inf')
+
+    combos = list(itertools.combinations(cache.keys(), r))
+    t = len(combos)
+
+    for i, combo in enumerate(combos, start=1):
+        merged_df = merge_predictions(cache, combo)
+        ensemble_df = ensemble_models(merged_df, dx_names)
+        _, y, y_hat, _ = unpack_predictions(ensemble_df, dx_map, dx_names)
+
+        score = cohen_kappa_score(y, y_hat)
+
+        if score > best_score:
+            best_score = score
+            best_ensemble = combo
+
+        progress = (i / t) * 100
+        print(f'\r[{i}/{t}] | {progress:4.1f}%', end='', flush=True)
+
+    return best_ensemble
+
+# Stage ensemble creation
+def compute_ensemble(dx_map, dx_names, mode='test'):
+    model_pool = pool_models()
+    cache = load_predictions(model_pool, dx_names, source='val')
+    best_ensemble = optimize_ensemble(cache, dx_map, dx_names)
+
+    cache = load_predictions(best_ensemble, dx_names, source=mode)
+    merged_df = merge_predictions(cache, best_ensemble)
+    ensemble_df = ensemble_models(merged_df, dx_names)
+    p, y, y_hat, ensemble_df = unpack_predictions(ensemble_df, dx_map, dx_names)
+
+    return p, y, y_hat, ensemble_df, best_ensemble

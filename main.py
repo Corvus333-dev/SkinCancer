@@ -7,11 +7,10 @@ from scripts import ensemble, export, model_ops, pipeline, plots, utils
 # Experiment controller
 cfg = Config(
     exp=ExpConfig(
-        mode='train',
-        backbone='efficientnetb1',
+        mode='ensemble',
+        backbone=None,
         checkpoint=None,
         unfreeze=None,
-        model_pool=None
     ),
     train=TrainConfig(
         batch_size=64,
@@ -120,9 +119,8 @@ def main():
 
         else: # Ensemble models
             exp_dir = export.make_exp_dir(cfg.exp.mode)
-            merged_df = ensemble.merge_predictions(cfg.exp.model_pool, dx_names)
-            ensemble_df = ensemble.ensemble_models(merged_df, dx_names)
-            p, y, y_hat, pred_df = ensemble.unpack_predictions(ensemble_df, dx_map, dx_names)
+            p, y, y_hat, pred_df, best_ensemble = ensemble.compute_ensemble(dx_map, dx_names)
+            cfg.exp.model_pool = tuple(str(p) for p in best_ensemble)
 
         evaluate(p, y, y_hat, pred_df, dx_names, exp_dir)
 
