@@ -154,11 +154,11 @@ def preprocess_image(path, input_shape, backbone):
     image = tf.io.decode_jpeg(image, channels=input_shape[2])
     image = tf.image.resize_with_pad(image, target_height=input_shape[0], target_width=input_shape[1])
 
-    # Convert RGB to BGR and zero-center with respect to ImageNet dataset
+    # Preprocess with respect to ImageNet
     if backbone == 'densenet121':
-        image = ppd(image)
+        image = ppd(image) # Rescale to 0-1 range and standardize
     elif backbone == 'resnet50':
-        image = ppr(image)
+        image = ppr(image) # Convert RGB to BGR and normalize
 
     return image
 
