@@ -8,7 +8,7 @@ from scripts import ensemble, export, model_ops, pipeline, plots, utils
 cfg = Config(
     exp=ExpConfig(
         mode='train',
-        backbone='densenet121',
+        backbone='MobileNetV3Large',
         checkpoint=None,
         unfreeze=None,
     ),

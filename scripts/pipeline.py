@@ -3,8 +3,7 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 import tensorflow as tf
-from tensorflow.keras.applications.densenet import preprocess_input as ppd
-from tensorflow.keras.applications.resnet import preprocess_input as ppr
+from tensorflow.keras.applications.resnet import preprocess_input
 
 # Create project root path relative to this module
 ROOT = Path(__file__).resolve().parent.parent
@@ -140,7 +139,7 @@ def preprocess_image(path, input_shape, backbone):
     """
     Decodes a JPEG-encoded image and resizes with pad.
 
-    Note: EfficientNet normalization to [0, 1] is included in the model via a Rescaling layer.
+    Note: Normalization to [0, 1] is included via a Rescaling layer for EfficientNetB1 and MobileNetV3Large models.
 
     Args:
         path (tf.Tensor): Image path.
@@ -154,11 +153,8 @@ def preprocess_image(path, input_shape, backbone):
     image = tf.io.decode_jpeg(image, channels=input_shape[2])
     image = tf.image.resize_with_pad(image, target_height=input_shape[0], target_width=input_shape[1])
 
-    # Preprocess with respect to ImageNet
-    if backbone == 'densenet121':
-        image = ppd(image) # Rescale to 0-1 range and standardize
-    elif backbone == 'resnet50':
-        image = ppr(image) # Convert RGB to BGR and normalize
+    if backbone == 'resnet50':
+        image = preprocess_input(image) # Convert RGB to BGR and normalize with respect to ImageNet
 
     return image
 
