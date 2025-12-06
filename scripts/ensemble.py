@@ -1,7 +1,7 @@
 import itertools
 import pandas as pd
 from pathlib import Path
-from sklearn.metrics import cohen_kappa_score, f1_score
+from sklearn.metrics import cohen_kappa_score
 
 from config import BASE_MODELS
 
@@ -134,9 +134,9 @@ def unpack_predictions(ensemble_df, dx_map, dx_names):
 
     return p, y, y_hat, ensemble_df
 
-def optimize_ensemble(cache, dx_map, dx_names, r=4):
+def optimize_ensemble(cache, dx_map, dx_names, max_r=6):
     """
-    Exhaustively evaluates all size-r model subsets and selects the combination that maximizes Cohen's kappa score.
+    Evaluates all size-2 to size-max_r model subsets and selects the combination that maximizes Cohen's kappa score.
 
     Computational complexity grows combinatorially:
         C(n, r) = n! / r! / (n - r)!
@@ -145,7 +145,7 @@ def optimize_ensemble(cache, dx_map, dx_names, r=4):
         cache (dict): Map of experiment directory (Path) to predicted probability distributions (DataFrame).
         dx_map (dict): Map of diagnosis codes to diagnosis names.
         dx_names (list): Diagnosis names.
-        r (int): Length of the model combination sequence.
+        max_r (int): Maximum length of the model combination sequence.
 
     Returns:
         tuple: Path objects corresponding to optimal model subset.
@@ -153,22 +153,24 @@ def optimize_ensemble(cache, dx_map, dx_names, r=4):
     best_ensemble = None
     best_score = float('-inf')
 
-    combos = list(itertools.combinations(cache.keys(), r))
-    t = len(combos)
+    for r in range(2, max_r + 1):
+        combos = list(itertools.combinations(cache.keys(), r))
+        t = len(combos)
+        print(f'\nEvaluating size-{r} subset:')
 
-    for i, combo in enumerate(combos, start=1):
-        merged_df = merge_predictions(cache, combo)
-        ensemble_df = ensemble_models(merged_df, dx_names)
-        _, y, y_hat, _ = unpack_predictions(ensemble_df, dx_map, dx_names)
+        for i, combo in enumerate(combos, start=1):
+            merged_df = merge_predictions(cache, combo)
+            ensemble_df = ensemble_models(merged_df, dx_names)
+            _, y, y_hat, _ = unpack_predictions(ensemble_df, dx_map, dx_names)
 
-        score = cohen_kappa_score(y, y_hat)
+            score = cohen_kappa_score(y, y_hat)
 
-        if score > best_score:
-            best_score = score
-            best_ensemble = combo
+            if score > best_score:
+                best_score = score
+                best_ensemble = combo
 
-        progress = (i / t) * 100
-        print(f'\r[{i}/{t}] | {progress:4.1f}%', end='', flush=True)
+            progress = (i / t) * 100
+            print(f'\r[{i}/{t}] | {progress:4.1f}%', end='', flush=True)
 
     return best_ensemble
 
