@@ -101,7 +101,7 @@ def main():
     )
 
     if cfg.exp.mode == 'train':
-        exp_dir = export.make_exp_dir(cfg.exp.backbone)
+        exp_dir = export.make_exp_dir(cfg.exp.backbone, cfg.exp.checkpoint)
         train_ds, n_classes, n_meta_features = pipeline.fetch_dataset(train_df, **fetch_args)
         val_ds, _, _ = pipeline.fetch_dataset(val_df, **fetch_args, shuffle=False)
         train(train_ds, val_ds, train_df, n_classes, n_meta_features, exp_dir)

@@ -19,18 +19,26 @@ def save_fig(fig, name):
     fig_dir.mkdir(parents=True, exist_ok=True)
     fig.savefig(fig_dir / f'{name}.png', dpi=150)
 
-def make_exp_dir(name):
+def make_exp_dir(name, checkpoint=None):
     """
     Creates a customizable-named, timestamped directory for storing experiment results.
 
     Args:
         name (str): Descriptive name for mid-level directory (e.g., 'resnet50', 'ensemble', etc.).
+        checkpoint (str): Location of model from which training will resume.
 
     Returns:
-        Path: Object pointing to new directory (models/name/YYYYMMDD_HHMM).
+        Path: Object pointing to new experiment directory (models/name/YYYYMMDD_HHMM/YYYYMMDD_HHMM).
     """
     timestamp = datetime.now().strftime('%Y%m%d_%H%M')
-    exp_dir = Path('models') / name / timestamp
+
+    if checkpoint:
+        exp_dir = Path(checkpoint).parent.parent / timestamp
+    elif name == 'ensemble':
+        exp_dir = Path('models') / name / timestamp
+    else:
+        exp_dir = Path('models') / name / timestamp / timestamp
+
     exp_dir.mkdir(parents=True, exist_ok=True)
 
     return exp_dir
