@@ -1,7 +1,7 @@
 import itertools
 import pandas as pd
 from pathlib import Path
-from sklearn.metrics import cohen_kappa_score
+from sklearn.metrics import f1_score
 
 from config import BASE_MODELS
 
@@ -134,9 +134,9 @@ def unpack_predictions(ensemble_df, dx_map, dx_names):
 
     return p, y, y_hat, ensemble_df
 
-def optimize_ensemble(cache, dx_map, dx_names, max_r=6):
+def optimize_ensemble(cache, dx_map, dx_names, max_r=3):
     """
-    Evaluates all size-2 to size-max_r model subsets and selects the combination that maximizes Cohen's kappa score.
+    Evaluates all size-2 to size-max_r model subsets and selects the combination that maximizes macro-F1 score.
 
     Computational complexity grows combinatorially:
         C(n, r) = n! / r! / (n - r)!
@@ -163,7 +163,7 @@ def optimize_ensemble(cache, dx_map, dx_names, max_r=6):
             ensemble_df = ensemble_models(merged_df, dx_names)
             _, y, y_hat, _ = unpack_predictions(ensemble_df, dx_map, dx_names)
 
-            score = cohen_kappa_score(y, y_hat)
+            score = f1_score(y, y_hat, average='macro')
 
             if score > best_score:
                 best_score = score
