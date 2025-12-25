@@ -20,7 +20,7 @@ cfg = Config(
         initial_lr=1e-3,
         lr_decay=True,
         patience=10,
-        seed=333,
+        seed=666,
         warmup_target=None,
         weight_decay=1e-4
     )
