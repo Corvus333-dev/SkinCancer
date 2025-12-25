@@ -134,7 +134,7 @@ def unpack_predictions(ensemble_df, dx_map, dx_names):
 
     return p, y, y_hat, ensemble_df
 
-def optimize_ensemble(cache, dx_map, dx_names, max_r=3):
+def optimize_ensemble(cache, dx_map, dx_names, max_r=6):
     """
     Evaluates all size-2 to size-max_r model subsets and selects the combination that maximizes macro-F1 score.
 
