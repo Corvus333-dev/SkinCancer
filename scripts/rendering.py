@@ -11,7 +11,7 @@ import pandas as pd
 import export, pipeline, plots
 
 raw_df = pd.read_csv('../data/HAM10000_metadata')
-train_df, val_df, test_df, _, dx_names = pipeline.load_data(seed=333) # Use ensemble seed (for post-run analysis)
+train_df, val_df, test_df, _, dx_names = pipeline.load_data(seed=666) # Use ensemble seed (for post-run analysis)
 exp_df = pd.concat([train_df, val_df, test_df], ignore_index=True)
 
 # Plot class distribution
