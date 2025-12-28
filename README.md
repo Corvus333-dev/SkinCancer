@@ -8,12 +8,13 @@
 ## Introduction
 
 In about four minutes, someone will die from skin cancer. It's a disease that hides in plain sight—visible to the naked
-eye, yet often overlooked until it's too late. The absurd irony is that most of these cases are preventable; the clues 
-are literally right on the surface.
+eye, yet often overlooked until it's too late. The absurd irony is that most of these cases are preventable, as the 
+clues are literally right on the surface.
 
-This project builds a deep learning tool for screening skin lesions. Variants of two lightweight models 
-(EfficientNetB1 and ResNet50) learn from dermoscopy images paired with patient metadata, each generating independent 
-predictions. An ensemble merges these into a consensus diagnosis, providing immediate and reliable assessments.
+This project builds a deep learning tool for screening skin lesions. Variants of three lightweight models 
+(EfficientNetB1, MobileNetV3Large, and ResNet50) learn from dermoscopy images paired with patient metadata, each 
+generating independent predictions. An ensemble merges these into a consensus diagnosis, providing immediate and 
+reliable assessments.
 
 ## Dataset
 
@@ -124,10 +125,13 @@ activations were used instead of `relu` to mitigate 'dead neuron' issues and mai
 
 ### Ensemble
 Models with different backbones and/or trained with distinct focal loss parameters exhibited diverse classification 
-behaviors. Accordingly, six models were selected for ensembling based on CNN architecture and subtle focal loss 
-variations to stabilize predictions and reduce variance:
+behaviors. Accordingly, an `optimize_ensemble` algorithm was implemented to exhaustively search all model subsets of 
+size r that maximized the macro-F1 score on the validation set, where:
 
-![Focal Loss Configuration](assets/focal_loss.png)
+$$2 \le r \le 6, \quad r \in \mathbb{Z}$$
+
+Soft-voting across CNNs with varying architectures and focal loss parameters stabilized predictions and reduced 
+variance, compensating for individual model weaknesses.
 
 ### Training Loop
 This iterative workflow was employed to balance computational efficiency with manual oversight during model development:  
@@ -142,14 +146,15 @@ This iterative workflow was employed to balance computational efficiency with ma
 
 ### Classification Summary
 
-| Model          | Accuracy | Macro-F1 |
-|----------------|----------|----------|
-| EfficientNetB1 | 87.9%    | 0.690    |
-| ResNet50       | 87.2%    | 0.622    |
-| Ensemble       | 90.3%    | 0.703    |
+| Model            | Accuracy | Macro-F1 |
+|------------------|----------|----------|
+| EfficientNetB1   | 88.2%    | 0.72     |
+| MobileNetV3Large | 82.8%    | 0.65     |
+| ResNet50         | 85.8%    | 0.68     |
+| Ensemble         | 90.5%    | 0.76     |
 
-*Non-ensemble metrics represent averages across models sharing the same CNN architecture but trained with focal loss 
-parameter offsets of ± 0.1.*
+*Non-ensemble metrics correspond to the per-backbone model with the highest macro-F1, selected from focal loss variants 
+with α ∈ {0.4, 0.5, 0.6} and γ ∈ {1.9, 2.0, 2.1}.*
 
 ### Confusion Matrix
 ![Confusion Matrix](assets/confusion_matrix.png)
@@ -160,7 +165,7 @@ parameter offsets of ± 0.1.*
 ## Discussion
 Even after undersampling duplicate melanocytic nevi samples, class imbalance (57.2% majority) remained substantial. 
 `SparseCategoricalFocalCrossentropy` improved minority-class signal recovery, while maintaining strong performance 
-(0.966 F1) on the majority class. However, clinically-critical confusion persisted between melanomas and benign 
+(0.97 F1) on the majority class. However, clinically-critical confusion persisted between melanomas and benign 
 keratoses (~12%), consistent with known physician error patterns. The model also misclassified a subset of melanomas as 
 melanocytic nevi (~23%), indicating that majority-class representation still dominates the loss landscape despite 
 mitigation efforts. This effect is most evident for melanoma, which has inherently ambiguous morphology. Additional 
@@ -178,8 +183,8 @@ Models were sensitive to the seed used in `train_test_split`, as expected for on
 cross-validation and/or extensive multi-seed averaging would provide more stable predictions, but these methods exceeded 
 the project's computational budget. Instead, several seeds were tested, and a non-outlier representative was selected 
 for ensembling. It was essential to avoid overtuning mid-level weights, as most proved highly transferable. Unfreezing 
-down to `block5d_expand_conv` and `conv4_block5_1_conv` for EfficientNetB1 and ResNet50, respectively, offered the best 
-trade-off between adaptation and generalization.
+down to `block5d_expand_conv`, `expanded_conv_10_depthwise`, and `conv4_block5_1_conv` for EfficientNetB1, 
+MobileNetV3Large, and ResNet50, respectively, offered the best trade-off between adaptation and generalization.
 
 ## Usage
 Extract HAM10000 images archive into `/data`, keeping the original folder names:
@@ -196,8 +201,7 @@ cfg = Config(
         mode='train',
         backbone='resnet50',
         checkpoint=None,
-        unfreeze=None,
-        model_pool=None
+        unfreeze=None
     ),
     train=TrainConfig(
         batch_size=64,
@@ -207,7 +211,7 @@ cfg = Config(
         initial_lr=1e-3,
         lr_decay=True,
         patience=10,
-        seed=333,
+        seed=666,
         warmup_target=None,
         weight_decay=1e-4
     )
@@ -217,7 +221,7 @@ cfg = Config(
 - Fresh Run: `mode='train'`, `checkpoint=None`, `unfreeze=None`
 - Resume Train: set `checkpoint='path/to/model.keras'` and `unfreeze='layer_name'`
 - Validate/Test: `mode='validate'` or `mode='test'`, and set `checkpoint`
-- Ensemble: `mode='ensemble'` and populate `model_pool`
+- Ensemble: `mode='ensemble'` (requires completed experiments)
 
 #### Unfreezing:
 After each training run, `layer_state.json` is exported to the corresponding experiment directory. This file logs which 
